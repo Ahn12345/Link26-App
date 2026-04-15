@@ -1,5 +1,5 @@
+# 비밀값만 로컬 전용 (.env 는 절대 커밋하지 않음)
 .env
-android/local.properties
 
 # Miscellaneous
 *.class
