@@ -28,3 +28,4 @@ flutter:
     - lib/data/DUR6/data.csv
     - lib/data/DUR7/data.csv
     - lib/data/DUR8/data.csv
+    #lib/data/DUR1 - 8/data.csv가 DUR n-n으로 줄어들 수 있음
