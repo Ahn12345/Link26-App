@@ -1,4 +1,4 @@
-package com.example.bio_link_app
+package com.example.Link_app
 
 import io.flutter.embedding.android.FlutterActivity
 
