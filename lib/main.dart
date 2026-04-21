@@ -3,5 +3,7 @@ import 'package:flutter/material.dart';
 import 'app.dart';
 
 void main() {
-  runApp(const BioLinkApp());
+  runApp(const LinkApp());
 }
+
+#추가 예정
