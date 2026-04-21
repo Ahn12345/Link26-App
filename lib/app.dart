@@ -4,13 +4,13 @@ import 'core/theme/app_theme.dart';
 import 'features/home/home_screen.dart';
 import 'features/splash/splash_screen.dart';
 
-class BioLinkApp extends StatelessWidget {
-  const BioLinkApp({super.key});
+class LinkApp extends StatelessWidget {
+  const LinkApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Bio Link App',
+      title: 'Link App',
       theme: AppTheme.light,
       initialRoute: SplashScreen.routeName,
       routes: {
