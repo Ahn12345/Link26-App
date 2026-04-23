@@ -1,5 +1,5 @@
-name: bio_link_app
-description: Bio Link mobile app (Android & iOS).
+name: link_app
+description: Link mobile app (Android & iOS).
 publish_to: "none"
 
 version: 1.0.0+1
