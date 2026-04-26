@@ -2,7 +2,7 @@
 .env
 
 # --- 커밋하지 않음: 도구·IDE·로컬 테스트·빌드 산출물 ---
-# lib/data/DUR1 ~ DUR8 은 CSV 저장용으로 저장소에 포함함 (여기 무시 규칙 적용 안 함).
+# lib/data/DUR1 ~ DUR2 은 CSV 저장용으로 저장소에 포함함 (여기 무시 규칙 적용 안 함).
 /test/
 
 # Miscellaneous
