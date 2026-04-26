@@ -3,6 +3,7 @@ import 'package:link_app/l10n/app_localizations.dart';
 
 import '../../core/services/home_layout_store.dart';
 import '../../core/widgets/widgets.dart';
+import '../ai_chat/ai_chat_screen.dart';
 import '../family_profiles/family_profiles_screen.dart';
 import '../family_voice/family_voice_screen.dart';
 import '../home_layout/home_layout_screen.dart';
@@ -92,6 +93,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 if (_visible.contains('quickActions')) ...[
                   const SizedBox(height: 24),
+                  _navTile(
+                    context,
+                    l10n.aiChatTitle,
+                    l10n.aiChatSubtitle,
+                    Icons.smart_toy,
+                    AiChatScreen.routeName,
+                  ),
                   _navTile(
                     context,
                     l10n.familyVoiceTitle,

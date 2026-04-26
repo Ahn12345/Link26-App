@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login/login_page.dart';
 import 'features/auth/signup/signup_page.dart';
+import 'features/ai_chat/ai_chat_screen.dart';
 import 'features/family_profiles/family_profiles_screen.dart';
 import 'features/family_voice/family_voice_screen.dart';
 import 'features/home/home_screen.dart';
@@ -98,6 +99,7 @@ class LinkAppState extends State<LinkApp> {
         HomeScreen.routeName: (_) => const HomeScreen(),
         LoginPage.routeName: (_) => const LoginPage(),
         SignupPage.routeName: (_) => const SignupPage(),
+        AiChatScreen.routeName: (_) => const AiChatScreen(),
         FamilyVoiceScreen.routeName: (_) => const FamilyVoiceScreen(),
         FamilyProfilesScreen.routeName: (_) => const FamilyProfilesScreen(),
         PushSettingsScreen.routeName: (_) => const PushSettingsScreen(),

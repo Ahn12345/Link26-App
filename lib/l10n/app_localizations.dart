@@ -61,6 +61,14 @@ class AppLocalizations {
       'languageEnglish': 'English',
       'languageKorean': 'Korean',
       'recordVoiceImport': 'Record / import',
+      'aiChatTitle': 'AI Chat & Recognition',
+      'aiChatSubtitle':
+          'Analyze prescriptions/supplements and show traffic-light safety.',
+      'aiSymptomInputLabel': 'Describe your symptoms',
+      'aiPrimaryAnswerButton': 'Get clear first answer',
+      'aiOcrInputLabel': 'Recognized text from image',
+      'aiOcrInputHint': 'Paste OCR text from prescription or supplement label',
+      'aiAnalyzeImageButton': 'Analyze image text',
     },
     'ko': {
       'appTitle': '링크 앱',
@@ -102,6 +110,13 @@ class AppLocalizations {
       'languageEnglish': '영어',
       'languageKorean': '한국어',
       'recordVoiceImport': '녹음 또는 가져오기',
+      'aiChatTitle': 'AI 채팅·인식',
+      'aiChatSubtitle': '처방전/영양제를 분석하고 신호등으로 복용 안전도를 표시합니다.',
+      'aiSymptomInputLabel': '증상을 입력하세요',
+      'aiPrimaryAnswerButton': '명확한 1차 답변 받기',
+      'aiOcrInputLabel': '이미지 인식(OCR) 텍스트',
+      'aiOcrInputHint': '처방전/영양제 라벨 OCR 결과를 붙여넣으세요',
+      'aiAnalyzeImageButton': '이미지 텍스트 분석',
     },
   };
 
@@ -144,6 +159,13 @@ class AppLocalizations {
   String get languageEnglish => _t('languageEnglish');
   String get languageKorean => _t('languageKorean');
   String get recordVoiceImport => _t('recordVoiceImport');
+  String get aiChatTitle => _t('aiChatTitle');
+  String get aiChatSubtitle => _t('aiChatSubtitle');
+  String get aiSymptomInputLabel => _t('aiSymptomInputLabel');
+  String get aiPrimaryAnswerButton => _t('aiPrimaryAnswerButton');
+  String get aiOcrInputLabel => _t('aiOcrInputLabel');
+  String get aiOcrInputHint => _t('aiOcrInputHint');
+  String get aiAnalyzeImageButton => _t('aiAnalyzeImageButton');
 }
 
 class _AppLocalizationsDelegate
