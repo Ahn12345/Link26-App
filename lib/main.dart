@@ -5,5 +5,3 @@ import 'app.dart';
 void main() {
   runApp(const LinkApp());
 }
-
-#추가 예정
