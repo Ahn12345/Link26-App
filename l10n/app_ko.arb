@@ -16,7 +16,7 @@
   "moreTitle": "더보기",
   "login": "로그인",
   "signup": "회원가입",
-  "medicineGuideIntro": "약 종류별로 복용 주기·방법을 안내합니다. 복용 횟수 집계와 AI 맥락은 매일 04:00(로컬)에 초기화되는 ‘하루’ 기준을 씁니다.",
+  "medicineGuideIntro": "약 종류별로 복용 주기·방법을 안내합니다. 복용 횟수 집계와 AI 맥락은 매일 04:00(로컬)에 초기화되는 하루 기준을 씁니다.",
   "medicineGuideMaxDoses": "하루 창에서 최대 10회까지 모델에 담을 수 있습니다(처방에 맞게 추후 조정).",
   "familyVoiceStub": "가족 음성 녹음·전화형 재생은 OS 권한과 안전한 저장소 연동 후 제공됩니다.",
   "familyProfilesStub": "넷플릭스처럼 프로필을 바꿉니다. 서버 동기화는 이후 연결할 수 있습니다.",
@@ -31,5 +31,13 @@
   "language": "언어",
   "languageSystem": "시스템 따름",
   "languageEnglish": "영어",
-  "languageKorean": "한국어"
+  "languageKorean": "한국어",
+  "recordVoiceImport": "녹음 또는 가져오기",
+  "aiChatTitle": "AI 채팅·인식",
+  "aiChatSubtitle": "처방전/영양제를 분석하고 신호등으로 복용 안전도를 표시합니다.",
+  "aiSymptomInputLabel": "증상을 입력하세요",
+  "aiPrimaryAnswerButton": "명확한 1차 답변 받기",
+  "aiOcrInputLabel": "이미지 인식(OCR) 텍스트",
+  "aiOcrInputHint": "처방전/영양제 라벨 OCR 결과를 붙여넣으세요",
+  "aiAnalyzeImageButton": "이미지 텍스트 분석"
 }

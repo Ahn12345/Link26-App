@@ -78,12 +78,7 @@ class LinkAppState extends State<LinkApp> {
       title: 'Link App',
       theme: AppTheme.light,
       initialRoute: SplashScreen.routeName,
-      localizationsDelegates: [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, supported) {
         if (locale == null) return const Locale('en');

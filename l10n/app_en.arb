@@ -16,7 +16,7 @@
   "moreTitle": "More",
   "login": "Log in",
   "signup": "Sign up",
-  "medicineGuideIntro": "Each medicine type can show how often to take it. The app treats a “day” as starting at 04:00 local time for counters and AI context reset.",
+  "medicineGuideIntro": "Each medicine type can show how often to take it. The app treats a day as starting at 04:00 local time for counters and AI context reset.",
   "medicineGuideMaxDoses": "The model allows up to 10 doses in that daily window (adjust per prescription in a future build).",
   "familyVoiceStub": "Voice recording and call-style playback will use OS permissions and secure storage.",
   "familyProfilesStub": "Switch profiles like Netflix; data can sync to a backend later.",
@@ -31,5 +31,13 @@
   "language": "Language",
   "languageSystem": "System default",
   "languageEnglish": "English",
-  "languageKorean": "Korean"
+  "languageKorean": "Korean",
+  "recordVoiceImport": "Record / import",
+  "aiChatTitle": "AI Chat & Recognition",
+  "aiChatSubtitle": "Analyze prescriptions/supplements and show traffic-light safety.",
+  "aiSymptomInputLabel": "Describe your symptoms",
+  "aiPrimaryAnswerButton": "Get clear first answer",
+  "aiOcrInputLabel": "Recognized text from image",
+  "aiOcrInputHint": "Paste OCR text from prescription or supplement label",
+  "aiAnalyzeImageButton": "Analyze image text"
 }

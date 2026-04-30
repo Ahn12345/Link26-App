@@ -43,7 +43,7 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
     final next = FamilyProfile(
       id: 'p${DateTime.now().millisecondsSinceEpoch}',
       displayName: 'Member ${_profiles.length + 1}',
-      avatarEmoji: 'тн?,
+      avatarEmoji: '??,
     );
     await _store.saveProfiles([..._profiles, next]);
     if (mounted) await _load();
