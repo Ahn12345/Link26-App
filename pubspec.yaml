@@ -1,5 +1,5 @@
 name: link26_app
-description: Link mobile app (Android & iOS).
+description: Link26 mobile app (Android & iOS).
 publish_to: "none"
 
 version: 1.0.0+1
@@ -24,7 +24,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/icons/
-    - assets/animations/
     - lib/data/DUR1/
     - lib/data/DUR2/
