@@ -1,4 +1,4 @@
-/// 로그인 관련 데이터 모델 (요청/응답 DTO 등)
+/// 로그??관???�이??모델 (?�청/?�답 DTO ??
 class LoginModel {
   const LoginModel();
 }

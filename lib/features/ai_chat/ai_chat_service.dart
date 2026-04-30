@@ -1,6 +1,6 @@
 import 'ai_chat_models.dart';
 
-/// AI 채팅/이미지 인식 백엔드 연동 전 단계의 규칙 기반 스텁.
+/// AI 채팅/?��?지 ?�식 백엔???�동 ???�계??규칙 기반 ?�텁.
 class AiChatService {
   Future<MedicineInsight> analyzePrescriptionImage({
     required String recognizedText,
@@ -30,7 +30,7 @@ class AiChatService {
     );
   }
 
-  /// 아픈 상황 의심 시 "권고"보다 우선해서 명확한 1차 답을 준다.
+  /// ?�픈 ?�황 ?�심 ??"권고"보다 ?�선?�서 명확??1�??�을 준??
   ChatTriageResult triageMessage(String message) {
     final lower = message.toLowerCase();
     final urgentKeywords = [
@@ -39,25 +39,25 @@ class AiChatService {
       'faint',
       'seizure',
       'severe bleeding',
-      '호흡곤란',
-      '가슴 통증',
-      '실신',
+      '?�흡곤�?',
+      '가???�증',
+      '?�신',
       '경련',
-      '피가 멈추지',
+      '?��? 멈추지',
     ];
     final urgent = urgentKeywords.any(lower.contains);
     if (urgent) {
       return const ChatTriageResult(
         urgent: true,
         primaryAnswer:
-            '응급 의심 상태입니다. 지금 즉시 119 또는 응급실로 이동하세요.',
-        followUpPrompt: '복용한 약/영양제와 증상 시작 시간을 알려주세요.',
+            '?�급 ?�심 ?�태?�니?? 지�?즉시 119 ?�는 ?�급?�로 ?�동?�세??',
+        followUpPrompt: '복용?????�양?��? 증상 ?�작 ?�간???�려주세??',
       );
     }
     return const ChatTriageResult(
       urgent: false,
-      primaryAnswer: '응급 신호는 낮아 보입니다. 증상에 맞는 복용 시간을 안내할게요.',
-      followUpPrompt: '현재 증상, 복용 중인 약, 마지막 복용 시간을 입력해주세요.',
+      primaryAnswer: '?�급 ?�호????�� 보입?�다. 증상??맞는 복용 ?�간???�내?�게??',
+      followUpPrompt: '?�재 증상, 복용 중인 ?? 마�?�?복용 ?�간???�력?�주?�요.',
     );
   }
 }

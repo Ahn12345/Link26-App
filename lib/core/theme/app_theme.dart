@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 앱 전역 테마. 색·타이포를 한곳에서 조정합니다.
+/// ???�역 ?�마. ?�·�??�포�??�곳?�서 조정?�니??
 abstract final class AppTheme {
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(

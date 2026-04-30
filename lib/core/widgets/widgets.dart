@@ -1,5 +1,5 @@
-/// 앱 전역에서 쓰는 UI 조각만 여기서 export 합니다.
-/// 기능 전용 위젯은 `features/<기능>/widgets/` 에 두세요.
+/// ???�역?�서 ?�는 UI 조각�??�기??export ?�니??
+/// 기능 ?�용 ?�젯?� `features/<기능>/widgets/` ???�세??
 library;
 
 export 'primary_button.dart';

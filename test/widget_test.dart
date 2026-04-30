@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:link_app/app.dart';
+import 'package:link26_app/app.dart';
 
 void main() {
   testWidgets('LinkApp builds smoke test', (WidgetTester tester) async {

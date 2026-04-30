@@ -1,11 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 넷플릭스 스타일 로컬 프로필(서버 동기화는 추후).
+/// ?�플�?�� ?��???로컬 ?�로???�버 ?�기?�는 추후).
 class FamilyProfile {
   const FamilyProfile({
     required this.id,
     required this.displayName,
-    this.avatarEmoji = '👤',
+    this.avatarEmoji = '?��',
   });
 
   final String id;
@@ -22,7 +22,7 @@ class FamilyProfileStore {
     final raw = p.getStringList(_key);
     if (raw == null || raw.isEmpty) {
       return const [
-        FamilyProfile(id: 'p1', displayName: '기본', avatarEmoji: '🙂'),
+        FamilyProfile(id: 'p1', displayName: '기본', avatarEmoji: '?��'),
       ];
     }
     return raw.map((line) {
@@ -30,7 +30,7 @@ class FamilyProfileStore {
       return FamilyProfile(
         id: parts[0],
         displayName: parts.length > 1 ? parts[1] : parts[0],
-        avatarEmoji: parts.length > 2 ? parts[2] : '👤',
+        avatarEmoji: parts.length > 2 ? parts[2] : '?��',
       );
     }).toList();
   }

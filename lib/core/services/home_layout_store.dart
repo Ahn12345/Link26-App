@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 메인 화면에 표시할 블록 ID 저장.
+/// 메인 ?�면???�시??블록 ID ?�??
 class HomeLayoutStore {
   HomeLayoutStore._();
 

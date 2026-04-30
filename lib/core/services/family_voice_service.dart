@@ -1,4 +1,4 @@
-/// 가족 음성 클립 메타(실제 녹음/재생은 네이티브·권한·저장소 연동 후 구현).
+/// 가�??�성 ?�립 메�?(?�제 ?�음/?�생?� ?�이?�브·권한·?�?�소 ?�동 ??구현).
 class FamilyVoiceClip {
   const FamilyVoiceClip({
     required this.id,
@@ -18,6 +18,6 @@ class FamilyVoiceService {
     required String label,
     required String filePath,
   }) async {
-    // TODO: 녹음/파일 피커 → 앱 저장소 복사, 메타 DB 저장
+    // TODO: ?�음/?�일 ?�커 ?????�?�소 복사, 메�? DB ?�??
   }
 }

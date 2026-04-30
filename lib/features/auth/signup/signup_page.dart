@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 회원가입 화면 UI
+/// ?�원가???�면 UI
 class SignupPage extends StatelessWidget {
   const SignupPage({super.key});
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:link_app/l10n/app_localizations.dart';
+import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/services/home_layout_store.dart';
 

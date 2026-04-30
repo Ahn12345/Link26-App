@@ -1,34 +1,34 @@
-#개발 배경 및 팀 구성
+#개발 배경 �??� 구성
 
-동국대 무빙 동아리 팀으로 구성
+?�국?� 무빙 ?�아�??�?�로 구성
 
-안병찬(PM, 개발)
-하윤서(UI/UX)
-이기훈(UI/UX)
-유송현(경쟁사 분석과 BM 모델 제작)
-이세현(바이오 아이디어 제공)
+?�병�?PM, 개발)
+?�윤??UI/UX)
+?�기??UI/UX)
+?�송??경쟁??분석�?BM 모델 ?�작)
+?�세??바이???�이?�어 ?�공)
 
-바이오 공모전을 위해 제작
+바이??공모?�을 ?�해 ?�작
 
 # Bio Link App
 
-Flutter **모바일 앱** (Android / iOS).
+Flutter **모바????* (Android / iOS).
 
-앱 화면에서 쓰는 이미지·아이콘·애니메이션은 **`assets/images/`**, **`assets/icons/`**, **`assets/animations/`** 에 두면 iOS·Android **같은 경로**로 빌드에 포함됩니다 (`pubspec.yaml`의 `assets:` 참고). 홈 화면 **앱 아이콘**만 플랫폼별 폴더가 따로 있으며, 원본 한 장으로 맞추려면 `flutter_launcher_icons` 같은 도구를 쓰면 됩니다.
+???�면?�서 ?�는 ?��?지·?�이콘·애?�메?�션?� **`assets/images/`**, **`assets/icons/`**, **`assets/animations/`** ???�면 iOS·Android **같�? 경로**�?빌드???�함?�니??(`pubspec.yaml`??`assets:` 참고). ???�면 **???�이�?*�??�랫?�별 ?�더가 ?�로 ?�으�? ?�본 ???�으�?맞추?�면 `flutter_launcher_icons` 같�? ?�구�??�면 ?�니??
 
-## 환경 변수
+## ?�경 변??
 
-비밀 값은 **`.env`** 에만 두고, 저장소에는 **올리지 않습니다** (`.gitignore`).
+비�? 값�? **`.env`** ?�만 ?�고, ?�?�소?�는 **?�리지 ?�습?�다** (`.gitignore`).
 
-1. 루트에서 `.env.example` 을 복사해 `.env` 로 저장합니다.  
-2. 필요한 키와 값을 채웁니다.  
-3. `flutter_dotenv` 등 패키지를 쓰면 `pubspec.yaml` 에 의존성을 추가한 뒤, 앱 시작 시 로드하도록 연결하면 됩니다.
+1. 루트?�서 `.env.example` ??복사??`.env` �??�?�합?�다.  
+2. ?�요???��? 값을 채웁?�다.  
+3. `flutter_dotenv` ???�키지�??�면 `pubspec.yaml` ???�존?�을 추�????? ???�작 ??로드?�도�??�결?�면 ?�니??
 
-## 실행
+## ?�행
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-자세한 내용은 [Flutter 문서](https://docs.flutter.dev/)를 참고하세요.
+?�세???�용?� [Flutter 문서](https://docs.flutter.dev/)�?참고?�세??

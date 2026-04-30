@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 주요 액션용 버튼. 화면들에서 재사용합니다.
+/// 주요 ?�션??버튼. ?�면?�에???�사?�합?�다.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,

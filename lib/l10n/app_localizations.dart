@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// ARB와 동일 키 — `flutter gen-l10n` 대신 수동 유지(OneDrive 등에서 코드생성 실패 시 대비).
+/// ARB?� ?�일 ????`flutter gen-l10n` ?�???�동 ?��?(OneDrive ?�에??코드?�성 ?�패 ???��?.
 class AppLocalizations {
   AppLocalizations(this.locale);
 
@@ -39,7 +39,7 @@ class AppLocalizations {
       'login': 'Log in',
       'signup': 'Sign up',
       'medicineGuideIntro':
-          'Each medicine type can show how often to take it. The app treats a “day” as starting at 04:00 local time for counters and AI context reset.',
+          'Each medicine type can show how often to take it. The app treats a ?�day??as starting at 04:00 local time for counters and AI context reset.',
       'medicineGuideMaxDoses':
           'The model allows up to 10 doses in that daily window (adjust per prescription in a future build).',
       'familyVoiceStub':
@@ -50,8 +50,8 @@ class AppLocalizations {
           'Enable categories here after Firebase Cloud Messaging (or equivalent) is configured.',
       'homeLayoutHint': 'Toggle blocks shown on the home screen.',
       'searchStub':
-          'Medicine and content search — connect to your data sources.',
-      'moreStub': 'Settings and legal links — expand as needed.',
+          'Medicine and content search ??connect to your data sources.',
+      'moreStub': 'Settings and legal links ??expand as needed.',
       'save': 'Save',
       'activeProfile': 'Active profile',
       'addProfile': 'Add profile',
@@ -71,52 +71,52 @@ class AppLocalizations {
       'aiAnalyzeImageButton': 'Analyze image text',
     },
     'ko': {
-      'appTitle': '링크 앱',
-      'homeTitle': '홈',
-      'familyVoiceTitle': '가족 목소리 알림',
-      'familyVoiceSubtitle': '전화 알림처럼 들리는 가족 음성 등록',
-      'familyProfilesTitle': '가족 계정',
-      'familyProfilesSubtitle': '넷플릭스처럼 프로필 전환',
-      'pushSettingsTitle': '푸시 알림',
-      'pushSettingsSubtitle': '일반 알림·채널 설정',
-      'homeLayoutTitle': '메인 화면 구성',
-      'homeLayoutSubtitle': '메인에 보일 정보 선택',
-      'medicineGuideTitle': '약 복용 안내',
+      'appTitle': '링크 ??,
+      'homeTitle': '??,
+      'familyVoiceTitle': '가�?목소�??�림',
+      'familyVoiceSubtitle': '?�화 ?�림처럼 ?�리??가�??�성 ?�록',
+      'familyProfilesTitle': '가�?계정',
+      'familyProfilesSubtitle': '?�플�?��처럼 ?�로???�환',
+      'pushSettingsTitle': '?�시 ?�림',
+      'pushSettingsSubtitle': '?�반 ?�림·채널 ?�정',
+      'homeLayoutTitle': '메인 ?�면 구성',
+      'homeLayoutSubtitle': '메인??보일 ?�보 ?�택',
+      'medicineGuideTitle': '??복용 ?�내',
       'medicineGuideSubtitle':
-          '약 종류별 방법·횟수·04시 기준 초기화',
-      'searchTitle': '검색',
-      'moreTitle': '더보기',
-      'login': '로그인',
-      'signup': '회원가입',
+          '??종류�?방법·?�수·04??기�? 초기??,
+      'searchTitle': '검??,
+      'moreTitle': '?�보�?,
+      'login': '로그??,
+      'signup': '?�원가??,
       'medicineGuideIntro':
-          '약 종류별로 복용 주기·방법을 안내합니다. 복용 횟수 집계와 AI 맥락은 매일 04:00(로컬)에 초기화되는 ‘하루’ 기준을 씁니다.',
+          '??종류별로 복용 주기·방법???�내?�니?? 복용 ?�수 집계?� AI 맥락?� 매일 04:00(로컬)??초기?�되???�하루�?기�????�니??',
       'medicineGuideMaxDoses':
-          '하루 창에서 최대 10회까지 모델에 담을 수 있습니다(처방에 맞게 추후 조정).',
+          '?�루 창에??최�? 10?�까지 모델???�을 ???�습?�다(처방??맞게 추후 조정).',
       'familyVoiceStub':
-          '가족 음성 녹음·전화형 재생은 OS 권한과 안전한 저장소 연동 후 제공됩니다.',
+          '가�??�성 ?�음·?�화???�생?� OS 권한�??�전???�?�소 ?�동 ???�공?�니??',
       'familyProfilesStub':
-          '넷플릭스처럼 프로필을 바꿉니다. 서버 동기화는 이후 연결할 수 있습니다.',
+          '?�플�?��처럼 ?�로?�을 바꿉?�다. ?�버 ?�기?�는 ?�후 ?�결?????�습?�다.',
       'pushStub':
-          'Firebase Cloud Messaging(또는 동등) 설정 후 여기서 채널·토글을 켭니다.',
-      'homeLayoutHint': '메인 화면에 보일 블록을 선택하세요.',
-      'searchStub': '약·콘텐츠 검색 — 데이터 소스와 연결 예정.',
-      'moreStub': '설정·약관 등 — 필요 시 확장.',
-      'save': '저장',
-      'activeProfile': '현재 프로필',
-      'addProfile': '프로필 추가',
-      'reload': '홈 다시 불러오기',
-      'language': '언어',
-      'languageSystem': '시스템 따름',
-      'languageEnglish': '영어',
-      'languageKorean': '한국어',
-      'recordVoiceImport': '녹음 또는 가져오기',
-      'aiChatTitle': 'AI 채팅·인식',
-      'aiChatSubtitle': '처방전/영양제를 분석하고 신호등으로 복용 안전도를 표시합니다.',
-      'aiSymptomInputLabel': '증상을 입력하세요',
-      'aiPrimaryAnswerButton': '명확한 1차 답변 받기',
-      'aiOcrInputLabel': '이미지 인식(OCR) 텍스트',
-      'aiOcrInputHint': '처방전/영양제 라벨 OCR 결과를 붙여넣으세요',
-      'aiAnalyzeImageButton': '이미지 텍스트 분석',
+          'Firebase Cloud Messaging(?�는 ?�등) ?�정 ???�기??채널·?��???�?��??',
+      'homeLayoutHint': '메인 ?�면??보일 블록???�택?�세??',
+      'searchStub': '?�·콘?�츠 검?????�이???�스?� ?�결 ?�정.',
+      'moreStub': '?�정·?��? ?????�요 ???�장.',
+      'save': '?�??,
+      'activeProfile': '?�재 ?�로??,
+      'addProfile': '?�로??추�?',
+      'reload': '???�시 불러?�기',
+      'language': '?�어',
+      'languageSystem': '?�스???�름',
+      'languageEnglish': '?�어',
+      'languageKorean': '?�국??,
+      'recordVoiceImport': '?�음 ?�는 가?�오�?,
+      'aiChatTitle': 'AI 채팅·?�식',
+      'aiChatSubtitle': '처방???�양?��? 분석?�고 ?�호?�으�?복용 ?�전?��? ?�시?�니??',
+      'aiSymptomInputLabel': '증상???�력?�세??,
+      'aiPrimaryAnswerButton': '명확??1�??��? 받기',
+      'aiOcrInputLabel': '?��?지 ?�식(OCR) ?�스??,
+      'aiOcrInputHint': '처방???�양???�벨 OCR 결과�?붙여?�으?�요',
+      'aiAnalyzeImageButton': '?��?지 ?�스??분석',
     },
   };
 

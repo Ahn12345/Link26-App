@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:link_app/l10n/app_localizations.dart';
+import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/domain/daily_window_policy.dart';
 
@@ -50,12 +50,12 @@ class MedicineGuideScreen extends StatelessWidget {
           const SizedBox(height: 8),
           const ListTile(
             leading: Icon(Icons.medication_liquid),
-            title: Text('Liquid — with food, 3× daily'),
+            title: Text('Liquid ??with food, 3× daily'),
             subtitle: Text('Max 10 logs / window in model'),
           ),
           const ListTile(
             leading: Icon(Icons.medication),
-            title: Text('Tablet — empty stomach, morning'),
+            title: Text('Tablet ??empty stomach, morning'),
             subtitle: Text('Link to DUR data later'),
           ),
         ],
