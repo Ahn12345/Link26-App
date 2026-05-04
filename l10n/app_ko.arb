@@ -39,5 +39,12 @@
   "aiPrimaryAnswerButton": "명확한 1차 답변 받기",
   "aiOcrInputLabel": "이미지 인식(OCR) 텍스트",
   "aiOcrInputHint": "처방전/영양제 라벨 OCR 결과를 붙여넣으세요",
-  "aiAnalyzeImageButton": "이미지 텍스트 분석"
+  "aiAnalyzeImageButton": "이미지 텍스트 분석",
+  "settingsTitle": "설정",
+  "settingsSubtitle": "글자 크기·접근성",
+  "settingsTextSize": "글자 크기",
+  "medicineCatalogTitle": "약 목록",
+  "medicineCatalogSubtitle": "등록된 항목(데모). 이후 서버·로컬 DB와 연결하세요.",
+  "medicineCatalogTooltip": "약 목록 열기",
+  "medicineCatalogEmpty": "표시할 약이 없습니다."
 }

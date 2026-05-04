@@ -39,5 +39,12 @@
   "aiPrimaryAnswerButton": "Get clear first answer",
   "aiOcrInputLabel": "Recognized text from image",
   "aiOcrInputHint": "Paste OCR text from prescription or supplement label",
-  "aiAnalyzeImageButton": "Analyze image text"
+  "aiAnalyzeImageButton": "Analyze image text",
+  "settingsTitle": "Settings",
+  "settingsSubtitle": "Text size and accessibility",
+  "settingsTextSize": "Text size",
+  "medicineCatalogTitle": "Medicine list",
+  "medicineCatalogSubtitle": "Known items (demo). Replace with your backend or local DB.",
+  "medicineCatalogTooltip": "Open medicine list",
+  "medicineCatalogEmpty": "No medicines to show."
 }

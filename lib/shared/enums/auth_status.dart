@@ -1,1 +1,1 @@
-﻿// TODO: structure placeholder
+enum AuthStatus { unknown, guest, authenticated }

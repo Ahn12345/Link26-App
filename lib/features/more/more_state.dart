@@ -1,1 +1,3 @@
-﻿// TODO: structure placeholder
+class MoreState {
+  const MoreState();
+}

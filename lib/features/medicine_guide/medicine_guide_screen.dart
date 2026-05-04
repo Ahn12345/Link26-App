@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/domain/daily_window_policy.dart';
+import '../medicine/medicine_screen.dart';
 
 class MedicineGuideScreen extends StatelessWidget {
   const MedicineGuideScreen({super.key});
@@ -15,7 +16,18 @@ class MedicineGuideScreen extends StatelessWidget {
     final now = DateTime.now();
     final start = policy.windowStartFor(now);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.medicineGuideTitle)),
+      appBar: AppBar(
+        title: Text(l10n.medicineGuideTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.medicineCatalogTooltip,
+            icon: const Icon(Icons.list_alt),
+            onPressed: () {
+              Navigator.of(context).pushNamed(MedicineScreen.routeName);
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

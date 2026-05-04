@@ -128,4 +128,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiAnalyzeImageButton => '이미지 텍스트 분석';
+
+  @override
+  String get settingsTitle => '설정';
+
+  @override
+  String get settingsSubtitle => '글자 크기·접근성';
+
+  @override
+  String get settingsTextSize => '글자 크기';
+
+  @override
+  String get medicineCatalogTitle => '약 목록';
+
+  @override
+  String get medicineCatalogSubtitle =>
+      '등록된 항목(데모). 이후 서버·로컬 DB와 연결하세요.';
+
+  @override
+  String get medicineCatalogTooltip => '약 목록 열기';
+
+  @override
+  String get medicineCatalogEmpty => '표시할 약이 없습니다.';
 }

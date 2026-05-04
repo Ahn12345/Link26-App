@@ -1,1 +1,5 @@
-﻿// TODO: structure placeholder
+import '../../core/domain/result.dart';
+
+abstract class DurRepository {
+  Future<Result<void>> ping();
+}

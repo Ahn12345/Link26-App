@@ -1,4 +1,6 @@
-enum SafetySignal { green, yellow, red }
+import 'package:link26_app/shared/enums/safety_signal.dart';
+
+export 'package:link26_app/shared/enums/safety_signal.dart';
 
 class MedicineInsight {
   const MedicineInsight({

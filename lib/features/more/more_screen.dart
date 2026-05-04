@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../app.dart';
+import '../settings/settings_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -18,6 +19,14 @@ class MoreScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           Text(l10n.moreStub),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: Text(l10n.settingsTitle),
+            subtitle: Text(l10n.settingsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).pushNamed(SettingsScreen.routeName),
+          ),
           const SizedBox(height: 24),
           Text(l10n.language, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),

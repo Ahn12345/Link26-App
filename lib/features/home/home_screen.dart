@@ -11,6 +11,7 @@ import '../medicine_guide/medicine_guide_screen.dart';
 import '../more/more_screen.dart';
 import '../push_settings/push_settings_screen.dart';
 import '../search/search_screen.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -113,6 +114,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.familyProfilesSubtitle,
                     Icons.groups,
                     FamilyProfilesScreen.routeName,
+                  ),
+                  _navTile(
+                    context,
+                    l10n.settingsTitle,
+                    l10n.settingsSubtitle,
+                    Icons.settings,
+                    SettingsScreen.routeName,
                   ),
                   _navTile(
                     context,

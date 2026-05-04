@@ -82,6 +82,13 @@ abstract class AppLocalizations {
   String get aiOcrInputLabel;
   String get aiOcrInputHint;
   String get aiAnalyzeImageButton;
+  String get settingsTitle;
+  String get settingsSubtitle;
+  String get settingsTextSize;
+  String get medicineCatalogTitle;
+  String get medicineCatalogSubtitle;
+  String get medicineCatalogTooltip;
+  String get medicineCatalogEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

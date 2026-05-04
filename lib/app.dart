@@ -3,6 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/constants/storage_keys.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login/login_page.dart';
 import 'features/auth/signup/signup_page.dart';
@@ -11,13 +12,13 @@ import 'features/family_profiles/family_profiles_screen.dart';
 import 'features/family_voice/family_voice_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/home_layout/home_layout_screen.dart';
+import 'features/medicine/medicine_screen.dart';
 import 'features/medicine_guide/medicine_guide_screen.dart';
 import 'features/more/more_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/push_settings/push_settings_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/splash/splash_screen.dart';
-
-const _localePrefKey = 'app_locale_override_v1';
 
 class LinkApp extends StatefulWidget {
   const LinkApp({super.key});
@@ -31,17 +32,21 @@ class LinkApp extends StatefulWidget {
 
 class LinkAppState extends State<LinkApp> {
   Locale? _localeOverride;
+  double _textScale = 1.0;
   bool _ready = false;
+
+  double get currentTextScale => _textScale;
 
   @override
   void initState() {
     super.initState();
-    _loadLocale();
+    _loadPrefs();
   }
 
-  Future<void> _loadLocale() async {
+  Future<void> _loadPrefs() async {
     final p = await SharedPreferences.getInstance();
-    final code = p.getString(_localePrefKey);
+    final code = p.getString(StorageKeys.localeOverride);
+    final scale = p.getDouble(StorageKeys.textScaleFactor);
     if (!mounted) return;
     setState(() {
       if (code == null || code.isEmpty) {
@@ -49,6 +54,8 @@ class LinkAppState extends State<LinkApp> {
       } else {
         _localeOverride = Locale(code);
       }
+      final s = (scale == null || scale <= 0) ? 1.0 : scale;
+      _textScale = s.clamp(0.85, 1.35);
       _ready = true;
     });
   }
@@ -57,12 +64,21 @@ class LinkAppState extends State<LinkApp> {
   Future<void> setLocaleOverride(Locale? locale) async {
     final p = await SharedPreferences.getInstance();
     if (locale == null) {
-      await p.remove(_localePrefKey);
+      await p.remove(StorageKeys.localeOverride);
     } else {
-      await p.setString(_localePrefKey, locale.languageCode);
+      await p.setString(StorageKeys.localeOverride, locale.languageCode);
     }
     if (mounted) {
       setState(() => _localeOverride = locale);
+    }
+  }
+
+  Future<void> setTextScaleFactor(double value) async {
+    final clamped = value.clamp(0.85, 1.35);
+    final p = await SharedPreferences.getInstance();
+    await p.setDouble(StorageKeys.textScaleFactor, clamped);
+    if (mounted) {
+      setState(() => _textScale = clamped);
     }
   }
 
@@ -77,6 +93,14 @@ class LinkAppState extends State<LinkApp> {
       locale: _localeOverride,
       title: 'Link App',
       theme: AppTheme.light,
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.linear(_textScale)),
+          child: child,
+        );
+      },
       initialRoute: SplashScreen.routeName,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -100,8 +124,10 @@ class LinkAppState extends State<LinkApp> {
         PushSettingsScreen.routeName: (_) => const PushSettingsScreen(),
         HomeLayoutScreen.routeName: (_) => const HomeLayoutScreen(),
         MedicineGuideScreen.routeName: (_) => const MedicineGuideScreen(),
+        MedicineScreen.routeName: (_) => const MedicineScreen(),
         SearchScreen.routeName: (_) => const SearchScreen(),
         MoreScreen.routeName: (_) => const MoreScreen(),
+        SettingsScreen.routeName: (_) => const SettingsScreen(),
       },
     );
   }

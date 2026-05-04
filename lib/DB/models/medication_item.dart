@@ -1,1 +1,3 @@
-﻿// TODO: structure placeholder
+class MedicationItem {
+  const MedicationItem();
+}

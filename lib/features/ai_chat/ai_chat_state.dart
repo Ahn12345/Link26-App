@@ -1,1 +1,3 @@
-﻿// TODO: structure placeholder
+class AiChatState {
+  const AiChatState();
+}

@@ -1,1 +1,1 @@
-﻿// TODO: structure placeholder
+enum SafetySignal { green, yellow, red }

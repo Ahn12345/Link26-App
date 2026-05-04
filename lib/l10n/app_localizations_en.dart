@@ -132,4 +132,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiAnalyzeImageButton => 'Analyze image text';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsSubtitle => 'Text size and accessibility';
+
+  @override
+  String get settingsTextSize => 'Text size';
+
+  @override
+  String get medicineCatalogTitle => 'Medicine list';
+
+  @override
+  String get medicineCatalogSubtitle =>
+      'Known items (demo). Replace with your backend or local DB.';
+
+  @override
+  String get medicineCatalogTooltip => 'Open medicine list';
+
+  @override
+  String get medicineCatalogEmpty => 'No medicines to show.';
 }

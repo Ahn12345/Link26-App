@@ -1,1 +1,3 @@
-﻿// TODO: structure placeholder
+// DB/local/app_database.dart
+class AppDatabase {
+}
