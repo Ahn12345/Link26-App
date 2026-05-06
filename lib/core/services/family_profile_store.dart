@@ -1,11 +1,11 @@
-import 'package:shared_preferences/shared_preferences.dart';
+ï»¿import 'package:shared_preferences/shared_preferences.dart';
 
-/// ?·í”Œë¦?Š¤ ?¤í???ë¡œì»¬ ?„ë¡œ???œë²„ ?™ê¸°?”ëŠ” ì¶”í›„).
+/// Local profile storage. Can be replaced with backend sync later.
 class FamilyProfile {
   const FamilyProfile({
     required this.id,
     required this.displayName,
-    this.avatarEmoji = '?‘¤',
+    this.avatarEmoji = 'U',
   });
 
   final String id;
@@ -22,7 +22,7 @@ class FamilyProfileStore {
     final raw = p.getStringList(_key);
     if (raw == null || raw.isEmpty) {
       return const [
-        FamilyProfile(id: 'p1', displayName: 'ê¸°ë³¸', avatarEmoji: '?™‚'),
+        FamilyProfile(id: 'p1', displayName: 'Default', avatarEmoji: '*'),
       ];
     }
     return raw.map((line) {
@@ -30,7 +30,7 @@ class FamilyProfileStore {
       return FamilyProfile(
         id: parts[0],
         displayName: parts.length > 1 ? parts[1] : parts[0],
-        avatarEmoji: parts.length > 2 ? parts[2] : '?‘¤',
+        avatarEmoji: parts.length > 2 ? parts[2] : 'U',
       );
     }).toList();
   }

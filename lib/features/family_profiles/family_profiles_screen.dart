@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/services/family_profile_store.dart';
@@ -43,7 +43,7 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
     final next = FamilyProfile(
       id: 'p${DateTime.now().millisecondsSinceEpoch}',
       displayName: 'Member ${_profiles.length + 1}',
-      avatarEmoji: '??,
+      avatarEmoji: '*',
     );
     await _store.saveProfiles([..._profiles, next]);
     if (mounted) await _load();
@@ -72,32 +72,28 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            '${l10n.activeProfile}: ${active ?? '??}',
+            '${l10n.activeProfile}: ${active ?? '-'}',
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          ..._profiles.map(
-            (p) {
-              final selected = active == p.id;
-              return ListTile(
-                leading: Text(
-                  p.avatarEmoji,
-                  style: const TextStyle(fontSize: 28),
-                ),
-                title: Text(p.displayName),
-                trailing: Icon(
-                  selected ? Icons.check_circle : Icons.circle_outlined,
-                  color: selected
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                ),
-                onTap: () async {
-                  await _store.setActiveProfileId(p.id);
-                  if (mounted) setState(() => _activeId = p.id);
-                },
-              );
-            },
-          ),
+          ..._profiles.map((p) {
+            final selected = active == p.id;
+            return ListTile(
+              leading: Text(
+                p.avatarEmoji,
+                style: const TextStyle(fontSize: 28),
+              ),
+              title: Text(p.displayName),
+              trailing: Icon(
+                selected ? Icons.check_circle : Icons.circle_outlined,
+                color: selected ? Theme.of(context).colorScheme.primary : null,
+              ),
+              onTap: () async {
+                await _store.setActiveProfileId(p.id);
+                if (mounted) setState(() => _activeId = p.id);
+              },
+            );
+          }),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _addProfile,
