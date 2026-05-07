@@ -1,8 +1,0 @@
-# 문자열 원본(ARB). pubspec에 generate: true를 넣으면 pub get 시 생성기가 돌아감.
-# OneDrive 등에서 실패하면 generate는 끄고, 가능한 환경에서만 `flutter gen-l10n` 실행.
-arb-dir: l10n
-template-arb-file: app_en.arb
-output-localization-file: app_localizations.dart
-output-class: AppLocalizations
-synthetic-package: false
-output-dir: lib/l10n

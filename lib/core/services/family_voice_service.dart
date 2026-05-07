@@ -1,4 +1,4 @@
-/// ê°€ì¡??Œì„± ?´ë¦½ ë©”í?(?¤ì œ ?¹ìŒ/?¬ìƒ?€ ?¤ì´?°ë¸ŒÂ·ê¶Œí•œÂ·?€?¥ì†Œ ?°ë™ ??êµ¬í˜„).
+/// Family voice clip metadata service stub.
 class FamilyVoiceClip {
   const FamilyVoiceClip({
     required this.id,
@@ -18,6 +18,6 @@ class FamilyVoiceService {
     required String label,
     required String filePath,
   }) async {
-    // TODO: ?¹ìŒ/?Œì¼ ?¼ì»¤ ?????€?¥ì†Œ ë³µì‚¬, ë©”í? DB ?€??
+    // TODO: Save selected audio file and metadata locally.
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/services/home_layout_store.dart';
@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
               else ...[
                 if (_visible.contains('logo'))
                   Image.asset(
-                    'assets/images/logo1.png',
+                    'assets/images/logo.png',
                     height: 120,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {

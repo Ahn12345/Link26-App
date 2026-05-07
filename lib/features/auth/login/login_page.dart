@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// 로그???�면 UI
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 

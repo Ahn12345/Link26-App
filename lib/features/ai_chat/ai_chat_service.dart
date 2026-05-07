@@ -1,6 +1,6 @@
 import 'ai_chat_models.dart';
 
-/// AI ì±„íŒ…/?´ë?ì§€ ?¸ì‹ ë°±ì—”???°ë™ ???¨ê³„??ê·œì¹™ ê¸°ë°˜ ?¤í….
+/// Rule-based demo service until backend AI is connected.
 class AiChatService {
   Future<MedicineInsight> analyzePrescriptionImage({
     required String recognizedText,
@@ -30,7 +30,6 @@ class AiChatService {
     );
   }
 
-  /// ?„í”ˆ ?í™© ?˜ì‹¬ ??"ê¶Œê³ "ë³´ë‹¤ ?°ì„ ?´ì„œ ëª…í™•??1ì°??µì„ ì¤€??
   ChatTriageResult triageMessage(String message) {
     final lower = message.toLowerCase();
     final urgentKeywords = [
@@ -39,25 +38,19 @@ class AiChatService {
       'faint',
       'seizure',
       'severe bleeding',
-      '?¸í¡ê³¤ë?',
-      'ê°€???µì¦',
-      '?¤ì‹ ',
-      'ê²½ë ¨',
-      '?¼ê? ë©ˆì¶”ì§€',
     ];
     final urgent = urgentKeywords.any(lower.contains);
     if (urgent) {
       return const ChatTriageResult(
         urgent: true,
-        primaryAnswer:
-            '?‘ê¸‰ ?˜ì‹¬ ?íƒœ?…ë‹ˆ?? ì§€ê¸?ì¦‰ì‹œ 119 ?ëŠ” ?‘ê¸‰?¤ë¡œ ?´ë™?˜ì„¸??',
-        followUpPrompt: 'ë³µìš©?????ì–‘?œì? ì¦ìƒ ?œì‘ ?œê°„???Œë ¤ì£¼ì„¸??',
+        primaryAnswer: 'Emergency symptoms detected. Call 119 or go to ER now.',
+        followUpPrompt: 'Share medicines taken and symptom start time.',
       );
     }
     return const ChatTriageResult(
       urgent: false,
-      primaryAnswer: '?‘ê¸‰ ? í˜¸????•„ ë³´ì…?ˆë‹¤. ì¦ìƒ??ë§ëŠ” ë³µìš© ?œê°„???ˆë‚´? ê²Œ??',
-      followUpPrompt: '?„ì¬ ì¦ìƒ, ë³µìš© ì¤‘ì¸ ?? ë§ˆì?ë§?ë³µìš© ?œê°„???…ë ¥?´ì£¼?¸ìš”.',
+      primaryAnswer: 'No immediate red-flag symptom detected in this message.',
+      followUpPrompt: 'Please share current symptoms and latest medication time.',
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// ?Œì›ê°€???”ë©´ UI
 class SignupPage extends StatelessWidget {
   const SignupPage({super.key});
 

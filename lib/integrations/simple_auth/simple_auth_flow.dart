@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import '../../core/domain/result.dart';
 import 'simple_auth_api_client.dart';
 import 'simple_auth_request_models.dart';
 import 'simple_auth_response_models.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../home/home_screen.dart';
 
@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/logo2.png',
+              'assets/images/logo.png',
               width: 160,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {

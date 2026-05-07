@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 메인 ?�면???�시??블록 ID ?�??
+/// Persists visible block IDs on home screen.
 class HomeLayoutStore {
   HomeLayoutStore._();
 

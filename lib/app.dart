@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/constants/storage_keys.dart';
@@ -95,13 +94,14 @@ class LinkAppState extends State<LinkApp> {
       theme: AppTheme.light,
       builder: (context, child) {
         if (child == null) return const SizedBox.shrink();
-        final mq = MediaQuery.of(context);
+        final mq = MediaQuery.maybeOf(context) ??
+            MediaQueryData.fromView(View.of(context));
         return MediaQuery(
           data: mq.copyWith(textScaler: TextScaler.linear(_textScale)),
           child: child,
         );
       },
-      initialRoute: SplashScreen.routeName,
+      home: const SplashScreen(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, supported) {
@@ -114,7 +114,6 @@ class LinkAppState extends State<LinkApp> {
         return const Locale('en');
       },
       routes: {
-        SplashScreen.routeName: (_) => const SplashScreen(),
         HomeScreen.routeName: (_) => const HomeScreen(),
         LoginPage.routeName: (_) => const LoginPage(),
         SignupPage.routeName: (_) => const SignupPage(),
@@ -129,6 +128,8 @@ class LinkAppState extends State<LinkApp> {
         MoreScreen.routeName: (_) => const MoreScreen(),
         SettingsScreen.routeName: (_) => const SettingsScreen(),
       },
+      onUnknownRoute: (_) =>
+          MaterialPageRoute(builder: (_) => const SplashScreen()),
     );
   }
 }

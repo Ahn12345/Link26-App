@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// ???„ì—­ ?Œë§ˆ. ?‰Â·í??´í¬ë¥??œê³³?ì„œ ì¡°ì •?©ë‹ˆ??
+/// Global theme configuration.
 abstract final class AppTheme {
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// ì£¼ìš” ?¡ì…˜??ë²„íŠ¼. ?”ë©´?¤ì—???¬ì‚¬?©í•©?ˆë‹¤.
+/// Shared primary action button.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     super.key,

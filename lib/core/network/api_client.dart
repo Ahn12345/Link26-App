@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
-import '../domain/failure.dart';
 import '../domain/result.dart';
 import '../utils/logger.dart';
 import 'network_error_mapper.dart';

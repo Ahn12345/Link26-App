@@ -13,6 +13,8 @@ class FamilyProfilesScreen extends StatefulWidget {
 }
 
 class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
+  static const int _maxProfiles = 5;
+
   final _store = FamilyProfileStore();
   List<FamilyProfile> _profiles = const [];
   String? _activeId;
@@ -25,8 +27,15 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
   }
 
   Future<void> _load() async {
-    final list = await _store.loadProfiles();
+    var list = await _store.loadProfiles();
+    if (list.length > _maxProfiles) {
+      list = list.take(_maxProfiles).toList();
+      await _store.saveProfiles(list);
+    }
     var active = await _store.activeProfileId();
+    if (active != null && list.every((p) => p.id != active)) {
+      active = null;
+    }
     if (active == null && list.isNotEmpty) {
       active = list.first.id;
       await _store.setActiveProfileId(active);
@@ -40,6 +49,15 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
   }
 
   Future<void> _addProfile() async {
+    if (_profiles.length >= _maxProfiles) {
+      final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+      final message = isKorean
+          ? '가족 계정은 최대 5명까지 추가할 수 있습니다.'
+          : 'You can add up to 5 family profiles.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
+
     final next = FamilyProfile(
       id: 'p${DateTime.now().millisecondsSinceEpoch}',
       displayName: 'Member ${_profiles.length + 1}',
@@ -72,6 +90,11 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
           ),
           const SizedBox(height: 16),
           Text(
+            '$_maxProfiles max / ${_profiles.length} added',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
             '${l10n.activeProfile}: ${active ?? '-'}',
             style: Theme.of(context).textTheme.titleSmall,
           ),
@@ -96,7 +119,7 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
           }),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: _addProfile,
+            onPressed: _profiles.length >= _maxProfiles ? null : _addProfile,
             icon: const Icon(Icons.person_add),
             label: Text(l10n.addProfile),
           ),
