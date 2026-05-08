@@ -12,7 +12,7 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final app = LinkApp.maybeOf(context);
+    final app = Link26App.maybeOf(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.moreTitle)),
       body: ListView(

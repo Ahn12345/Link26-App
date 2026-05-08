@@ -19,17 +19,17 @@ import 'features/push_settings/push_settings_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/splash/splash_screen.dart';
 
-class LinkApp extends StatefulWidget {
-  const LinkApp({super.key});
+class Link26App extends StatefulWidget {
+  const Link26App({super.key});
 
-  static LinkAppState? maybeOf(BuildContext context) =>
-      context.findAncestorStateOfType<LinkAppState>();
+  static Link26AppState? maybeOf(BuildContext context) =>
+      context.findAncestorStateOfType<Link26AppState>();
 
   @override
-  State<LinkApp> createState() => LinkAppState();
+  State<Link26App> createState() => Link26AppState();
 }
 
-class LinkAppState extends State<LinkApp> {
+class Link26AppState extends State<Link26App> {
   Locale? _localeOverride;
   double _textScale = 1.0;
   bool _ready = false;

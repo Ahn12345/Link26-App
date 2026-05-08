@@ -22,13 +22,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final app = LinkApp.maybeOf(context);
+      final app = Link26App.maybeOf(context);
       if (app != null) setState(() => _textScale = app.currentTextScale);
     });
   }
 
   Future<void> _persistScale(double v) async {
-    await LinkApp.maybeOf(context)?.setTextScaleFactor(v);
+    await Link26App.maybeOf(context)?.setTextScaleFactor(v);
     if (mounted) setState(() => _textScale = v);
   }
 
