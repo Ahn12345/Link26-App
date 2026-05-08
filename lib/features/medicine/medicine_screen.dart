@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:link26_app/domain/domain.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import '../../domain/domain.dart';
 import 'data/local_medicine_catalog_repository.dart';
 
 class MedicineScreen extends StatefulWidget {
