@@ -1,4 +1,6 @@
-/// 다국어. ARB 원본은 프로젝트 루트 [l10n/].
+﻿/// ?ㅺ뎅?? ARB ?먮낯? ?꾨줈?앺듃 猷⑦듃 [l10n/].
+
+library;
 
 export 'app_localizations.dart';
 export 'app_localizations_en.dart';

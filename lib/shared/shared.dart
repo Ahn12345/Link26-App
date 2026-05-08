@@ -1,4 +1,6 @@
-/// 공용 enum·모델·확장. `import 'package:link26_app/shared/shared.dart';`
+﻿/// 怨듭슜 enum쨌紐⑤뜽쨌?뺤옣. `import 'package:link26_app/shared/shared.dart';`
+
+library;
 
 export 'enums/auth_status.dart';
 export 'enums/safety_signal.dart';

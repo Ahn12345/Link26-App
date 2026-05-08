@@ -1,4 +1,6 @@
-/// 기능 모듈(화면·라우트). 세부 구현은 각 하위 폴더.
+﻿/// 湲곕뒫 紐⑤뱢(?붾㈃쨌?쇱슦??. ?몃? 援ы쁽? 媛??섏쐞 ?대뜑.
+
+library;
 
 export 'ai_chat/ai_chat_models.dart';
 export 'ai_chat/ai_chat_screen.dart';

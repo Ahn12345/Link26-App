@@ -1,4 +1,6 @@
-/// 외부 API 클라이언트·매퍼. 기능 레이어에서 사용.
+﻿/// ?몃? API ?대씪?댁뼵?맞룸ℓ?? 湲곕뒫 ?덉씠?댁뿉???ъ슜.
+
+library;
 
 export 'dur/dur_api_client.dart';
 export 'dur/dur_endpoints.dart';
