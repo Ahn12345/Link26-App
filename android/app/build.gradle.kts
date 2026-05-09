@@ -38,6 +38,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode
         versionName = flutterVersionName
+        // Android Studio 정적 분석이 매니페스트의 ${applicationName} 을 해석하도록 명시
+        manifestPlaceholders["applicationName"] = "android.app.Application"
     }
 
     buildTypes {
