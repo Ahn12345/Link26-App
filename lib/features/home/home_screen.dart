@@ -26,6 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Set<String> _visible = {...HomeLayoutStore.allBlockIds};
   bool _layoutLoading = true;
 
+  static const _homeHeroAsset = 'assets/images/Home.png';
+  static const _aiChatAsset = 'assets/images/aichat.png';
+  static const _familyVoiceAsset = 'assets/images/emergencycall.png';
+  static const _familyProfilesAsset = 'assets/images/familyadd.png';
+  static const _settingsAsset = 'assets/images/setting.png';
+  static const _medicineAsset = 'assets/images/pillsearch.png';
+  static const _searchAsset = 'assets/images/pillsearch.png';
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +101,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 if (_visible.contains('quickActions')) ...[
+                  const SizedBox(height: 20),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      _homeHeroAsset,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('home hero: $error');
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   _navTile(
                     context,
@@ -100,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.aiChatSubtitle,
                     Icons.smart_toy,
                     AiChatScreen.routeName,
+                    leadingAsset: _aiChatAsset,
                   ),
                   _navTile(
                     context,
@@ -107,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.familyVoiceSubtitle,
                     Icons.call,
                     FamilyVoiceScreen.routeName,
+                    leadingAsset: _familyVoiceAsset,
                   ),
                   _navTile(
                     context,
@@ -114,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.familyProfilesSubtitle,
                     Icons.groups,
                     FamilyProfilesScreen.routeName,
+                    leadingAsset: _familyProfilesAsset,
                   ),
                   _navTile(
                     context,
@@ -121,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.settingsSubtitle,
                     Icons.settings,
                     SettingsScreen.routeName,
+                    leadingAsset: _settingsAsset,
                   ),
                   _navTile(
                     context,
@@ -142,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.medicineGuideSubtitle,
                     Icons.medication,
                     MedicineGuideScreen.routeName,
+                    leadingAsset: _medicineAsset,
                   ),
                   _navTile(
                     context,
@@ -149,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.searchStub,
                     Icons.search,
                     SearchScreen.routeName,
+                    leadingAsset: _searchAsset,
                   ),
                   _navTile(
                     context,
@@ -178,12 +204,28 @@ class _HomeScreenState extends State<HomeScreen> {
     String title,
     String subtitle,
     IconData icon,
-    String route,
-  ) {
+    String route, {
+    String? leadingAsset,
+  }) {
+    final leading = leadingAsset == null
+        ? Icon(icon)
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              leadingAsset,
+              width: 56,
+              height: 56,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('tile asset $leadingAsset: $error');
+                return Icon(icon);
+              },
+            ),
+          );
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icon),
+        leading: leading,
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
