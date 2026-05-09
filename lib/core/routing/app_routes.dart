@@ -14,4 +14,7 @@ abstract final class AppRoutes {
   static const search = '/search';
   static const more = '/more';
   static const settings = '/settings';
+  static const pillSearch = '/pill-search';
+  static const alerts = '/alerts';
+  static const emergencyContact = '/emergency-contact';
 }

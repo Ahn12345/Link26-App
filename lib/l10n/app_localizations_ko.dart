@@ -58,11 +58,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get continueCta => '계속';
 
   @override
+  String get loginEmailLabel => '이메일';
+
+  @override
+  String get loginPasswordLabel => '비밀번호';
+
+  @override
+  String get loginFieldsRequired => '이메일과 비밀번호를 입력하세요.';
+
+  @override
   String get signOut => '로그아웃';
 
   @override
-  String get homeLandingHint =>
-      '하단 탭에서 홈·AI 채팅·더보기(기능 메뉴)를 이용할 수 있습니다.';
+  String get homeLandingHint => '하단 탭: 홈 · AI 채팅 · 설정';
 
   @override
   String get moreMenuSectionTitle => '기능';
@@ -166,4 +174,104 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get medicineCatalogEmpty => '표시할 약이 없습니다.';
+
+  @override
+  String get homeTodayAlertsTitle => '오늘의 알림';
+
+  @override
+  String get homeTodayAlertsViewAll => '전체 보기';
+
+  @override
+  String get homeMyMedicinesTitle => '내 약 목록';
+
+  @override
+  String get homeAddMedicine => '추가';
+
+  @override
+  String get homeNoMedicinesYet =>
+      '등록된 약이 없습니다. 추가로 검색해 등록하세요.';
+
+  @override
+  String get alertsScreenTitle => '오늘의 알림';
+
+  @override
+  String get alertItemWater => '물 마시기';
+
+  @override
+  String get alertItemVitamin => '영양제';
+
+  @override
+  String get alertItemWalk => '가벼운 산책';
+
+  @override
+  String get pillSearchTitle => '약 검색';
+
+  @override
+  String get pillSearchLabel => '약 이름';
+
+  @override
+  String get pillSearchHint => '목록에 넣을 약 이름을 입력';
+
+  @override
+  String get pillSearchAdded => '목록에 추가했습니다.';
+
+  @override
+  String get settingsEmergencyContact => '긴급 연락처';
+
+  @override
+  String get settingsEmergencyContactSubtitle => '전화형 알림·연락';
+
+  @override
+  String get settingsFamilyAddEntry => '가족 구성원 추가';
+
+  @override
+  String get emergencyContactStub =>
+      '긴급 연락처와 통화 바로가기를 등록합니다. (데모 — 이후 tel: 및 권한 연동)';
+
+  @override
+  String get emergencyCallPlaceholder => '다이얼 연동 예정입니다.';
+
+  @override
+  String get emergencyCallAction => '긴급 연락처에 전화';
+
+  @override
+  String get monthlyHiraTitle => '매월 간편인증 (25일)';
+
+  @override
+  String get monthlyHiraBody =>
+      '심사평가원·공단 데이터 갱신을 위해 매달 1회 간편인증이 필요합니다. 1/2 단계입니다.';
+
+  @override
+  String get monthlyHiraPrimaryAction => '간편인증';
+
+  @override
+  String get monthlyHiraSecondTitle => '인증 확인';
+
+  @override
+  String get monthlyHiraSecondHint =>
+      '2단계: 기관 간편인증 흐름을 완료합니다(데모).';
+
+  @override
+  String get monthlyHiraComplete => '완료';
+
+  @override
+  String get later => '나중에';
+
+  @override
+  String get loginFailed => '이메일 또는 비밀번호가 일치하지 않습니다.';
+
+  @override
+  String get signupEmailTaken => '이미 가입된 이메일입니다.';
+
+  @override
+  String get signupNameLabel => '표시 이름 (선택)';
+
+  @override
+  String get socialLoginComingSoon => '소셜 로그인은 여기에 연결됩니다.';
+
+  @override
+  String get socialLoginGoogle => 'Google로 계속';
+
+  @override
+  String get socialLoginApple => 'Apple로 계속';
 }

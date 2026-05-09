@@ -60,6 +60,9 @@ abstract class AppLocalizations {
   String get signup;
   String get authWelcomeSubtitle;
   String get continueCta;
+  String get loginEmailLabel;
+  String get loginPasswordLabel;
+  String get loginFieldsRequired;
   String get signOut;
   String get homeLandingHint;
   String get moreMenuSectionTitle;
@@ -94,6 +97,38 @@ abstract class AppLocalizations {
   String get medicineCatalogSubtitle;
   String get medicineCatalogTooltip;
   String get medicineCatalogEmpty;
+  String get homeTodayAlertsTitle;
+  String get homeTodayAlertsViewAll;
+  String get homeMyMedicinesTitle;
+  String get homeAddMedicine;
+  String get homeNoMedicinesYet;
+  String get alertsScreenTitle;
+  String get alertItemWater;
+  String get alertItemVitamin;
+  String get alertItemWalk;
+  String get pillSearchTitle;
+  String get pillSearchLabel;
+  String get pillSearchHint;
+  String get pillSearchAdded;
+  String get settingsEmergencyContact;
+  String get settingsEmergencyContactSubtitle;
+  String get settingsFamilyAddEntry;
+  String get emergencyContactStub;
+  String get emergencyCallPlaceholder;
+  String get emergencyCallAction;
+  String get monthlyHiraTitle;
+  String get monthlyHiraBody;
+  String get monthlyHiraPrimaryAction;
+  String get monthlyHiraSecondTitle;
+  String get monthlyHiraSecondHint;
+  String get monthlyHiraComplete;
+  String get later;
+  String get loginFailed;
+  String get signupEmailTaken;
+  String get signupNameLabel;
+  String get socialLoginComingSoon;
+  String get socialLoginGoogle;
+  String get socialLoginApple;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

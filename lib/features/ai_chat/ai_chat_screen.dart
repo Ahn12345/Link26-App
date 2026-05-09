@@ -14,6 +14,8 @@ class AiChatScreen extends StatefulWidget {
 }
 
 class _AiChatScreenState extends State<AiChatScreen> {
+  static const _heroAsset = 'assets/images/aichat.png';
+
   final _service = AiChatService();
   final _messageCtrl = TextEditingController();
   final _ocrCtrl = TextEditingController();
@@ -46,10 +48,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
     setState(() => _insight = result);
   }
 
-  void _runTriage() {
+  Future<void> _runTriage() async {
     final message = _messageCtrl.text.trim();
     if (message.isEmpty) return;
-    setState(() => _triage = _service.triageMessage(message));
+    final r = await _service.triageMessage(message);
+    if (!mounted) return;
+    setState(() => _triage = r);
   }
 
   @override
@@ -60,6 +64,18 @@ class _AiChatScreenState extends State<AiChatScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              _heroAsset,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint('ai chat hero: $error');
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(l10n.aiChatSubtitle),
           const SizedBox(height: 12),
           TextField(
@@ -86,7 +102,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   color: _signalColor(_insight!.signal, context),
                 ),
                 title: Text(_insight!.recommendation),
-                subtitle: Text(_insight!.reason),
+                subtitle: Text(
+                  _insight!.secondaryReview != null
+                      ? '${_insight!.reason}\n\n2차: ${_insight!.secondaryReview}'
+                      : _insight!.reason,
+                ),
               ),
             ),
           ],
@@ -111,7 +131,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
               color: _triage!.urgent ? Colors.red.shade50 : Colors.green.shade50,
               child: ListTile(
                 title: Text(_triage!.primaryAnswer),
-                subtitle: Text(_triage!.followUpPrompt),
+                subtitle: Text(
+                  _triage!.secondaryReview != null
+                      ? '${_triage!.followUpPrompt}\n\n2차: ${_triage!.secondaryReview}'
+                      : _triage!.followUpPrompt,
+                ),
                 leading: Icon(
                   _triage!.urgent ? Icons.warning_amber : Icons.check_circle,
                 ),

@@ -8,12 +8,15 @@ class MedicineInsight {
     required this.signal,
     required this.recommendation,
     required this.reason,
+    this.secondaryReview,
   });
 
   final String productName;
   final SafetySignal signal;
   final String recommendation;
   final String reason;
+  /// Gemini 등 2차 검증 문구.
+  final String? secondaryReview;
 }
 
 class ChatTriageResult {
@@ -21,9 +24,11 @@ class ChatTriageResult {
     required this.urgent,
     required this.primaryAnswer,
     required this.followUpPrompt,
+    this.secondaryReview,
   });
 
   final bool urgent;
   final String primaryAnswer;
   final String followUpPrompt;
+  final String? secondaryReview;
 }

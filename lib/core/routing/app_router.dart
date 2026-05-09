@@ -12,6 +12,9 @@ import '../../features/medicine_guide/medicine_guide_screen.dart';
 import '../../features/more/more_screen.dart';
 import '../../features/push_settings/push_settings_screen.dart';
 import '../../features/search/search_screen.dart';
+import '../../features/home/alerts_list_screen.dart';
+import '../../features/search/pill_search_screen.dart';
+import '../../features/settings/emergency_contact_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import 'app_routes.dart';
@@ -33,5 +36,8 @@ Map<String, WidgetBuilder> buildAppRoutes() {
     AppRoutes.search: (_) => const SearchScreen(),
     AppRoutes.more: (_) => const MoreScreen(),
     AppRoutes.settings: (_) => const SettingsScreen(),
+    AppRoutes.pillSearch: (_) => const PillSearchScreen(),
+    AppRoutes.alerts: (_) => const AlertsListScreen(),
+    AppRoutes.emergencyContact: (_) => const EmergencyContactScreen(),
   };
 }

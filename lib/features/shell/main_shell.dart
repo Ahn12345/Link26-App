@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import '../../core/services/monthly_hira_auth_gate.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_landing_screen.dart';
-import '../more/more_screen.dart';
+import '../settings/settings_tab_screen.dart';
 
-/// 하단 탭: 홈(랜딩) · AI 채팅 · 더보기
+/// 하단 탭: 홈 · AI 채팅 · 설정
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -15,8 +16,30 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) MonthlyHiraAuthGate.maybeShow(context);
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      MonthlyHiraAuthGate.maybeShow(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +51,7 @@ class _MainShellState extends State<MainShell> {
         children: const [
           HomeLandingScreen(),
           AiChatScreen(),
-          MoreScreen(),
+          SettingsTabScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -46,9 +69,9 @@ class _MainShellState extends State<MainShell> {
             label: l10n.aiChatTitle,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.more_horiz),
-            selectedIcon: const Icon(Icons.more_horiz),
-            label: l10n.moreTitle,
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: l10n.settingsTitle,
           ),
         ],
       ),

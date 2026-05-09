@@ -61,11 +61,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueCta => 'Continue';
 
   @override
+  String get loginEmailLabel => 'Email';
+
+  @override
+  String get loginPasswordLabel => 'Password';
+
+  @override
+  String get loginFieldsRequired =>
+      'Enter email and password to continue.';
+
+  @override
   String get signOut => 'Log out';
 
   @override
   String get homeLandingHint =>
-      'Use the bottom tabs: Home, AI Chat, and More for other tools.';
+      'Bottom tabs: Home, AI Chat, and Settings.';
 
   @override
   String get moreMenuSectionTitle => 'Features';
@@ -171,4 +181,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get medicineCatalogEmpty => 'No medicines to show.';
+
+  @override
+  String get homeTodayAlertsTitle => 'Today\'s reminders';
+
+  @override
+  String get homeTodayAlertsViewAll => 'View all reminders';
+
+  @override
+  String get homeMyMedicinesTitle => 'My medicines';
+
+  @override
+  String get homeAddMedicine => 'Add';
+
+  @override
+  String get homeNoMedicinesYet =>
+      'No medicines yet. Tap Add to search and register.';
+
+  @override
+  String get alertsScreenTitle => 'Today\'s reminders';
+
+  @override
+  String get alertItemWater => 'Drink water';
+
+  @override
+  String get alertItemVitamin => 'Vitamins';
+
+  @override
+  String get alertItemWalk => 'Light walk';
+
+  @override
+  String get pillSearchTitle => 'Medicine search';
+
+  @override
+  String get pillSearchLabel => 'Medicine name';
+
+  @override
+  String get pillSearchHint => 'Enter name to add to your list';
+
+  @override
+  String get pillSearchAdded => 'Added to your list.';
+
+  @override
+  String get settingsEmergencyContact => 'Emergency contact';
+
+  @override
+  String get settingsEmergencyContactSubtitle =>
+      'Call-style alerts and contacts';
+
+  @override
+  String get settingsFamilyAddEntry => 'Add family member';
+
+  @override
+  String get emergencyContactStub =>
+      'Register an emergency contact and call shortcuts. (Demo — wire tel: and permissions later.)';
+
+  @override
+  String get emergencyCallPlaceholder => 'Dialer integration coming soon.';
+
+  @override
+  String get emergencyCallAction => 'Call emergency contact';
+
+  @override
+  String get monthlyHiraTitle => 'Monthly easy authentication (25th)';
+
+  @override
+  String get monthlyHiraBody =>
+      'For HIRA/NHI data refresh, complete easy auth once per month. Step 1 of 2.';
+
+  @override
+  String get monthlyHiraPrimaryAction => 'Easy auth';
+
+  @override
+  String get monthlyHiraSecondTitle => 'Confirm authentication';
+
+  @override
+  String get monthlyHiraSecondHint =>
+      'Step 2: confirm with your institution\'s easy-auth flow (demo).';
+
+  @override
+  String get monthlyHiraComplete => 'Done';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get loginFailed => 'Email or password does not match.';
+
+  @override
+  String get signupEmailTaken => 'This email is already registered.';
+
+  @override
+  String get signupNameLabel => 'Display name (optional)';
+
+  @override
+  String get socialLoginComingSoon =>
+      'Social sign-in will connect here.';
+
+  @override
+  String get socialLoginGoogle => 'Continue with Google';
+
+  @override
+  String get socialLoginApple => 'Continue with Apple';
 }

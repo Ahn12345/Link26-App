@@ -17,7 +17,10 @@ import 'features/medicine_guide/medicine_guide_screen.dart';
 import 'features/more/more_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/push_settings/push_settings_screen.dart';
+import 'features/home/alerts_list_screen.dart';
+import 'features/search/pill_search_screen.dart';
 import 'features/search/search_screen.dart';
+import 'features/settings/emergency_contact_screen.dart';
 import 'features/splash/splash_screen.dart';
 
 class Link26App extends StatefulWidget {
@@ -129,6 +132,9 @@ class Link26AppState extends State<Link26App> {
         SearchScreen.routeName: (_) => const SearchScreen(),
         MoreScreen.routeName: (_) => const MoreScreen(),
         SettingsScreen.routeName: (_) => const SettingsScreen(),
+        PillSearchScreen.routeName: (_) => const PillSearchScreen(),
+        AlertsListScreen.routeName: (_) => const AlertsListScreen(),
+        EmergencyContactScreen.routeName: (_) => const EmergencyContactScreen(),
       },
       onUnknownRoute: (_) =>
           MaterialPageRoute(builder: (_) => const SplashScreen()),

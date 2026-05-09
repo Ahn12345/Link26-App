@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/services/home_layout_store.dart';
+import '../../core/services/local_medicine_list_store.dart';
+import '../search/pill_search_screen.dart';
+import 'alerts_list_screen.dart';
 
-/// 하단 탭 중 「홈」 — 랜딩(로고·히어로·짧은 안내)만 표시합니다.
+/// 홈 탭: 오늘의 알림, 내 약 목록 + 추가(pillsearch), 기존 히어로 블록.
 class HomeLandingScreen extends StatefulWidget {
   const HomeLandingScreen({super.key});
 
@@ -14,6 +17,7 @@ class HomeLandingScreen extends StatefulWidget {
 class _HomeLandingScreenState extends State<HomeLandingScreen> {
   Set<String> _visible = {...HomeLayoutStore.allBlockIds};
   bool _loading = true;
+  List<String> _medicines = [];
 
   static const _homeHeroAsset = 'assets/images/Home.png';
 
@@ -25,12 +29,19 @@ class _HomeLandingScreenState extends State<HomeLandingScreen> {
 
   Future<void> _load() async {
     final v = await HomeLayoutStore.loadVisible();
+    final m = await LocalMedicineListStore.load();
     if (mounted) {
       setState(() {
         _visible = v;
+        _medicines = m;
         _loading = false;
       });
     }
+  }
+
+  Future<void> _openPillSearch() async {
+    await Navigator.of(context).pushNamed(PillSearchScreen.routeName);
+    if (mounted) await _load();
   }
 
   @override
@@ -50,15 +61,69 @@ class _HomeLandingScreenState extends State<HomeLandingScreen> {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else ...[
+                Text(
+                  l10n.homeTodayAlertsTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  child: ListTile(
+                    title: Text(l10n.homeTodayAlertsViewAll),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context)
+                        .pushNamed(AlertsListScreen.routeName),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.homeMyMedicinesTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: _openPillSearch,
+                      icon: const Icon(Icons.add, size: 20),
+                      label: Text(l10n.homeAddMedicine),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (_medicines.isEmpty)
+                  Text(
+                    l10n.homeNoMedicinesYet,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  )
+                else
+                  ..._medicines.map(
+                    (name) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        title: Text(name),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () async {
+                            await LocalMedicineListStore.remove(name);
+                            await _load();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 24),
                 if (_visible.contains('logo'))
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 100,
+                    height: 80,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.image, size: 72),
+                        const Icon(Icons.image, size: 56),
                   ),
-                if (_visible.contains('logo')) const SizedBox(height: 20),
+                if (_visible.contains('logo')) const SizedBox(height: 16),
                 if (_visible.contains('title'))
                   Text(
                     l10n.appTitle,
@@ -74,14 +139,14 @@ class _HomeLandingScreenState extends State<HomeLandingScreen> {
                   ),
                 if (_visible.contains('familySummary'))
                   Padding(
-                    padding: const EdgeInsets.only(top: 16),
+                    padding: const EdgeInsets.only(top: 12),
                     child: Text(
                       l10n.familyProfilesSubtitle,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
@@ -93,7 +158,7 @@ class _HomeLandingScreenState extends State<HomeLandingScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 Text(
                   l10n.homeLandingHint,
                   textAlign: TextAlign.center,
