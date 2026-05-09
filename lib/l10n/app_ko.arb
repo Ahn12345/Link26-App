@@ -33,7 +33,7 @@
   "languageEnglish": "영어",
   "languageKorean": "한국어",
   "recordVoiceImport": "녹음 또는 가져오기",
-  "aiChatTitle": "AI 채팅·인식",
+  "aiChatTitle": "AI 채팅",
   "aiChatSubtitle": "처방전/영양제를 분석하고 신호등으로 복용 안전도를 표시합니다.",
   "aiSymptomInputLabel": "증상을 입력하세요",
   "aiPrimaryAnswerButton": "명확한 1차 답변 받기",

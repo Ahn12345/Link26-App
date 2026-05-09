@@ -138,7 +138,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordVoiceImport => 'Record / import';
 
   @override
-  String get aiChatTitle => 'AI Chat & Recognition';
+  String get aiChatTitle => 'AI Chat';
 
   @override
   String get aiChatSubtitle =>

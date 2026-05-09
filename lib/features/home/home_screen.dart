@@ -2,6 +2,7 @@
 import 'package:link26_app/models/link_models.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../more/more_screen.dart';
+import '../search/pill_search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,6 +10,14 @@ class HomeScreen extends StatefulWidget {
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+}
+
+/// [MainShell] 홈 탭 본문 — 목업과 동일한 대시보드 레이아웃.
+class HomeDashboardContent extends StatelessWidget {
+  const HomeDashboardContent({super.key});
+
+  @override
+  Widget build(BuildContext context) => const _HomeTab();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -61,7 +70,9 @@ class _HomeTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _SearchBox(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreenMock()))),
+          _SearchBox(
+            onTap: () => Navigator.of(context).pushNamed(PillSearchScreen.routeName),
+          ),
           const SizedBox(height: 20),
           _SummaryCard(),
           const SizedBox(height: 18),
@@ -73,7 +84,11 @@ class _HomeTab extends StatelessWidget {
           const SizedBox(height: 10),
           _CompletedCard(medicines: medicines.where((e) => e.completed).toList()),
           const SizedBox(height: 18),
-          _SectionTitle(title: '내 약 목록', action: '+ 추가', onTap: () => _showAddMedicineSheet(context)),
+          _SectionTitle(
+            title: '내 약 목록',
+            action: '+ 추가',
+            onTap: () => Navigator.of(context).pushNamed(PillSearchScreen.routeName),
+          ),
           const SizedBox(height: 10),
           ...medicines.take(2).map((m) => Padding(padding: const EdgeInsets.only(bottom: 8), child: _MedicineTile(medicine: m))),
           const _BannerCard(),
@@ -279,131 +294,6 @@ class SearchScreenMock extends StatelessWidget {
   const SearchScreenMock({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('약 검색')), body: const Padding(padding: EdgeInsets.all(20), child: Column(children: [_SearchBox(), SizedBox(height: 24), _MedicineTile(medicine: Medication(id: '1', name: '아스피린', englishName: 'Aspirin', dose: '100mg', frequency: '1일 1회', time: '08:00'))])));
-}
-
-
-void _showAddMedicineSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => const _AddMedicineSheet(),
-  );
-}
-
-class _AddMedicineSheet extends StatelessWidget {
-  const _AddMedicineSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        margin: const EdgeInsets.all(18),
-        padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.16),
-              blurRadius: 22,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(child: Text('약 추가', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900))),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, size: 32)),
-                ],
-              ),
-              const SizedBox(height: 22),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: '약 이름 검색',
-                  hintStyle: const TextStyle(color: Color(0xFF64748B)),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const _MedicineSuggestion(index: 1, name: '타이레놀'),
-              const SizedBox(height: 14),
-              const _MedicineSuggestion(index: 2, name: '아모잘탄'),
-              const SizedBox(height: 24),
-              InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () {},
-                child: Row(
-                  children: const [
-                    Expanded(child: Text('직접 입력', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900))),
-                    Icon(Icons.arrow_forward, color: Color(0xFF94A3B8), size: 30),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 26),
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(58), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                child: const Text('완료', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MedicineSuggestion extends StatelessWidget {
-  const _MedicineSuggestion({required this.index, required this.name});
-  final int index;
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(radius: 16, backgroundColor: const Color(0xFFF1F5F9), child: Text('$index', style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w800))),
-          const SizedBox(width: 16),
-          Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-          const SizedBox(width: 8),
-          const Icon(Icons.info_outline, color: Color(0xFF94A3B8)),
-          const Spacer(),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-            label: const Text('추가'),
-            style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF111827), side: const BorderSide(color: Color(0xFFE2E8F0))),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _SectionTitle extends StatelessWidget {

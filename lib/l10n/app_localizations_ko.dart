@@ -132,7 +132,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordVoiceImport => '녹음 또는 가져오기';
 
   @override
-  String get aiChatTitle => 'AI 채팅·인식';
+  String get aiChatTitle => 'AI 채팅';
 
   @override
   String get aiChatSubtitle =>

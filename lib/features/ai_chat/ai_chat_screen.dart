@@ -25,33 +25,16 @@ class _AiChatBody extends StatefulWidget {
 }
 
 class _AiChatBodyState extends State<_AiChatBody> {
+  static const _quotaUsed = 3;
+  static const _quotaMax = 10;
+
   final controller = TextEditingController();
   final messages = <ChatMessage>[
     const ChatMessage(
       isUser: false,
-      time: '오전 10:48',
+      time: '오후 10:48',
       text:
-          '안녕하세요! 처방전 약 정보를 확인하는 방법을 안내해드릴게요.\n\n처방전이나 약 사진을 업로드하시면 약 정보를 확인해드릴 수 있어요.\n\n💡 사진 촬영 팁\n• 약 이름과 용량이 선명하게 보이도록 촬영해주세요\n• 처방전의 경우 약 이름 부분이 잘 보이게 촬영해주세요\n• 밝은 곳에서 촬영하시면 더 정확합니다',
-    ),
-    const ChatMessage(
-      isUser: false,
-      time: '오전 10:50',
-      text: '사진을 확인했습니다! 🙂\n다음과 같은 약이 처방되었어요.',
-      cardTitle: '아세트아미노펜 500mg',
-      cardSubtitle: '1일 3회, 1회 3정, 식후 복용\n5일분 처방',
-    ),
-    const ChatMessage(
-      isUser: true,
-      time: '오전 10:51',
-      text: '처방전 사진을 추가로 업로드합니다.',
-    ),
-    const ChatMessage(
-      isUser: false,
-      time: '오전 10:52',
-      text:
-          '추가로 업로드해주신 처방전도 확인했습니다! 아래 약이 추가로 처방되었어요.',
-      cardTitle: '로라타딘 10mg',
-      cardSubtitle: '1일 1정, 1일 1회, 취침 전 복용\n5일분 처방',
+          '안녕하세요! 약 정보를 도와드리겠습니다. 처방전이나 약 사진을 업로드하시면 약 정보를 확인해드립니다.\n\n📷 사진 촬영 팁\n• 약 이름과 용량이 선명하게 보이도록 촬영해주세요\n• 처방전은 약 이름이 잘 보이게 촬영해주세요\n• 밝은 곳에서 촬영하시면 더 정확합니다',
     ),
   ];
 
@@ -80,101 +63,144 @@ class _AiChatBodyState extends State<_AiChatBody> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
-            child: Row(
+    final progress = _quotaUsed / _quotaMax;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.arrow_back_ios_new),
+                Text(
+                  'AI 약 정보',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
-                const CircleAvatar(
-                  backgroundColor: Color(0xFF0B6BFF),
-                  child: Icon(Icons.smart_toy, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'AI 처방전 도우미',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          color: const Color(0xFF0B6BFF),
                         ),
                       ),
-                      Text(
-                        '언제든지 궁금한 점을 물어보세요!',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 12,
-                        ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '$_quotaUsed/$_quotaMax',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF475569),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add),
-                  label: const Text('새 대화'),
+                const SizedBox(height: 6),
+                Text(
+                  '오전 4시에 초기화됩니다',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF64748B),
+                      ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          Expanded(
+        ),
+        Expanded(
+          child: ColoredBox(
+            color: const Color(0xFFF1F5F9),
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               itemCount: messages.length,
-              itemBuilder: (context, index) => _Bubble(message: messages[index]),
+              itemBuilder: (context, index) =>
+                  _Bubble(message: messages[index]),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          color: const Color(0xFFEAF2FF),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline, color: Color(0xFF0B6BFF), size: 22),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'AI가 제공하는 정보는 참고용입니다. 증상이 있거나 약을 바꾸기 전에는 반드시 의사·약사와 상담하세요.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.35,
+                    color: Color(0xFF334155),
+                  ),
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: '궁금한 내용을 입력하세요...',
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFF),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: const BorderSide(color: Color(0xFFD7E4FF)),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+            ],
+          ),
+        ),
+        Material(
+          color: Colors.white,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    style: IconButton.styleFrom(
+                      foregroundColor: Colors.black87,
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.image_outlined),
-                ),
-                FilledButton(
-                  onPressed: send,
-                  style: FilledButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(14),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: '약에 대해 궁금한 점을 물어보세요...',
+                        filled: true,
+                        fillColor: const Color(0xFFF1F5F9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(22),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: const Icon(Icons.send),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  FilledButton(
+                    onPressed: send,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF475569),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(14),
+                    ),
+                    child: const Icon(Icons.send, size: 20),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
