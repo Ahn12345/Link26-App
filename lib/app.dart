@@ -4,12 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/constants/storage_keys.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/auth_welcome_screen.dart';
 import 'features/auth/login/login_page.dart';
 import 'features/auth/signup/signup_page.dart';
 import 'features/ai_chat/ai_chat_screen.dart';
 import 'features/family_profiles/family_profiles_screen.dart';
 import 'features/family_voice/family_voice_screen.dart';
-import 'features/home/home_screen.dart';
+import 'features/shell/main_shell.dart';
 import 'features/home_layout/home_layout_screen.dart';
 import 'features/medicine/medicine_screen.dart';
 import 'features/medicine_guide/medicine_guide_screen.dart';
@@ -114,7 +115,8 @@ class Link26AppState extends State<Link26App> {
         return const Locale('en');
       },
       routes: {
-        HomeScreen.routeName: (_) => const HomeScreen(),
+        MainShell.routeName: (_) => const MainShell(),
+        AuthWelcomeScreen.routeName: (_) => const AuthWelcomeScreen(),
         LoginPage.routeName: (_) => const LoginPage(),
         SignupPage.routeName: (_) => const SignupPage(),
         AiChatScreen.routeName: (_) => const AiChatScreen(),

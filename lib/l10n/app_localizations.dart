@@ -58,6 +58,11 @@ abstract class AppLocalizations {
   String get moreTitle;
   String get login;
   String get signup;
+  String get authWelcomeSubtitle;
+  String get continueCta;
+  String get signOut;
+  String get homeLandingHint;
+  String get moreMenuSectionTitle;
   String get medicineGuideIntro;
   String get medicineGuideMaxDoses;
   String get familyVoiceStub;

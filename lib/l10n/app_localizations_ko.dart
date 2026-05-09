@@ -52,6 +52,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signup => '회원가입';
 
   @override
+  String get authWelcomeSubtitle => '로그인 또는 회원가입 후 홈 화면으로 이동합니다.';
+
+  @override
+  String get continueCta => '계속';
+
+  @override
+  String get signOut => '로그아웃';
+
+  @override
+  String get homeLandingHint =>
+      '하단 탭에서 홈·AI 채팅·더보기(기능 메뉴)를 이용할 수 있습니다.';
+
+  @override
+  String get moreMenuSectionTitle => '기능';
+
+  @override
   String get medicineGuideIntro =>
       '약 종류별로 복용 주기·방법을 안내합니다. 복용 횟수 집계와 AI 맥락은 매일 04:00(로컬)에 초기화되는 하루 기준을 씁니다.';
 

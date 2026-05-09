@@ -24,7 +24,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                 'assets/images/logo.png',
                 height: 100,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (context, error, stackTrace) =>
                     Icon(Icons.link, size: 80, color: scheme.primary),
               ),
               const SizedBox(height: 24),

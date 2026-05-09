@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../features/ai_chat/ai_chat_screen.dart';
+import '../../features/auth/auth_welcome_screen.dart';
 import '../../features/auth/login/login_page.dart';
 import '../../features/auth/signup/signup_page.dart';
 import '../../features/family_profiles/family_profiles_screen.dart';
 import '../../features/family_voice/family_voice_screen.dart';
-import '../../features/home/home_screen.dart';
+import '../../features/shell/main_shell.dart';
 import '../../features/home_layout/home_layout_screen.dart';
 import '../../features/medicine_guide/medicine_guide_screen.dart';
 import '../../features/more/more_screen.dart';
@@ -19,7 +20,8 @@ import 'app_routes.dart';
 Map<String, WidgetBuilder> buildAppRoutes() {
   return {
     AppRoutes.splash: (_) => const SplashScreen(),
-    AppRoutes.home: (_) => const HomeScreen(),
+    AppRoutes.home: (_) => const MainShell(),
+    AppRoutes.authWelcome: (_) => const AuthWelcomeScreen(),
     AppRoutes.login: (_) => const LoginPage(),
     AppRoutes.signup: (_) => const SignupPage(),
     AppRoutes.aiChat: (_) => const AiChatScreen(),

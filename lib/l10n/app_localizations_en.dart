@@ -54,6 +54,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signup => 'Sign up';
 
   @override
+  String get authWelcomeSubtitle =>
+      'Log in or create an account to open your home screen.';
+
+  @override
+  String get continueCta => 'Continue';
+
+  @override
+  String get signOut => 'Log out';
+
+  @override
+  String get homeLandingHint =>
+      'Use the bottom tabs: Home, AI Chat, and More for other tools.';
+
+  @override
+  String get moreMenuSectionTitle => 'Features';
+
+  @override
   String get medicineGuideIntro =>
       'Each medicine type can show how often to take it. The app treats a day as starting at 04:00 local time for counters and AI context reset.';
 

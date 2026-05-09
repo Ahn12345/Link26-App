@@ -2,6 +2,7 @@
 abstract final class AppRoutes {
   static const splash = '/';
   static const home = '/home';
+  static const authWelcome = '/auth/welcome';
   static const login = '/auth/login';
   static const signup = '/auth/signup';
   static const aiChat = '/ai-chat';
