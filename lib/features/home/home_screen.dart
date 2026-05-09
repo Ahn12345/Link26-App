@@ -1,98 +1,131 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:link26_app/models/link_models.dart';
-import '../ai_chat/ai_chat_screen.dart';
-import '../more/more_screen.dart';
+
+import '../../core/services/local_medicine_list_store.dart';
 import '../search/pill_search_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-  static const routeName = '/home';
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-/// [MainShell] 홈 탭 본문 — 목업과 동일한 대시보드 레이아웃.
-class HomeDashboardContent extends StatelessWidget {
+/// [MainShell] 홈 탭 본문 — 우측 목업과 같은 대시보드(검색·요약·알림·복용완료·내 약·배너).
+class HomeDashboardContent extends StatefulWidget {
   const HomeDashboardContent({super.key});
 
   @override
-  Widget build(BuildContext context) => const _HomeTab();
+  State<HomeDashboardContent> createState() => _HomeDashboardContentState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _index = 0;
+class _HomeDashboardContentState extends State<HomeDashboardContent> {
+  List<String> _registeredNames = [];
 
-  final _pages = const [
-    _HomeTab(),
-    AiChatScreen(showScaffold: false),
-    MoreScreen(showScaffold: false),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: '홈'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline), selectedIcon: Icon(Icons.chat_bubble), label: 'AI 채팅'),
-          NavigationDestination(icon: Icon(Icons.more_horiz), label: '더보기'),
-        ],
-      ),
-    );
-  }
-}
-
-class _HomeTab extends StatelessWidget {
-  const _HomeTab();
-
-  static const medicines = [
+  static const _demoMedicines = [
     Medication(id: '1', name: '아스피린', englishName: 'Aspirin', dose: '100mg', frequency: '1일 1회', time: '08:00', completed: true),
     Medication(id: '2', name: '메트포르민', englishName: 'Metformin', dose: '500mg', frequency: '1일 2회', time: '08:00', completed: true),
     Medication(id: '3', name: '알로디핀', englishName: 'Amlodipine', dose: '5mg', frequency: '1일 1회', time: '08:00'),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  Future<void> _reload() async {
+    final names = await LocalMedicineListStore.load();
+    if (mounted) setState(() => _registeredNames = names);
+  }
+
+  Future<void> _openPillSearch() async {
+    await Navigator.of(context).pushNamed(PillSearchScreen.routeName);
+    await _reload();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text('건강한 하루를 시작하세요', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final registeredCount =
+        _registeredNames.isNotEmpty ? _registeredNames.length : _demoMedicines.length;
+
+    final listTiles = <Widget>[
+      if (_registeredNames.isNotEmpty)
+        ..._registeredNames.map(
+          (name) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _RegisteredMedicineTile(name: name),
+          ),
+        )
+      else
+        ..._demoMedicines
+            .take(2)
+            .map(
+              (m) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _MedicineTile(medicine: m),
               ),
-              IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlarmListScreen())), icon: const Icon(Icons.notifications_none)),
+            ),
+    ];
+
+    return ColoredBox(
+      color: bg,
+      child: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: _reload,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      '건강한 하루를 시작하세요',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AlarmListScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.notifications_none),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _SearchBox(onTap: _openPillSearch),
+              const SizedBox(height: 20),
+              _SummaryCard(registeredCount: registeredCount),
+              const SizedBox(height: 18),
+              _SectionTitle(
+                title: '오늘의 알림',
+                action: '전체보기',
+                icon: Icons.calendar_month_outlined,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AlarmListScreen(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const _TodayAlarmCard(),
+              const SizedBox(height: 18),
+              const _SectionTitle(title: '복용 완료'),
+              const SizedBox(height: 10),
+              _CompletedCard(
+                medicines: _demoMedicines.where((e) => e.completed).toList(),
+              ),
+              const SizedBox(height: 18),
+              _SectionTitle(
+                title: '내 약 목록',
+                action: '+ 추가',
+                onTap: _openPillSearch,
+              ),
+              const SizedBox(height: 10),
+              ...listTiles,
+              const _BannerCard(),
             ],
           ),
-          const SizedBox(height: 14),
-          _SearchBox(
-            onTap: () => Navigator.of(context).pushNamed(PillSearchScreen.routeName),
-          ),
-          const SizedBox(height: 20),
-          _SummaryCard(),
-          const SizedBox(height: 18),
-          _SectionTitle(title: '오늘의 알림', action: '전체보기', icon: Icons.calendar_month_outlined, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlarmListScreen()))),
-          const SizedBox(height: 10),
-          _TodayAlarmCard(),
-          const SizedBox(height: 18),
-          const _SectionTitle(title: '복용 완료'),
-          const SizedBox(height: 10),
-          _CompletedCard(medicines: medicines.where((e) => e.completed).toList()),
-          const SizedBox(height: 18),
-          _SectionTitle(
-            title: '내 약 목록',
-            action: '+ 추가',
-            onTap: () => Navigator.of(context).pushNamed(PillSearchScreen.routeName),
-          ),
-          const SizedBox(height: 10),
-          ...medicines.take(2).map((m) => Padding(padding: const EdgeInsets.only(bottom: 8), child: _MedicineTile(medicine: m))),
-          const _BannerCard(),
-        ],
+        ),
       ),
     );
   }
@@ -116,16 +149,22 @@ class _SearchBox extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.registeredCount});
+
+  final int registeredCount;
+
   @override
   Widget build(BuildContext context) {
     return _Card(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('오늘 복용 & 등록된 약', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
-        Row(children: const [
-          Expanded(child: _Metric(label: '오늘 복용', value: '3/4')),
-          SizedBox(height: 52, child: VerticalDivider()),
-          Expanded(child: _Metric(label: '등록된 약', value: '3개')),
+        Row(children: [
+          const Expanded(child: _Metric(label: '오늘 복용', value: '3/4')),
+          const SizedBox(height: 52, child: VerticalDivider()),
+          Expanded(
+            child: _Metric(label: '등록된 약', value: '$registeredCount개'),
+          ),
         ]),
       ]),
     );
@@ -145,6 +184,8 @@ class _Metric extends StatelessWidget {
 }
 
 class _TodayAlarmCard extends StatelessWidget {
+  const _TodayAlarmCard();
+
   @override
   Widget build(BuildContext context) {
     return _Card(
@@ -155,7 +196,14 @@ class _TodayAlarmCard extends StatelessWidget {
           Row(children: [Text('08:00', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), SizedBox(width: 8), _Pill('알림')]),
           SizedBox(height: 4), Text('알로디핀 5mg', style: TextStyle(color: Color(0xFF334155), fontSize: 16)),
         ])),
-        FilledButton(onPressed: () {}, child: const Text('복용 완료')),
+        FilledButton(
+          onPressed: () {},
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          child: const Text('복용 완료'),
+        ),
       ]),
     );
   }
@@ -202,8 +250,49 @@ class _MedicineTile extends StatelessWidget {
         const _RoundIcon(icon: Icons.medication_outlined, color: Color(0xFF0B6BFF), soft: Color(0xFFEAF2FF)),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${medicine.name} (${medicine.englishName})', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), Text('${medicine.dose}   ${medicine.frequency}   ${medicine.time}', style: const TextStyle(color: Color(0xFF475569), fontSize: 15))])),
-        IconButton(onPressed: () {}, icon: const Icon(Icons.edit_outlined, color: Color(0xFF0B6BFF))),
+        const Icon(Icons.medication, color: Color(0xFF0B6BFF), size: 26),
       ]),
+    );
+  }
+}
+
+class _RegisteredMedicineTile extends StatelessWidget {
+  const _RegisteredMedicineTile({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Row(
+        children: [
+          const _RoundIcon(
+            icon: Icons.medication_outlined,
+            color: Color(0xFF0B6BFF),
+            soft: Color(0xFFEAF2FF),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  '등록됨 · 상세는 검색에서 추가·수정',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.medication, color: Color(0xFF0B6BFF), size: 26),
+        ],
+      ),
     );
   }
 }
@@ -316,7 +405,7 @@ class _Card extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: const Color(0xFFD7E4FF)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
