@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/services/auth_session.dart';
 import '../auth/auth_welcome_screen.dart';

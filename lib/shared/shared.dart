@@ -1,4 +1,4 @@
-﻿/// 怨듭슜 enum쨌紐⑤뜽쨌?뺤옣. `import 'package:link26_app/shared/shared.dart';`
+/// 怨듭슜 enum쨌紐⑤뜽쨌?뺤옣. `import 'package:link26_app/shared/shared.dart';`
 
 library;
 
