@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import '../../core/database/user_local_repository.dart';
-import 'login/login_page.dart';
-import 'signup/signup_page.dart';
+import 'package:link26_app/core/database/user_local_repository.dart';
+import 'package:link26_app/core/widgets/app_brand_logo.dart';
+import 'package:link26_app/features/auth/login/login_page.dart';
+import 'package:link26_app/features/auth/signup/signup_page.dart';
 
 class AuthWelcomeScreen extends StatelessWidget {
   const AuthWelcomeScreen({super.key});
@@ -13,7 +14,6 @@ class AuthWelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -21,13 +21,7 @@ class AuthWelcomeScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 24),
-              Image.asset(
-                'assets/images/logo.png',
-                height: 100,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    Icon(Icons.link, size: 80, color: scheme.primary),
-              ),
+              const AppBrandLogo(height: 100),
               const SizedBox(height: 24),
               Text(
                 l10n.appTitle,

@@ -1,2 +1,2 @@
 // features/ai_chat/domain/dur_signal_engine.dart
-void durSignalEngineInit() {}
+void dur_signal_engineInit() {}

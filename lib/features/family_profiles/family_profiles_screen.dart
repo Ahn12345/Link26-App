@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import '../../core/services/family_profile_store.dart';
+import 'package:link26_app/core/services/family_profile_store.dart';
 
 class FamilyProfilesScreen extends StatefulWidget {
   const FamilyProfilesScreen({super.key});

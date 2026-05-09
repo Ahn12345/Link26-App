@@ -1,2 +1,2 @@
 // features/auth/login/login_validators.dart
-void loginValidatorsInit() {}
+void login_validatorsInit() {}

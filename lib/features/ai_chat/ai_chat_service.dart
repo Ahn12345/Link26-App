@@ -3,7 +3,7 @@ import 'package:link26_app/core/constants/api_keys.dart';
 
 import 'ai_chat_models.dart';
 
-/// OCR/증상 분석: API 키가 있으면 Gemini 2.5 Flash 2패스, 없으면 규칙 기반 폴백.
+/// OCR/?? ??: API ?? ??? Gemini 2.5 Flash 2??, ??? ?? ?? ??.
 class AiChatService {
   static const _modelId = 'gemini-2.5-flash';
 

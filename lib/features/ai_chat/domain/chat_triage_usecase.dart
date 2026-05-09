@@ -1,2 +1,2 @@
 // features/ai_chat/domain/chat_triage_usecase.dart
-void chatTriageUsecaseInit() {}
+void chat_triage_usecaseInit() {}

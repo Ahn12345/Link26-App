@@ -15,6 +15,7 @@ class MedicineInsight {
   final SafetySignal signal;
   final String recommendation;
   final String reason;
+
   /// Gemini 등 2차 검증 문구.
   final String? secondaryReview;
 }

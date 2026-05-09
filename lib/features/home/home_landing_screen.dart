@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/services/home_layout_store.dart';
+import '../../core/widgets/app_brand_logo.dart';
 import '../../core/services/local_medicine_list_store.dart';
 import '../search/pill_search_screen.dart';
 import 'alerts_list_screen.dart';
@@ -116,13 +117,7 @@ class _HomeLandingScreenState extends State<HomeLandingScreen> {
                   ),
                 const SizedBox(height: 24),
                 if (_visible.contains('logo'))
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 80,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.image, size: 56),
-                  ),
+                  const AppBrandLogo(height: 80),
                 if (_visible.contains('logo')) const SizedBox(height: 16),
                 if (_visible.contains('title'))
                   Text(

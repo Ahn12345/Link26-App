@@ -1,2 +1,2 @@
 // features/auth/signup/signup_validators.dart
-void signupValidatorsInit() {}
+void signup_validatorsInit() {}

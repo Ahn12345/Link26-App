@@ -1,2 +1,2 @@
 // features/auth/domain/login_usecase.dart
-void loginUsecaseInit() {}
+void login_usecaseInit() {}

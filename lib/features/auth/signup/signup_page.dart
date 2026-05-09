@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../core/database/user_local_repository.dart';
-import '../../../core/services/auth_session.dart';
-import '../../../core/services/hira_link_service.dart';
-import '../../shell/main_shell.dart';
+import 'package:link26_app/core/database/user_local_repository.dart';
+import 'package:link26_app/core/services/auth_session.dart';
+import 'package:link26_app/core/services/hira_link_service.dart';
+import 'package:link26_app/features/shell/main_shell.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});

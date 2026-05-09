@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-import '../../core/services/auth_session.dart';
-import '../auth/auth_welcome_screen.dart';
-import '../shell/main_shell.dart';
+import 'package:link26_app/core/services/auth_session.dart';
+import 'package:link26_app/core/widgets/app_brand_logo.dart';
+import 'package:link26_app/features/auth/auth_welcome_screen.dart';
+import 'package:link26_app/features/shell/main_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,19 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/logo.png',
-              width: 160,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                debugPrint('logo2: $error');
-                return Icon(
-                  Icons.link,
-                  size: 80,
-                  color: scheme.primary,
-                );
-              },
-            ),
+            const AppBrandLogo(width: 160),
             const SizedBox(height: 24),
             SizedBox(
               width: 28,
