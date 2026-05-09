@@ -52,7 +52,7 @@ class _HomeTab extends StatelessWidget {
   static const medicines = [
     Medication(id: '1', name: '아스피린', englishName: 'Aspirin', dose: '100mg', frequency: '1일 1회', time: '08:00', completed: true),
     Medication(id: '2', name: '메트포르민', englishName: 'Metformin', dose: '500mg', frequency: '1일 2회', time: '08:00', completed: true),
-    Medication(id: '3', name: '암로디핀', englishName: 'Amlodipine', dose: '5mg', frequency: '1일 1회', time: '08:00'),
+    Medication(id: '3', name: '알로디핀', englishName: 'Amlodipine', dose: '5mg', frequency: '1일 1회', time: '08:00'),
   ];
 
   @override
@@ -153,7 +153,7 @@ class _TodayAlarmCard extends StatelessWidget {
         const SizedBox(width: 14),
         const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [Text('08:00', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), SizedBox(width: 8), _Pill('알림')]),
-          SizedBox(height: 4), Text('암로디핀 5mg', style: TextStyle(color: Color(0xFF334155), fontSize: 16)),
+          SizedBox(height: 4), Text('알로디핀 5mg', style: TextStyle(color: Color(0xFF334155), fontSize: 16)),
         ])),
         FilledButton(onPressed: () {}, child: const Text('복용 완료')),
       ]),
@@ -229,11 +229,11 @@ class AlarmListScreen extends StatefulWidget {
 class _AlarmListScreenState extends State<AlarmListScreen> {
   String filter = '전체';
   final items = const [
-    MedicineAlarm(id: '1', dateLabel: '2024년 5월 20일 (월)', time: '08:00', type: '알림', medicineName: '암로디핀', dose: '5mg', status: '복용 완료'),
+    MedicineAlarm(id: '1', dateLabel: '2024년 5월 20일 (월)', time: '08:00', type: '알림', medicineName: '알로디핀', dose: '5mg', status: '복용 완료'),
     MedicineAlarm(id: '2', dateLabel: '2024년 5월 20일 (월)', time: '08:00', type: '전화', medicineName: '아스피린', dose: '100mg', status: '완료'),
     MedicineAlarm(id: '3', dateLabel: '2024년 5월 20일 (월)', time: '12:00', type: '전화', medicineName: '비타민D', dose: '1000IU', status: '예정'),
     MedicineAlarm(id: '4', dateLabel: '2024년 5월 20일 (월)', time: '20:00', type: '알림', medicineName: '메트포르민', dose: '500mg', status: '복용 완료'),
-    MedicineAlarm(id: '5', dateLabel: '2024년 5월 19일 (일)', time: '08:00', type: '알림', medicineName: '암로디핀', dose: '5mg', status: '완료'),
+    MedicineAlarm(id: '5', dateLabel: '2024년 5월 19일 (일)', time: '08:00', type: '알림', medicineName: '알로디핀', dose: '5mg', status: '완료'),
   ];
 
   @override

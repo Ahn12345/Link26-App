@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 abstract final class AppTheme {
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
-      seedColor: Colors.deepPurple,
+      seedColor: const Color(0xFF0B6BFF),
       brightness: Brightness.light,
     );
     return ThemeData(

@@ -109,13 +109,15 @@ class Link26AppState extends State<Link26App> {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, supported) {
-        if (locale == null) return const Locale('en');
-        for (final l in supported) {
-          if (l.languageCode == locale.languageCode) {
-            return l;
+        if (locale != null) {
+          for (final l in supported) {
+            if (l.languageCode == locale.languageCode) {
+              return l;
+            }
           }
         }
-        return const Locale('en');
+        // 시스템 로케일이 없거나 미지원일 때 기본은 한국어(목업·스토어 기준).
+        return const Locale('ko');
       },
       routes: {
         MainShell.routeName: (_) => const MainShell(),
