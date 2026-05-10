@@ -47,20 +47,29 @@ class Link26AppState extends State<Link26App> {
   }
 
   Future<void> _loadPrefs() async {
-    final p = await SharedPreferences.getInstance();
-    final code = p.getString(StorageKeys.localeOverride);
-    final scale = p.getDouble(StorageKeys.textScaleFactor);
-    if (!mounted) return;
-    setState(() {
-      if (code == null || code.isEmpty) {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final code = p.getString(StorageKeys.localeOverride);
+      final scale = p.getDouble(StorageKeys.textScaleFactor);
+      if (!mounted) return;
+      setState(() {
+        if (code == null || code.isEmpty) {
+          _localeOverride = null;
+        } else {
+          _localeOverride = Locale(code);
+        }
+        final s = (scale == null || scale <= 0) ? 1.0 : scale;
+        _textScale = s.clamp(0.85, 1.35);
+        _ready = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
         _localeOverride = null;
-      } else {
-        _localeOverride = Locale(code);
-      }
-      final s = (scale == null || scale <= 0) ? 1.0 : scale;
-      _textScale = s.clamp(0.85, 1.35);
-      _ready = true;
-    });
+        _textScale = 1.0;
+        _ready = true;
+      });
+    }
   }
 
   /// null = follow system + [localeResolutionCallback].
