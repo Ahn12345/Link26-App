@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  참조용 레이아웃 (Android Studio Design 탭에서만 확인).
+  실제 앱 UI는 Flutter(Dart)가 그립니다. 기획/검수용 스켈레톤입니다.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/link26_chat_background">
+
+    <!-- 헤더 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/link26_space_md"
+        android:background="@color/link26_surface"
+        android:elevation="2dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ai_chat_title"
+            android:textSize="@dimen/link26_header_title"
+            android:textStyle="bold"
+            android:textColor="@color/link26_on_surface" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="@dimen/link26_space_sm"
+            android:progress="30"
+            android:progressTint="@color/link26_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_xs"
+            android:text="@string/ai_chat_reset_hint"
+            android:textSize="@dimen/link26_caption"
+            android:textColor="@color/link26_on_surface_muted" />
+    </LinearLayout>
+
+    <!-- 채팅 영역 (스크롤 대체: 고정 높이 예시) -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:padding="@dimen/link26_space_md">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/link26_surface"
+            android:padding="@dimen/link26_space_md"
+            android:text="@string/reference_ai_welcome_stub"
+            android:textColor="@color/link26_on_surface"
+            android:textSize="@dimen/link26_body" />
+    </ScrollView>
+
+    <!-- 안내 배너 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/link26_space_md"
+        android:layout_marginHorizontal="@dimen/link26_space_sm"
+        android:layout_marginBottom="@dimen/link26_space_xs"
+        android:background="@drawable/reference_banner_rounded">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ai_disclaimer"
+            android:textColor="@color/link26_disclaimer_text"
+            android:textSize="@dimen/link26_caption" />
+    </LinearLayout>
+
+    <!-- 입력 줄 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/link26_space_sm"
+        android:background="@color/link26_surface">
+
+        <ImageButton
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:backgroundTint="@color/link26_input_fill"
+            android:contentDescription="@string/reference_camera"
+            android:src="@android:drawable/ic_menu_camera" />
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="@dimen/link26_space_sm"
+            android:hint="@string/ai_chat_input_hint"
+            android:backgroundTint="@color/link26_input_fill"
+            android:minHeight="48dp"
+            android:padding="@dimen/link26_space_sm" />
+
+        <ImageButton
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:backgroundTint="@color/link26_send_button"
+            android:contentDescription="@string/reference_send"
+            android:src="@android:drawable/ic_menu_send" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Link26</string>
+    <string name="ai_chat_title">AI 약 정보</string>
+    <string name="ai_chat_reset_hint">오전 4시에 초기화됩니다</string>
+    <string name="ai_chat_input_hint">약에 대해 궁금한 점을 물어보세요…</string>
+    <string name="ai_disclaimer">AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.</string>
+    <string name="reference_ai_welcome_stub">첫 AI 말풍선 (실제 UI는 Flutter)</string>
+    <string name="reference_camera">카메라</string>
+    <string name="reference_send">전송</string>
+</resources>

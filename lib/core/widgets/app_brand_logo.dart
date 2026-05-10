@@ -1,48 +1,26 @@
 import 'package:flutter/material.dart';
 
-/// Bundled brand mark: prefers [primaryAsset] (e.g. `logo2.png`), then [fallbackAsset].
+/// 앱 브랜드 마크(에셋 PNG 없이 Material 아이콘).
 class AppBrandLogo extends StatelessWidget {
   const AppBrandLogo({
     super.key,
-    this.primaryAsset = 'assets/images/logo2.png',
-    this.fallbackAsset = 'assets/images/logo.png',
     this.width,
     this.height,
-    this.fit = BoxFit.contain,
+    this.icon = Icons.link_rounded,
   });
 
-  final String primaryAsset;
-  final String fallbackAsset;
   final double? width;
   final double? height;
-  final BoxFit fit;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final iconSize = width ?? height ?? 80;
-    return Image.asset(
-      primaryAsset,
-      width: width,
-      height: height,
-      fit: fit,
-      errorBuilder: (context, error, stackTrace) {
-        debugPrint('AppBrandLogo primary missing: $error');
-        return Image.asset(
-          fallbackAsset,
-          width: width,
-          height: height,
-          fit: fit,
-          errorBuilder: (context, error, stackTrace) {
-            debugPrint('AppBrandLogo fallback missing: $error');
-            return Icon(
-              Icons.link,
-              size: iconSize,
-              color: scheme.primary,
-            );
-          },
-        );
-      },
+    final size = width ?? height ?? 80;
+    return Icon(
+      icon,
+      size: size,
+      color: scheme.primary,
     );
   }
 }

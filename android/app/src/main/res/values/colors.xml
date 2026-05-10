@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Link26 UI/UX 토큰 — Flutter `AppTheme` / `AiChatScreen` 과 맞춤. 네이티브(스플래시·시스템 UI)용. -->
+<resources>
+    <color name="link26_primary">#3B6CF5</color>
+    <color name="link26_primary_seed">#0047AB</color>
+    <color name="link26_chat_background">#F5F6F8</color>
+    <color name="link26_scaffold_tint">#EEF4FA</color>
+    <color name="link26_surface">#FFFFFF</color>
+    <color name="link26_on_surface">#111827</color>
+    <color name="link26_on_surface_muted">#64748B</color>
+    <color name="link26_border">#E5E7EB</color>
+    <color name="link26_disclaimer_bg">#E8F2FE</color>
+    <color name="link26_disclaimer_text">#1E3A5F</color>
+    <color name="link26_input_fill">#F3F4F6</color>
+    <color name="link26_send_button">#5C5C5C</color>
+    <color name="link26_user_bubble">#E8F1FE</color>
+    <color name="splash_background">@color/link26_scaffold_tint</color>
+</resources>
