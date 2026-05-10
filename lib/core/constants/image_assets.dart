@@ -17,11 +17,4 @@ abstract final class ImageAssets {
   static const familyadd = 'assets/images/familyadd.png';
   static const simplelogin1 = 'assets/images/simplelogin1.png';
   static const simplelogin2 = 'assets/images/simplelogin2.png';
-
-  /// 홈 탭: 전체 목업 PNG 를 깔지 않음(대시보드와 중복 방지).
-  static const String homeTabBackground = '';
-
-  /// 더보기 탭: `setting.png` 목업을 배경으로 깔면 리스트·카드와 시안이 이중으로 보일 수 있음.
-  /// 배경 이미지가 필요하면 [setting] 등으로 바꿉니다.
-  static const String moreTabBackground = '';
 }

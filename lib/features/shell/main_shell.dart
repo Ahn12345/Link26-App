@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import '../../core/constants/image_assets.dart';
 import '../../core/services/monthly_hira_auth_gate.dart';
-import '../../core/widgets/full_screen_asset_background.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
 import '../more/more_screen.dart';
 
-/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅 · 더보기.
+/// 하단 탭: 홈 · AI 채팅 · 더보기.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -139,11 +137,7 @@ class _ActiveTabBody extends StatelessWidget {
     final Widget child;
     switch (index) {
       case 0:
-        child = const FullScreenAssetBackground(
-          assetPath: ImageAssets.homeTabBackground,
-          fallbackAssetPath: null,
-          child: HomeDashboardContent(),
-        );
+        child = const HomeDashboardContent();
         break;
       case 1:
         child = ColoredBox(
@@ -156,18 +150,10 @@ class _ActiveTabBody extends StatelessWidget {
         );
         break;
       case 2:
-        child = const FullScreenAssetBackground(
-          assetPath: ImageAssets.moreTabBackground,
-          fallbackAssetPath: null,
-          child: MoreScreen(showScaffold: false),
-        );
+        child = const MoreScreen(showScaffold: false);
         break;
       default:
-        child = const FullScreenAssetBackground(
-          assetPath: ImageAssets.homeTabBackground,
-          fallbackAssetPath: null,
-          child: HomeDashboardContent(),
-        );
+        child = const HomeDashboardContent();
     }
     return KeyedSubtree(key: ValueKey<int>(index), child: child);
   }
