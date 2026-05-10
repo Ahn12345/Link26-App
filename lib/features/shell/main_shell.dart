@@ -62,7 +62,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           navigationBarTheme: NavigationBarThemeData(
-            indicatorColor: scheme.primary.withValues(alpha: 0.14),
+            indicatorColor: Colors.transparent,
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
                 return TextStyle(
@@ -102,17 +102,21 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               destinations: [
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined, color: scheme.onSurfaceVariant),
-                  selectedIcon: Icon(Icons.home, color: scheme.primary),
+                  selectedIcon: Icon(Icons.home_rounded, color: scheme.primary),
                   label: l10n.homeTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.chat_bubble_outline, color: scheme.onSurfaceVariant),
-                  selectedIcon: Icon(Icons.chat_bubble, color: scheme.primary),
+                  icon: Icon(Icons.chat_bubble_outline_rounded,
+                      color: scheme.onSurfaceVariant),
+                  selectedIcon:
+                      Icon(Icons.chat_rounded, color: scheme.primary),
                   label: l10n.aiChatTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.more_horiz, color: scheme.onSurfaceVariant),
-                  selectedIcon: Icon(Icons.more_horiz, color: scheme.primary),
+                  icon: Icon(Icons.more_horiz_rounded,
+                      color: scheme.onSurfaceVariant),
+                  selectedIcon:
+                      Icon(Icons.more_horiz_rounded, color: scheme.primary),
                   label: l10n.moreTitle,
                 ),
               ],

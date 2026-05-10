@@ -527,36 +527,25 @@ class _InputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canAct = enabled && !sending;
+    final softOutline = Link26Surface.outline.withValues(alpha: 0.45);
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Material(
-            color: Colors.white,
-            elevation: 1,
-            shadowColor: Colors.black.withValues(alpha: 0.06),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Link26Surface.outline),
+          IconButton(
+            onPressed: canAct ? onCamera : null,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: canAct
+                  ? Link26Surface.textSecondary
+                  : Link26Surface.textSecondary.withValues(alpha: 0.35),
+              minimumSize: const Size(48, 48),
+              padding: EdgeInsets.zero,
             ),
-            child: InkWell(
-              onTap: canAct ? onCamera : null,
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: Icon(
-                  Icons.photo_camera_outlined,
-                  color: canAct
-                      ? Link26Surface.textSecondary
-                      : Link26Surface.textSecondary.withValues(alpha: 0.35),
-                  size: 24,
-                ),
-              ),
-            ),
+            icon: const Icon(Icons.photo_camera_outlined, size: 26),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 4),
           Expanded(
             child: TextField(
               controller: controller,
@@ -571,29 +560,44 @@ class _InputBar extends StatelessWidget {
                 ),
                 filled: true,
                 fillColor: Colors.white,
+                isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
-                border: OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Link26Surface.outline),
+                  borderSide: BorderSide(color: softOutline, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                    color: Link26Surface.accent,
+                    width: 1.5,
+                  ),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: softOutline, width: 1),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 10),
           Material(
-            color: canAct
-                ? Link26Surface.accent
-                : Link26Surface.accent.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.transparent,
             child: InkWell(
               onTap: canAct ? onSend : null,
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
+              customBorder: const CircleBorder(),
+              child: Ink(
                 width: 48,
                 height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: canAct
+                      ? Link26Surface.accent
+                      : Link26Surface.accent.withValues(alpha: 0.4),
+                ),
                 child: sending
                     ? const Padding(
                         padding: EdgeInsets.all(12),
@@ -602,10 +606,12 @@ class _InputBar extends StatelessWidget {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                        size: 22,
+                    : const Center(
+                        child: Icon(
+                          Icons.send_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
               ),
             ),
