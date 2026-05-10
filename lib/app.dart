@@ -107,12 +107,38 @@ class Link26AppState extends State<Link26App> {
           child: child,
         );
         if (kLink26ShowBuildTagBanner) {
-          wrapped = Banner(
-            message: kLink26BuildTag,
-            location: BannerLocation.topEnd,
-            color: Colors.deepOrange,
-            textDirection: TextDirection.ltr,
-            child: wrapped,
+          wrapped = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(child: wrapped),
+              Positioned(
+                top: 0,
+                right: 8,
+                child: SafeArea(
+                  child: IgnorePointer(
+                    child: Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.deepOrange,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        child: Text(
+                          kLink26BuildTag,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         }
         return wrapped;
