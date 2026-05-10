@@ -5,6 +5,7 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -86,14 +87,16 @@ class _LoginPageState extends State<LoginPage> {
       minimumSize: const Size.fromHeight(48),
       foregroundColor: Link26Surface.textPrimary,
       side: const BorderSide(color: Link26Surface.outline),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Link26Surface.radiusButton),
+      ),
     );
+    final heroH = Link26Layout.heroImageHeight(MediaQuery.sizeOf(context).width);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.login)),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Link26ResponsiveScroll(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -104,9 +107,9 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     DecodedAssetImage(
                       ImageAssets.login,
-                      height: 140,
+                      height: heroH,
                       fit: BoxFit.contain,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
                     ),
                     const SizedBox(height: 12),
                     Text(

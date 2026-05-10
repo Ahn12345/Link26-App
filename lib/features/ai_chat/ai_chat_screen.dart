@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/models/link_models.dart';
@@ -144,61 +145,81 @@ class _AiChatBodyState extends State<_AiChatBody> {
     final shellNavPad =
         embedded ? MediaQuery.of(context).padding.bottom + 88.0 : 0.0;
 
-    return SafeArea(
-      bottom: true,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: shellNavPad),
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final side = Link26Layout.chatListHorizontal(w);
+        final inner = w - 2 * side;
+        final bubbleMax = Link26Layout.chatBubbleMaxWidth(inner);
+
+        return SafeArea(
+          bottom: true,
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              _ChatHeader(
-                used: _dailyUsed,
-                limit: _dailyLimit,
-                embedded: embedded,
-              ),
-              Expanded(
-                child: ColoredBox(
-                  color: Link26Surface.scaffoldBg,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    children: [
-                      _AiWelcomeBubble(
-                        timeLabel: _welcomeAccessLabel ?? '…',
-                      ),
-                      ...messages.map(
-                        (m) => Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: _ChatBubble(message: m),
+              Padding(
+                padding: EdgeInsets.only(bottom: shellNavPad),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ChatHeader(
+                      used: _dailyUsed,
+                      limit: _dailyLimit,
+                      embedded: embedded,
+                      horizontalPad: side,
+                    ),
+                    Expanded(
+                      child: ColoredBox(
+                        color: Link26Surface.scaffoldBg,
+                        child: ListView(
+                          padding: EdgeInsets.fromLTRB(side, 16, side, 8),
+                          children: [
+                            _AiWelcomeBubble(
+                              timeLabel: _welcomeAccessLabel ?? '…',
+                              maxBubbleWidth: bubbleMax,
+                            ),
+                            ...messages.map(
+                              (m) => Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: _ChatBubble(
+                                  message: m,
+                                  maxBubbleWidth: bubbleMax,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(side, 0, side, 0),
+                      child: const _DisclaimerBanner(),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(side, 0, side, 0),
+                      child: _InputBar(
+                        controller: controller,
+                        onSend: sendMessage,
+                        onCamera: openCamera,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const _DisclaimerBanner(),
-              _InputBar(
-                controller: controller,
-                onSend: sendMessage,
-                onCamera: openCamera,
-              ),
+              if (!embedded)
+                Positioned(
+                  top: 4,
+                  left: side,
+                  child: IconButton(
+                    style: IconButton.styleFrom(foregroundColor: Link26Surface.textPrimary),
+                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                    onPressed: () => Navigator.maybePop(context),
+                  ),
+                ),
             ],
           ),
-          ),
-          if (!embedded)
-            Positioned(
-              top: 4,
-              left: 0,
-              child: IconButton(
-                style: IconButton.styleFrom(foregroundColor: Link26Surface.textPrimary),
-                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                onPressed: () => Navigator.maybePop(context),
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -208,22 +229,25 @@ class _ChatHeader extends StatelessWidget {
     required this.used,
     required this.limit,
     required this.embedded,
+    required this.horizontalPad,
   });
 
   final int used;
   final int limit;
   final bool embedded;
+  final double horizontalPad;
 
   @override
   Widget build(BuildContext context) {
     final progress = limit > 0 ? used / limit : 0.0;
+    final leftPad = horizontalPad + (embedded ? 0 : 36);
 
     return Material(
       color: Colors.white,
       elevation: 2,
       shadowColor: Colors.black.withValues(alpha: 0.06),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(embedded ? 16 : 44, 14, 16, 14),
+        padding: EdgeInsets.fromLTRB(leftPad, 14, horizontalPad, 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -278,9 +302,13 @@ class _ChatHeader extends StatelessWidget {
 
 /// 첫 AI 말풍선 — [timeLabel]은 접속 시각([AiChatSessionStore])과 동일 포맷.
 class _AiWelcomeBubble extends StatelessWidget {
-  const _AiWelcomeBubble({required this.timeLabel});
+  const _AiWelcomeBubble({
+    required this.timeLabel,
+    required this.maxBubbleWidth,
+  });
 
   final String timeLabel;
+  final double maxBubbleWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +316,7 @@ class _AiWelcomeBubble extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width - 32,
+          maxWidth: maxBubbleWidth,
         ),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -352,7 +380,7 @@ class _DisclaimerBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -399,7 +427,7 @@ class _InputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -475,9 +503,13 @@ class _InputBar extends StatelessWidget {
 }
 
 class _ChatBubble extends StatelessWidget {
-  const _ChatBubble({required this.message});
+  const _ChatBubble({
+    required this.message,
+    required this.maxBubbleWidth,
+  });
 
   final ChatMessage message;
+  final double maxBubbleWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +521,7 @@ class _ChatBubble extends StatelessWidget {
       alignment: align,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.88,
+          maxWidth: maxBubbleWidth,
         ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(

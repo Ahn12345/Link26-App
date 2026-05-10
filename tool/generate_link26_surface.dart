@@ -125,6 +125,56 @@ $gradientLines
 
   File(outPath).writeAsStringSync(out);
   print('Wrote $outPath');
+
+  _writeResponsiveTokens(root, design);
+}
+
+void _writeResponsiveTokens(Directory root, XmlElement design) {
+  final resp = design.getElement('responsive');
+  double d(String key, double fallback) {
+    final raw = resp?.getAttribute(key);
+    if (raw == null || raw.isEmpty) return fallback;
+    return double.tryParse(raw) ?? fallback;
+  }
+
+  final bc = d('breakpointCompact', 600);
+  final bm = d('breakpointMedium', 900);
+  final cmw = d('contentMaxWidth', 520);
+  final pc = d('paddingCompact', 16);
+  final pm = d('paddingMedium', 22);
+  final pe = d('paddingExpanded', 32);
+  final pt = d('pageTop', 16);
+  final pbot = d('pageBottom', 24);
+  final hc = d('heroCompact', 140);
+  final hm = d('heroMedium', 170);
+  final he = d('heroExpanded', 200);
+  final cbf = d('chatBubbleMaxFraction', 0.92);
+  final csm = d('chatSideMin', 12);
+
+  final outPath = '${root.path}/lib/core/layout/link26_responsive_tokens.g.dart';
+  File(outPath).parent.createSync(recursive: true);
+  File(outPath).writeAsStringSync('''
+// GENERATED FILE - do not edit by hand.
+// Source: assets/design/link26_design_tokens.xml (<responsive/>)
+// Regenerate: dart run tool/generate_link26_surface.dart
+
+abstract final class Link26ResponsiveTokens {
+  static const double breakpointCompact = $bc;
+  static const double breakpointMedium = $bm;
+  static const double contentMaxWidth = $cmw;
+  static const double paddingCompact = $pc;
+  static const double paddingMedium = $pm;
+  static const double paddingExpanded = $pe;
+  static const double pageTop = $pt;
+  static const double pageBottom = $pbot;
+  static const double heroCompact = $hc;
+  static const double heroMedium = $hm;
+  static const double heroExpanded = $he;
+  static const double chatBubbleMaxFraction = $cbf;
+  static const double chatSideMin = $csm;
+}
+''');
+  print('Wrote $outPath');
 }
 
 String _hexToDart(String hex) {

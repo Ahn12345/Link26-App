@@ -44,4 +44,26 @@
       <stop>#F5F9FD</stop>
     </gradient>
   </gradients>
+
+  <!--
+    반응형: Flutter Link26Layout / .g.dart 생성.
+    - breakpointCompact 미만: paddingCompact, heroCompact
+    - breakpointCompact ~ breakpointMedium: paddingMedium, heroMedium
+    - 그 이상: paddingExpanded, heroExpanded + 본문 최대 너비 contentMaxWidth 로 중앙 정렬
+  -->
+  <responsive
+      breakpointCompact="600"
+      breakpointMedium="900"
+      contentMaxWidth="520"
+      paddingCompact="16"
+      paddingMedium="22"
+      paddingExpanded="32"
+      pageTop="16"
+      pageBottom="24"
+      heroCompact="140"
+      heroMedium="170"
+      heroExpanded="200"
+      chatBubbleMaxFraction="0.92"
+      chatSideMin="12"
+  />
 </link26-design>

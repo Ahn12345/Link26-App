@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -21,7 +23,9 @@ class AuthWelcomeScreen extends StatelessWidget {
       minimumSize: const Size.fromHeight(52),
       foregroundColor: Link26Surface.accent,
       side: const BorderSide(color: Link26Surface.accent, width: 1.5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Link26Surface.radiusButton),
+      ),
     );
 
     return Scaffold(
@@ -34,63 +38,94 @@ class AuthWelcomeScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                Link26ElevatedCard(
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-                  child: Column(
-                    children: [
-                      DecodedAssetImage(
-                        ImageAssets.logo,
-                        height: 100,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.appTitle,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Link26Surface.textPrimary,
-                          letterSpacing: -0.4,
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final w = c.maxWidth;
+              final pad = Link26Layout.pageInsets(w);
+              final heroH = Link26Layout.heroImageHeight(w);
+              return Padding(
+                padding: pad,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: Link26ResponsiveTokens.contentMaxWidth,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        l10n.authWelcomeSubtitle,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: Link26Surface.textSecondary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.4,
+                        child: Link26ElevatedCard(
+                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                          child: Column(
+                            children: [
+                              DecodedAssetImage(
+                                ImageAssets.logo,
+                                height: heroH * 0.72,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.appTitle,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Link26Surface.textPrimary,
+                                  letterSpacing: -0.4,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                l10n.authWelcomeSubtitle,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Link26Surface.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.4,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  ),
+                    ),
+                    const Spacer(),
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FilledButton(
+                              onPressed: () {
+                                Navigator.of(context).pushNamed(LoginPage.routeName);
+                              },
+                              style: Link26Surface.filledAccentButton(
+                                minimumSize: const Size.fromHeight(52),
+                              ),
+                              child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton(
+                              onPressed: () =>
+                                  Navigator.of(context).pushNamed(SignupPage.routeName),
+                              style: outlineBtn,
+                              child: Text(l10n.signup, style: const TextStyle(fontWeight: FontWeight.w800)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-                const Spacer(),
-                FilledButton(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(LoginPage.routeName);
-                  },
-                  style: Link26Surface.filledAccentButton(minimumSize: const Size.fromHeight(52)),
-                  child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(SignupPage.routeName),
-                  style: outlineBtn,
-                  child: Text(l10n.signup, style: const TextStyle(fontWeight: FontWeight.w800)),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

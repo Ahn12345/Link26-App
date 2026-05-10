@@ -3,6 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -76,11 +77,11 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final heroH = Link26Layout.heroImageHeight(MediaQuery.sizeOf(context).width);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.signup)),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Link26ResponsiveScroll(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -88,9 +89,9 @@ class _SignupPageState extends State<SignupPage> {
                 padding: const EdgeInsets.all(16),
                 child: DecodedAssetImage(
                   ImageAssets.signup,
-                  height: 160,
+                  height: heroH,
                   fit: BoxFit.contain,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
                   errorBuilder: (context, error, stackTrace) {
                     debugPrint('signup art: $error');
                     return const Icon(

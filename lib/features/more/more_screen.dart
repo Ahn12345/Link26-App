@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -32,8 +33,8 @@ class _MoreBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
     return SafeArea(
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(20, 16, 20, 28 + bottomPad),
+      child: Link26ResponsiveList(
+        bottomInset: bottomPad + 4,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
