@@ -3,6 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/image_assets.dart';
+import '../widgets/decoded_asset_image.dart';
 import '../constants/storage_keys.dart';
 import 'hira_link_service.dart';
 
@@ -33,14 +34,13 @@ abstract final class MonthlyHiraAuthGate {
             children: [
               Text(l10n.monthlyHiraBody),
               const SizedBox(height: 12),
-              ClipRRect(
+              DecodedAssetImage(
+                ImageAssets.simplelogin1,
+                height: 220,
+                fit: BoxFit.contain,
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  ImageAssets.simplelogin1,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox(height: 8),
-                ),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox(height: 8),
               ),
             ],
           ),
@@ -78,14 +78,13 @@ abstract final class MonthlyHiraAuthGate {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ClipRRect(
+              DecodedAssetImage(
+                ImageAssets.simplelogin2,
+                height: 220,
+                fit: BoxFit.contain,
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  ImageAssets.simplelogin2,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
-                ),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
               const SizedBox(height: 12),
               Text(l10n.monthlyHiraSecondHint),

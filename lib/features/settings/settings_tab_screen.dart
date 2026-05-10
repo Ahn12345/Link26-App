@@ -13,6 +13,7 @@ import '../search/search_screen.dart';
 import 'emergency_contact_screen.dart';
 import 'settings_screen.dart';
 import '../../core/constants/image_assets.dart';
+import '../../core/widgets/decoded_asset_image.dart';
 import '../../core/services/auth_session.dart';
 
 /// 하단 탭 「설정」— 긴급연락·가족 추가·기타 메뉴.
@@ -37,16 +38,14 @@ class SettingsTabScreen extends StatelessWidget {
                 .pushNamed(EmergencyContactScreen.routeName),
           ),
           ListTile(
-            leading: ClipRRect(
+            leading: DecodedAssetImage(
+              ImageAssets.familyadd,
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                ImageAssets.familyadd,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.groups),
-              ),
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.groups),
             ),
             title: Text(l10n.settingsFamilyAddEntry),
             subtitle: Text(l10n.familyProfilesSubtitle),
@@ -154,16 +153,14 @@ class SettingsTabScreen extends StatelessWidget {
   }) {
     return ListTile(
       leading: asset != null
-          ? ClipRRect(
+          ? DecodedAssetImage(
+              asset,
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                asset,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Icon(icon ?? Icons.folder, size: 40),
-              ),
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(icon ?? Icons.folder, size: 40),
             )
           : Icon(icon ?? Icons.chevron_right),
       title: Text(title),

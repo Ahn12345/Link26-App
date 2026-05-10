@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 
 /// 네이티브 스플래시와 맞춘 배경색 + [ImageAssets.applogo] (런처 아이콘과 동일 에셋).
@@ -30,20 +31,17 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    final logoPx = (120 * dpr).round().clamp(1, 2048);
     return Scaffold(
       backgroundColor: SplashScreen.splashColor,
       body: SafeArea(
         child: Column(
           children: [
             const Spacer(),
-            Image.asset(
+            DecodedAssetImage(
               ImageAssets.applogo,
               width: 120,
+              height: 120,
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.medium,
-              cacheWidth: logoPx,
             ),
             const Spacer(),
           ],

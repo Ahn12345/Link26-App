@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/constants/image_assets.dart';
+import '../../core/widgets/decoded_asset_image.dart';
 
 /// 디자인 에셋 `emergencycall.png` — 긴급 연락 UX (실제 전화는 추후 `tel:` 연동).
 class EmergencyContactScreen extends StatelessWidget {
@@ -17,14 +18,13 @@ class EmergencyContactScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          ClipRRect(
+          DecodedAssetImage(
+            ImageAssets.emergencycall,
+            height: 220,
+            fit: BoxFit.contain,
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              ImageAssets.emergencycall,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.phone_in_talk, size: 120),
-            ),
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.phone_in_talk, size: 120),
           ),
           const SizedBox(height: 24),
           Text(

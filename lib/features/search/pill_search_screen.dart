@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/constants/image_assets.dart';
+import '../../core/widgets/decoded_asset_image.dart';
 import '../../core/services/local_medicine_list_store.dart';
 
 /// 약 검색 + 내 약 목록에 추가 (`pillsearch.png`).
@@ -41,14 +42,13 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          ClipRRect(
+          DecodedAssetImage(
+            ImageAssets.pillsearch,
+            height: 200,
+            fit: BoxFit.contain,
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              ImageAssets.pillsearch,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const SizedBox.shrink(),
-            ),
+            errorBuilder: (context, error, stackTrace) =>
+                const SizedBox.shrink(),
           ),
           const SizedBox(height: 16),
           TextField(

@@ -23,12 +23,6 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   /// AI 탭으로 전환할 때마다 증가 → 첫 말풍선 접속 시각 갱신.
   int _aiVisitStamp = 0;
 
-  /// [IndexedStack]이 숨겨진 탭도 빌드하므로, 큰 배경 PNG(더보기)는 첫 진입 시에만 로드합니다.
-  bool _moreTabMaterialized = false;
-
-  /// AI 탭 본문도 첫 진입 전까지는 가벼운 placeholder 만 둡니다.
-  bool _aiTabMaterialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -64,37 +58,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     return Scaffold(
       extendBody: true,
       backgroundColor: const Color(0xFFEEF4FA),
-      body: IndexedStack(
-        index: _index,
-        sizing: StackFit.expand,
-        children: [
-          FullScreenAssetBackground(
-            assetPath: ImageAssets.homeTabBackground,
-            fallbackAssetPath: null,
-            child: const HomeDashboardContent(),
-          ),
-          _aiTabMaterialized
-              ? AiChatScreen(
-                  showScaffold: false,
-                  embeddedInShell: true,
-                  visitStamp: _aiVisitStamp,
-                )
-              : const ColoredBox(
-                  color: Color(0xFFF5F6F8),
-                  child: SizedBox.expand(),
-                ),
-          _moreTabMaterialized
-              ? FullScreenAssetBackground(
-                  assetPath: ImageAssets.setting,
-                  fallbackAssetPath: null,
-                  child: const MoreScreen(showScaffold: false),
-                )
-              : const ColoredBox(
-                  color: Color(0xFFEEF4FA),
-                  child: SizedBox.expand(),
-                ),
-        ],
-      ),
+      // IndexedStack 은 숨긴 탭도 매 프레임 build → 에뮬에서 ANR. 현재 탭만 마운트.
+      body: _ActiveTabBody(index: _index, aiVisitStamp: _aiVisitStamp),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           navigationBarTheme: NavigationBarThemeData(
@@ -130,14 +95,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
                 setState(() {
                   final from = _index;
                   _index = i;
-                  if (i == 1) {
-                    _aiTabMaterialized = true;
-                    if (from != 1) {
-                      _aiVisitStamp++;
-                    }
-                  }
-                  if (i == 2) {
-                    _moreTabMaterialized = true;
+                  if (i == 1 && from != 1) {
+                    _aiVisitStamp++;
                   }
                 });
               },
@@ -163,5 +122,53 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+}
+
+class _ActiveTabBody extends StatelessWidget {
+  const _ActiveTabBody({
+    required this.index,
+    required this.aiVisitStamp,
+  });
+
+  final int index;
+  final int aiVisitStamp;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget child;
+    switch (index) {
+      case 0:
+        child = const FullScreenAssetBackground(
+          assetPath: ImageAssets.homeTabBackground,
+          fallbackAssetPath: null,
+          child: HomeDashboardContent(),
+        );
+        break;
+      case 1:
+        child = ColoredBox(
+          color: const Color(0xFFF5F6F8),
+          child: AiChatScreen(
+            showScaffold: false,
+            embeddedInShell: true,
+            visitStamp: aiVisitStamp,
+          ),
+        );
+        break;
+      case 2:
+        child = const FullScreenAssetBackground(
+          assetPath: ImageAssets.setting,
+          fallbackAssetPath: null,
+          child: MoreScreen(showScaffold: false),
+        );
+        break;
+      default:
+        child = const FullScreenAssetBackground(
+          assetPath: ImageAssets.homeTabBackground,
+          fallbackAssetPath: null,
+          child: HomeDashboardContent(),
+        );
+    }
+    return KeyedSubtree(key: ValueKey<int>(index), child: child);
   }
 }

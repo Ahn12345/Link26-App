@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 
@@ -33,13 +34,10 @@ class AuthWelcomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                Image.asset(
+                DecodedAssetImage(
                   ImageAssets.logo,
                   height: 120,
                   fit: BoxFit.contain,
-                  filterQuality: FilterQuality.medium,
-                  cacheHeight:
-                      (120 * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, 2048),
                 ),
                 const SizedBox(height: 20),
                 Text(

@@ -5,6 +5,7 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 
@@ -91,14 +92,11 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              ClipRRect(
+              DecodedAssetImage(
+                ImageAssets.login,
+                height: 160,
+                fit: BoxFit.contain,
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  ImageAssets.login,
-                  height: 160,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
               ),
               const SizedBox(height: 12),
               Text(

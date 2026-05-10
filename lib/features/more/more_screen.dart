@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
@@ -33,11 +34,10 @@ class _MoreBody extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomPad),
         children: [
           Center(
-            child: Image.asset(
+            child: DecodedAssetImage(
               ImageAssets.logo,
               height: 72,
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
             ),
           ),
           const SizedBox(height: 20),
