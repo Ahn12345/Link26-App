@@ -6,8 +6,9 @@ import '../../core/services/monthly_hira_auth_gate.dart';
 import '../../core/widgets/design_backdrop.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
+import '../more/more_screen.dart';
 
-/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅(위젯) · 더보기(목업 이미지).
+/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅 · 더보기(실제 메뉴 UI).
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -56,14 +57,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           DesignBackdrop(
             assetPath: DesignAssets.homeBackground,
             fit: DesignFit.screenCover,
-            backgroundOpacity: 0.2,
+            backgroundOpacity: 0.42,
             child: const HomeDashboardContent(),
           ),
           const AiChatScreen(showScaffold: false, embeddedInShell: true),
-          DesignBackdrop(
-            assetPath: DesignAssets.more,
-            fit: DesignAssets.imageFit,
-          ),
+          const MoreScreen(showScaffold: false),
         ],
       ),
       bottomNavigationBar: Theme(

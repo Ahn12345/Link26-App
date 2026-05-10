@@ -16,6 +16,99 @@ abstract final class _Dash {
   static const cardShadow = Color(0x14000000);
 }
 
+class _HomeHeroHeader extends StatelessWidget {
+  const _HomeHeroHeader({required this.onNotificationTap});
+
+  final VoidCallback onNotificationTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 22, 14, 22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0659E0),
+            Color(0xFF3FA3FF),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _Dash.accent.withValues(alpha: 0.35),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    child: Text(
+                      '오늘의 복약',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  '건강한 하루를\n시작하세요',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    height: 1.18,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '복용 현황과 알림을 한곳에서',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: Colors.white,
+            shape: const CircleBorder(),
+            elevation: 2,
+            shadowColor: Colors.black.withValues(alpha: 0.12),
+            child: IconButton(
+              onPressed: onNotificationTap,
+              icon: const Icon(Icons.notifications_none_rounded),
+              color: _Dash.accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// [MainShell] 홈 탭 — 카카오 functional 데이터 흐름 + 고퀄 카드 UI.
 class HomeDashboardContent extends StatefulWidget {
   const HomeDashboardContent({super.key});
@@ -90,34 +183,10 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          '건강한 하루를 시작하세요',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            height: 1.25,
-                            color: _Dash.textPrimary,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                      ),
-                      Material(
-                        color: Colors.white,
-                        shape: const CircleBorder(),
-                        elevation: 1,
-                        shadowColor: Colors.black.withValues(alpha: 0.06),
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.notifications_none_rounded),
-                          color: _Dash.textSecondary,
-                        ),
-                      ),
-                    ],
+                  _HomeHeroHeader(
+                    onNotificationTap: () {},
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 18),
                   _SearchPill(
                     onTap: () =>
                         Navigator.of(context).pushNamed(PillSearchScreen.routeName),

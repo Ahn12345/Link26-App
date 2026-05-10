@@ -14,12 +14,24 @@ class AuthWelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              scheme.primary.withValues(alpha: 0.12),
+              scheme.surface,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
               const SizedBox(height: 24),
               const AppBrandLogo(height: 100),
               const SizedBox(height: 24),
@@ -54,7 +66,8 @@ class AuthWelcomeScreen extends StatelessWidget {
                 child: Text(l10n.signup),
               ),
               const SizedBox(height: 16),
-            ],
+              ],
+            ),
           ),
         ),
       ),

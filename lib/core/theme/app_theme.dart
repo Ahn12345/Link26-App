@@ -10,7 +10,8 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: const Color(0xFFF5F8FC),
+      /// 홈·탭 공통 배경 (이전 #F5F8FC 대비 한 톤 내려 대비 강화).
+      scaffoldBackgroundColor: const Color(0xFFE6EDF7),
       navigationBarTheme: NavigationBarThemeData(
         indicatorColor: scheme.primaryContainer.withValues(alpha: 0.65),
         surfaceTintColor: Colors.transparent,

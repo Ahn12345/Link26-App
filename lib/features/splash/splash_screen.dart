@@ -80,6 +80,16 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AppBrandLogo(width: 160),
+                  const SizedBox(height: 20),
+                  Text(
+                    '약과 건강을 연결합니다',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.2,
+                      color: scheme.onSurface.withValues(alpha: 0.72),
+                    ),
+                  ),
                   const SizedBox(height: 28),
                   SizedBox(
                     width: 28,
