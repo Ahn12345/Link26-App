@@ -1,20 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/alarms/all_alarms_screen.dart';
 import 'package:link26_app/features/medicine/add_medicine_sheet.dart';
 import 'package:link26_app/features/search/pill_search_screen.dart';
 import 'package:link26_app/models/alarm_item.dart';
 import 'package:link26_app/models/medicine.dart';
-
-/// 홈 대시보드 색·타이포 (목업 기준)
-abstract final class _Dash {
-  static const accent = Color(0xFF0047AB);
-  static const textPrimary = Color(0xFF0F172A);
-  static const textSecondary = Color(0xFF475569);
-  static const textMuted = Color(0xFF64748B);
-  static const outline = Color(0xFFE8EEF5);
-  static const cardShadow = Color(0x14000000);
-}
 
 /// [MainShell] 홈 탭 — 카카오 functional 데이터 흐름 + 고퀄 카드 UI.
 class HomeDashboardContent extends StatefulWidget {
@@ -118,7 +110,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                             fontSize: 24,
                             fontWeight: FontWeight.w900,
                             height: 1.25,
-                            color: _Dash.textPrimary,
+                            color: Link26Surface.textPrimary,
                             letterSpacing: -0.4,
                           ),
                         ),
@@ -131,7 +123,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                         child: IconButton(
                           onPressed: () {},
                           icon: const Icon(Icons.notifications_none_rounded),
-                          color: _Dash.textSecondary,
+                          color: Link26Surface.textSecondary,
                         ),
                       ),
                     ],
@@ -142,7 +134,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                         Navigator.of(context).pushNamed(PillSearchScreen.routeName),
                   ),
                   const SizedBox(height: 20),
-                  _ElevatedCard(
+                  Link26ElevatedCard(
                     child: Row(
                       children: [
                         Expanded(
@@ -151,7 +143,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                             value: '$completed/${alarms.length}',
                           ),
                         ),
-                        Container(width: 1, height: 54, color: _Dash.outline),
+                        Container(width: 1, height: 54, color: Link26Surface.outline),
                         Expanded(
                           child: _Stat(
                             title: '등록된 약',
@@ -162,7 +154,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _SectionHeader(
+                  Link26SectionHeader(
                     title: '오늘의 알림',
                     action: '전체보기',
                     icon: Icons.calendar_month_outlined,
@@ -184,7 +176,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
-                      color: _Dash.textPrimary,
+                      color: Link26Surface.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -192,7 +184,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       .where((e) => e.completed)
                       .map((e) => _CompletedTile(item: e)),
                   const SizedBox(height: 18),
-                  _SectionHeader(
+                  Link26SectionHeader(
                     title: '내 약 목록',
                     action: '+ 추가',
                     onAction: _openAddMedicine,
@@ -231,7 +223,7 @@ class _SearchPill extends StatelessWidget {
           height: 52,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(r),
-            border: Border.all(color: _Dash.outline),
+            border: Border.all(color: Link26Surface.outline),
           ),
           child: Row(
             children: [
@@ -240,7 +232,7 @@ class _SearchPill extends StatelessWidget {
                 child: Text(
                   '약 이름, 성분, 복용 시간 등을 검색하세요',
                   style: TextStyle(
-                    color: _Dash.textSecondary,
+                    color: Link26Surface.textSecondary,
                     fontSize: 15,
                   ),
                   maxLines: 1,
@@ -248,44 +240,12 @@ class _SearchPill extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 12),
-              Icon(Icons.search_rounded, color: _Dash.textMuted, size: 26),
+              Icon(Icons.search_rounded, color: Link26Surface.textMuted, size: 26),
               SizedBox(width: 16),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ElevatedCard extends StatelessWidget {
-  const _ElevatedCard({required this.child, this.padding = const EdgeInsets.all(18)});
-
-  final Widget child;
-  final EdgeInsets padding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _Dash.outline),
-        boxShadow: [
-          BoxShadow(
-            color: _Dash.cardShadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: _Dash.accent.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 }
@@ -304,7 +264,7 @@ class _Stat extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            color: _Dash.textMuted,
+            color: Link26Surface.textMuted,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -313,63 +273,13 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            color: _Dash.accent,
+            color: Link26Surface.accent,
             fontSize: 30,
             fontWeight: FontWeight.w900,
             height: 1.05,
             letterSpacing: -0.5,
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.action,
-    this.icon,
-    this.onAction,
-  });
-
-  final String title;
-  final String? action;
-  final IconData? icon;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w900,
-              color: _Dash.textPrimary,
-            ),
-          ),
-        ),
-        if (action != null)
-          TextButton.icon(
-            onPressed: onAction,
-            icon: Icon(icon, size: 18, color: _Dash.accent),
-            label: Text(
-              action!,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                color: _Dash.accent,
-                fontSize: 14,
-              ),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
       ],
     );
   }
@@ -383,13 +293,13 @@ class _AlarmPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _ElevatedCard(
+    return Link26ElevatedCard(
       child: Row(
         children: [
           const CircleAvatar(
             radius: 24,
             backgroundColor: Color(0xFFEAF3FF),
-            child: Icon(Icons.notifications_none_rounded, color: _Dash.accent),
+            child: Icon(Icons.notifications_none_rounded, color: Link26Surface.accent),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -403,7 +313,7 @@ class _AlarmPreviewCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: _Dash.textPrimary,
+                        color: Link26Surface.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -416,7 +326,7 @@ class _AlarmPreviewCard extends StatelessWidget {
                       child: const Text(
                         '알림',
                         style: TextStyle(
-                          color: _Dash.accent,
+                          color: Link26Surface.accent,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                         ),
@@ -428,7 +338,7 @@ class _AlarmPreviewCard extends StatelessWidget {
                 Text(
                   '${item.medicineName} ${item.dose}',
                   style: const TextStyle(
-                    color: _Dash.textSecondary,
+                    color: Link26Surface.textSecondary,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -439,7 +349,7 @@ class _AlarmPreviewCard extends StatelessWidget {
           FilledButton(
             onPressed: onDone,
             style: FilledButton.styleFrom(
-              backgroundColor: _Dash.accent,
+              backgroundColor: Link26Surface.accent,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -461,7 +371,7 @@ class _CompletedTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: _ElevatedCard(
+      child: Link26ElevatedCard(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
@@ -470,7 +380,7 @@ class _CompletedTile extends StatelessWidget {
               backgroundColor: const Color(0xFFEAF3FF),
               child: Icon(
                 item.type == AlarmType.call ? Icons.call_outlined : Icons.notifications_none_rounded,
-                color: _Dash.accent,
+                color: Link26Surface.accent,
               ),
             ),
             const SizedBox(width: 12),
@@ -482,18 +392,18 @@ class _CompletedTile extends StatelessWidget {
                     '${item.time} · ${item.type == AlarmType.call ? '전화' : '알림'}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
-                      color: _Dash.textPrimary,
+                      color: Link26Surface.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${item.medicineName} ${item.dose}',
-                    style: const TextStyle(color: _Dash.textSecondary, fontSize: 14),
+                    style: const TextStyle(color: Link26Surface.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.check_circle, color: _Dash.accent, size: 28),
+            const Icon(Icons.check_circle, color: Link26Surface.accent, size: 28),
           ],
         ),
       ),
@@ -510,7 +420,7 @@ class _MedicineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: _ElevatedCard(
+      child: Link26ElevatedCard(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +428,7 @@ class _MedicineTile extends StatelessWidget {
             const CircleAvatar(
               radius: 22,
               backgroundColor: Color(0xFFEAF3FF),
-              child: Icon(Icons.medication_outlined, color: _Dash.accent),
+              child: Icon(Icons.medication_outlined, color: Link26Surface.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -530,14 +440,14 @@ class _MedicineTile extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
-                      color: _Dash.textPrimary,
+                      color: Link26Surface.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${medicine.dose}   ${medicine.frequency}   ${medicine.time}',
                     style: const TextStyle(
-                      color: _Dash.textMuted,
+                      color: Link26Surface.textMuted,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -547,7 +457,7 @@ class _MedicineTile extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.edit_outlined, color: _Dash.accent),
+              icon: const Icon(Icons.edit_outlined, color: Link26Surface.accent),
             ),
           ],
         ),
@@ -567,7 +477,7 @@ class _AdBanner extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             const Color(0xFFE8F1FF),
-            _Dash.accent.withValues(alpha: 0.12),
+            Link26Surface.accent.withValues(alpha: 0.12),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -576,7 +486,7 @@ class _AdBanner extends StatelessWidget {
         border: Border.all(color: const Color(0xFFD7E4FF)),
         boxShadow: [
           BoxShadow(
-            color: _Dash.accent.withValues(alpha: 0.08),
+            color: Link26Surface.accent.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

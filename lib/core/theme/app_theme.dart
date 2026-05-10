@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/theme/link26_surface_style.dart';
+
 /// Global theme configuration.
 abstract final class AppTheme {
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF0047AB),
+      seedColor: Link26Surface.accent,
       brightness: Brightness.light,
     );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      /// 홈·탭 공통 배경 톤 (시안 연블루).
-      scaffoldBackgroundColor: const Color(0xFFEEF4FA),
+      scaffoldBackgroundColor: Link26Surface.scaffoldBg,
       navigationBarTheme: NavigationBarThemeData(
         indicatorColor: scheme.primaryContainer.withValues(alpha: 0.65),
         surfaceTintColor: Colors.transparent,
@@ -19,8 +20,20 @@ abstract final class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         centerTitle: true,
-        backgroundColor: scheme.surfaceContainerHighest,
-        foregroundColor: scheme.onSurface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Link26Surface.scaffoldBg,
+        foregroundColor: Link26Surface.textPrimary,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w900,
+          color: Link26Surface.textPrimary,
+        ),
+        iconTheme: const IconThemeData(color: Link26Surface.textSecondary),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: Link26Surface.filledAccentButton(),
       ),
     );
   }

@@ -28,6 +28,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  xml: ^6.6.1
 
 flutter_launcher_icons:
   android: true
@@ -41,6 +42,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/design/
     - assets/images/
-    - lib/data/DUR1/
-    - lib/data/DUR2/
+    # DUR CSV 는 현재 Dart 에서 로드하지 않음 — APK/AAB 용량 절감을 위해 번들에서 제외.
+    # 필요 시 네트워크·다운로드 또는 별도 모듈로 제공하세요.

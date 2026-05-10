@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
@@ -31,44 +33,58 @@ class _MoreBody extends StatelessWidget {
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
     return SafeArea(
       child: ListView(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomPad),
+        padding: EdgeInsets.fromLTRB(20, 16, 20, 28 + bottomPad),
         children: [
-          Center(
-            child: DecodedAssetImage(
-              ImageAssets.applogo,
-              height: 72,
-              fit: BoxFit.contain,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(
+                child: Text(
+                  '더보기',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    height: 1.25,
+                    color: Link26Surface.textPrimary,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+              ),
+              DecodedAssetImage(
+                ImageAssets.applogo,
+                height: 40,
+                width: 40,
+                fit: BoxFit.contain,
+              ),
+            ],
           ),
           const SizedBox(height: 20),
-          const Text('더보기', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 16),
-          Container(
+          Link26ElevatedCard(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
             child: const Row(
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: Color(0xFF38BDF8),
-                  child: Text('김', style: TextStyle(color: Colors.white, fontSize: 24)),
+                  backgroundColor: Link26Surface.chipTint,
+                  child: Text('김', style: TextStyle(color: Link26Surface.accent, fontSize: 24, fontWeight: FontWeight.w800)),
                 ),
                 SizedBox(width: 14),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('김건강', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                    Text('kimhealth@example.com'),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('김건강', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Link26Surface.textPrimary)),
+                      SizedBox(height: 4),
+                      Text('kimhealth@example.com', style: TextStyle(color: Link26Surface.textSecondary, fontSize: 14)),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 18),
+          const Link26SectionHeader(title: '메뉴'),
+          const SizedBox(height: 8),
           _MenuTile(
             icon: Icons.group_outlined,
             title: '가족 계정',
@@ -126,22 +142,40 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xFFF1F5F9),
-          child: Icon(icon),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Link26ElevatedCard(
+        padding: EdgeInsets.zero,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Link26Surface.chipTint,
+                    child: Icon(icon, color: Link26Surface.accent),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: Link26Surface.textPrimary)),
+                        const SizedBox(height: 2),
+                        Text(subtitle, style: const TextStyle(fontSize: 13, color: Link26Surface.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Link26Surface.textMuted),
+                ],
+              ),
+            ),
+          ),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
       ),
     );
   }

@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 여백·라운드 — Flutter 쪽 padding 과 대략 동일 스케일 -->
+<!--
+  `assets/design/link26_design_tokens.xml` 의 <dimens> 와 동일 숫자(dp) 유지.
+-->
 <resources>
     <dimen name="link26_space_xs">8dp</dimen>
     <dimen name="link26_space_sm">12dp</dimen>
     <dimen name="link26_space_md">16dp</dimen>
     <dimen name="link26_space_lg">20dp</dimen>
-    <dimen name="link26_radius_card">14dp</dimen>
-    <dimen name="link26_radius_input">14dp</dimen>
+    <dimen name="link26_space_page_h">20dp</dimen>
+    <dimen name="link26_space_page_v">16dp</dimen>
+    <dimen name="link26_radius_input">12dp</dimen>
+    <dimen name="link26_radius_button">12dp</dimen>
+    <dimen name="link26_radius_card">16dp</dimen>
     <dimen name="link26_radius_pill">18dp</dimen>
     <dimen name="link26_header_title">20sp</dimen>
     <dimen name="link26_body">15sp</dimen>

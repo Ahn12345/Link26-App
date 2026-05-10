@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Link26 UI 토큰 (단일 소스)
+  - Flutter 색·라운드: 프로젝트 루트에서  dart run tool/generate_link26_surface.dart
+  - Android: values/colors.xml · values/dimens.xml 과 동일 hex/dp 유지 (수동 동기화)
+  - 이미지 목록: assets/images/link26_image_assets.xml
+-->
+<link26-design version="1">
+  <colors>
+    <color name="accent">#0047AB</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="text_muted">#64748B</color>
+    <color name="outline">#E8EEF5</color>
+    <color name="card_shadow">#14000000</color>
+    <color name="scaffold_bg">#EEF4FA</color>
+    <color name="chip_tint">#EAF3FF</color>
+    <color name="badge_tint">#EAF2FF</color>
+    <!-- 네이티브 레이아웃·참조용 (Flutter 화면과 동일 톤) -->
+    <color name="surface">#FFFFFF</color>
+    <color name="on_surface_legacy">#111827</color>
+    <color name="chat_background">#EEF4FA</color>
+    <color name="border_legacy">#E8EEF5</color>
+    <color name="disclaimer_bg">#EAF3FF</color>
+    <color name="disclaimer_text">#0F172A</color>
+    <color name="input_fill">#FFFFFF</color>
+    <color name="send_button">#0047AB</color>
+    <color name="user_bubble">#EAF3FF</color>
+  </colors>
+
+  <dimens>
+    <!-- 논리 픽셀 (Flutter); Android dimens.xml 은 동일 숫자에 dp 붙임 -->
+    <dimen name="radius_input">12</dimen>
+    <dimen name="radius_button">12</dimen>
+    <dimen name="radius_card">16</dimen>
+    <dimen name="space_page_h">20</dimen>
+    <dimen name="space_page_v">16</dimen>
+  </dimens>
+
+  <gradients>
+    <gradient name="backdrop">
+      <stop>#E4EEF8</stop>
+      <stop>#EEF4FA</stop>
+      <stop>#F5F9FD</stop>
+    </gradient>
+  </gradients>
+</link26-design>

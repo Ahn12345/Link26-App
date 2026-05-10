@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
+import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/models/link_models.dart';
 
 /// 시안 기준 AI 약 정보 채팅 (`#3B6CF5` 등).
@@ -23,14 +24,6 @@ class AiChatScreen extends StatelessWidget {
   /// [embeddedInShell] 일 때만 사용. 라우트 단독 진입은 0 그대로 두면 됩니다.
   final int visitStamp;
 
-  static const Color primaryBlue = Color(0xFF3B6CF5);
-  static const Color chatBackground = Color(0xFFF5F6F8);
-  static const Color bubbleBorder = Color(0xFFE5E7EB);
-  static const Color disclaimerBg = Color(0xFFE8F2FE);
-  static const Color disclaimerText = Color(0xFF1E3A5F);
-  static const Color sendButtonBg = Color(0xFF5C5C5C);
-  static const Color inputFill = Color(0xFFF3F4F6);
-
   @override
   Widget build(BuildContext context) {
     final body = _AiChatBody(
@@ -38,10 +31,10 @@ class AiChatScreen extends StatelessWidget {
       visitStamp: visitStamp,
     );
     if (!showScaffold) {
-      return ColoredBox(color: chatBackground, child: body);
+      return ColoredBox(color: Link26Surface.scaffoldBg, child: body);
     }
     return Scaffold(
-      backgroundColor: chatBackground,
+      backgroundColor: Link26Surface.scaffoldBg,
       body: body,
     );
   }
@@ -168,7 +161,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
               ),
               Expanded(
                 child: ColoredBox(
-                  color: AiChatScreen.chatBackground,
+                  color: Link26Surface.scaffoldBg,
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     children: [
@@ -199,8 +192,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
               top: 4,
               left: 0,
               child: IconButton(
+                style: IconButton.styleFrom(foregroundColor: Link26Surface.textPrimary),
                 icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                color: const Color(0xFF111827),
                 onPressed: () => Navigator.maybePop(context),
               ),
             ),
@@ -238,8 +231,8 @@ class _ChatHeader extends StatelessWidget {
               'AI 약 정보',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF111827),
+                fontWeight: FontWeight.w900,
+                color: Link26Surface.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
@@ -252,8 +245,8 @@ class _ChatHeader extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progress.clamp(0.0, 1.0),
                       minHeight: 8,
-                      backgroundColor: const Color(0xFFE5E7EB),
-                      color: AiChatScreen.primaryBlue,
+                      backgroundColor: Link26Surface.outline,
+                      color: Link26Surface.accent,
                     ),
                   ),
                 ),
@@ -263,7 +256,7 @@ class _ChatHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: AiChatScreen.primaryBlue,
+                    color: Link26Surface.accent,
                   ),
                 ),
               ],
@@ -301,7 +294,7 @@ class _AiWelcomeBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AiChatScreen.bubbleBorder),
+          border: Border.all(color: Link26Surface.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,9 +302,10 @@ class _AiWelcomeBubble extends StatelessWidget {
             RichText(
               text: TextSpan(
                 style: const TextStyle(
-                  color: Color(0xFF111827),
+                  color: Link26Surface.textPrimary,
                   fontSize: 15,
                   height: 1.55,
+                  fontWeight: FontWeight.w500,
                 ),
                 children: [
                   const TextSpan(text: '안녕하세요! 약 정보를 도와드리겠습니다.\n\n'),
@@ -320,11 +314,11 @@ class _AiWelcomeBubble extends StatelessWidget {
                         '처방전이나 약 사진을 업로드하시면 약 정보를 확인해드립니다.\n\n',
                   ),
                   const TextSpan(text: '💡 '),
-                  TextSpan(
+                  const TextSpan(
                     text: '사진 촬영 팁:',
                     style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.grey.shade900,
+                      fontWeight: FontWeight.w900,
+                      color: Link26Surface.accent,
                     ),
                   ),
                   const TextSpan(text: '\n'),
@@ -362,7 +356,7 @@ class _DisclaimerBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AiChatScreen.disclaimerBg,
+          color: Link26Surface.chipTint,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -370,7 +364,7 @@ class _DisclaimerBanner extends StatelessWidget {
           children: [
             Icon(
               Icons.info_outline,
-              color: AiChatScreen.primaryBlue,
+              color: Link26Surface.accent,
               size: 22,
             ),
             const SizedBox(width: 10),
@@ -380,7 +374,7 @@ class _DisclaimerBanner extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.45,
-                  color: AiChatScreen.disclaimerText,
+                  color: Link26Surface.textPrimary,
                 ),
               ),
             ),
@@ -410,8 +404,13 @@ class _InputBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Material(
-            color: AiChatScreen.inputFill,
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            elevation: 1,
+            shadowColor: Colors.black.withValues(alpha: 0.06),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Link26Surface.outline),
+            ),
             child: InkWell(
               onTap: onCamera,
               borderRadius: BorderRadius.circular(12),
@@ -420,7 +419,7 @@ class _InputBar extends StatelessWidget {
                 height: 48,
                 child: Icon(
                   Icons.photo_camera_outlined,
-                  color: Color(0xFF374151),
+                  color: Link26Surface.textSecondary,
                   size: 24,
                 ),
               ),
@@ -439,21 +438,21 @@ class _InputBar extends StatelessWidget {
                   fontSize: 15,
                 ),
                 filled: true,
-                fillColor: AiChatScreen.inputFill,
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+                  borderSide: const BorderSide(color: Link26Surface.outline),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 10),
           Material(
-            color: AiChatScreen.sendButtonBg,
+            color: Link26Surface.accent,
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
               onTap: onSend,
@@ -483,7 +482,7 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    final bg = isUser ? const Color(0xFFE8F1FE) : Colors.white;
+    final bg = isUser ? Link26Surface.chipTint : Colors.white;
     final align = isUser ? Alignment.centerRight : Alignment.centerLeft;
 
     return Align(
@@ -496,7 +495,7 @@ class _ChatBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AiChatScreen.bubbleBorder),
+          border: Border.all(color: Link26Surface.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,7 +505,7 @@ class _ChatBubble extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 height: 1.5,
-                color: Color(0xFF111827),
+                color: Link26Surface.textPrimary,
               ),
             ),
             if (message.cardTitle != null) ...[
@@ -514,14 +513,14 @@ class _ChatBubble extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F7FF),
+                  color: Link26Surface.badgeTint,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Color(0xFFBFD7FF)),
+                  border: Border.all(color: Link26Surface.outline),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.medication_outlined, color: AiChatScreen.primaryBlue),
+                    const Icon(Icons.medication_outlined, color: Link26Surface.accent),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(

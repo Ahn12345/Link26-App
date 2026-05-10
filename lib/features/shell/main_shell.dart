@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/services/monthly_hira_auth_gate.dart';
+import '../../core/theme/link26_surface_style.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
 import '../more/more_screen.dart';
@@ -55,7 +56,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBody: true,
-      backgroundColor: const Color(0xFFEEF4FA),
+      backgroundColor: Link26Surface.scaffoldBg,
       // IndexedStack 은 숨긴 탭도 매 프레임 build → 에뮬에서 ANR. 현재 탭만 마운트.
       body: _ActiveTabBody(index: _index, aiVisitStamp: _aiVisitStamp),
       bottomNavigationBar: Theme(
@@ -141,7 +142,7 @@ class _ActiveTabBody extends StatelessWidget {
         break;
       case 1:
         child = ColoredBox(
-          color: const Color(0xFFF5F6F8),
+          color: Link26Surface.scaffoldBg,
           child: AiChatScreen(
             showScaffold: false,
             embeddedInShell: true,

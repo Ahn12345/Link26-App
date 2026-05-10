@@ -5,7 +5,9 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 
@@ -80,72 +82,84 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final fieldBorder = OutlineInputBorder(borderRadius: BorderRadius.circular(12));
+    final outlineBtn = OutlinedButton.styleFrom(
+      minimumSize: const Size.fromHeight(48),
+      foregroundColor: Link26Surface.textPrimary,
+      side: const BorderSide(color: Link26Surface.outline),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.login)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 8),
-              DecodedAssetImage(
-                ImageAssets.login,
-                height: 160,
-                fit: BoxFit.contain,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.authWelcomeSubtitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
+              Link26ElevatedCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    DecodedAssetImage(
+                      ImageAssets.login,
+                      height: 140,
+                      fit: BoxFit.contain,
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.authWelcomeSubtitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Link26Surface.textSecondary,
+                        fontSize: 15,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
               Semantics(
                 button: true,
                 label: l10n.socialLoginGoogle,
-                child: SizedBox(
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _socialStub(context),
-                    icon: Icon(Icons.g_mobiledata, size: 28, color: scheme.onSurface),
-                    label: Text(l10n.socialLoginGoogle),
-                  ),
+                child: OutlinedButton.icon(
+                  style: outlineBtn,
+                  onPressed: () => _socialStub(context),
+                  icon: const Icon(Icons.g_mobiledata, size: 28, color: Link26Surface.textPrimary),
+                  label: Text(l10n.socialLoginGoogle),
                 ),
               ),
               const SizedBox(height: 10),
               Semantics(
                 button: true,
                 label: l10n.socialLoginApple,
-                child: SizedBox(
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _socialStub(context),
-                    icon: Icon(Icons.apple, size: 22, color: scheme.onSurface),
-                    label: Text(l10n.socialLoginApple),
-                  ),
+                child: OutlinedButton.icon(
+                  style: outlineBtn,
+                  onPressed: () => _socialStub(context),
+                  icon: const Icon(Icons.apple, size: 22, color: Link26Surface.textPrimary),
+                  label: Text(l10n.socialLoginApple),
                 ),
               ),
               const SizedBox(height: 22),
               Row(
                 children: [
-                  Expanded(child: Divider(color: scheme.outlineVariant)),
+                  const Expanded(child: Divider(color: Link26Surface.outline)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       l10n.loginDividerEmail,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: const TextStyle(
+                        color: Link26Surface.textMuted,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                  Expanded(child: Divider(color: scheme.outlineVariant)),
+                  const Expanded(child: Divider(color: Link26Surface.outline)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -153,30 +167,21 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: l10n.loginEmailLabel,
-                  border: fieldBorder,
-                  enabledBorder: fieldBorder,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                decoration: Link26Surface.inputDecoration(labelText: l10n.loginEmailLabel),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _passwordCtrl,
                 obscureText: true,
-                decoration: InputDecoration(
-                  labelText: l10n.loginPasswordLabel,
-                  border: fieldBorder,
-                  enabledBorder: fieldBorder,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                decoration: Link26Surface.inputDecoration(labelText: l10n.loginPasswordLabel),
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => _submit(context),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(l10n.continueCta),
+                style: Link26Surface.filledAccentButton(minimumSize: const Size.fromHeight(52)),
+                child: Text(l10n.continueCta, style: const TextStyle(fontWeight: FontWeight.w800)),
               ),
               const SizedBox(height: 16),
             ],

@@ -3,7 +3,9 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
@@ -78,61 +80,63 @@ class _SignupPageState extends State<SignupPage> {
       appBar: AppBar(title: Text(l10n.signup)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DecodedAssetImage(
-                ImageAssets.signup,
-                height: 200,
-                fit: BoxFit.contain,
-                borderRadius: BorderRadius.circular(12),
-                errorBuilder: (context, error, stackTrace) {
-                  debugPrint('signup art: $error');
-                  return Icon(
-                    Icons.person_add_alt_1,
-                    size: 120,
-                    color: Theme.of(context).colorScheme.primary,
-                  );
-                },
+              Link26ElevatedCard(
+                padding: const EdgeInsets.all(16),
+                child: DecodedAssetImage(
+                  ImageAssets.signup,
+                  height: 160,
+                  fit: BoxFit.contain,
+                  borderRadius: BorderRadius.circular(12),
+                  errorBuilder: (context, error, stackTrace) {
+                    debugPrint('signup art: $error');
+                    return const Icon(
+                      Icons.person_add_alt_1,
+                      size: 120,
+                      color: Link26Surface.accent,
+                    );
+                  },
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Text(
                 l10n.signup,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Link26Surface.textPrimary,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _nameCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.signupNameLabel,
-                  border: const OutlineInputBorder(),
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                decoration: Link26Surface.inputDecoration(labelText: l10n.signupNameLabel),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: l10n.loginEmailLabel,
-                  border: const OutlineInputBorder(),
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                decoration: Link26Surface.inputDecoration(labelText: l10n.loginEmailLabel),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _passwordCtrl,
                 obscureText: true,
-                decoration: InputDecoration(
-                  labelText: l10n.loginPasswordLabel,
-                  border: const OutlineInputBorder(),
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                decoration: Link26Surface.inputDecoration(labelText: l10n.loginPasswordLabel),
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => _submit(context),
-                child: Text(l10n.continueCta),
+                style: Link26Surface.filledAccentButton(minimumSize: const Size.fromHeight(52)),
+                child: Text(l10n.continueCta, style: const TextStyle(fontWeight: FontWeight.w800)),
               ),
             ],
           ),

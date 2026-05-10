@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/models/alarm_item.dart';
 
 class AllAlarmsScreen extends StatefulWidget {
@@ -31,46 +33,84 @@ class _AllAlarmsScreenState extends State<AllAlarmsScreen> {
   Widget build(BuildContext context) {
     const chips = ['전체', '알림', '전화', '복용 완료'];
     return Scaffold(
+      backgroundColor: Link26Surface.scaffoldBg,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
             Row(
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back_ios_new),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Link26Surface.textPrimary,
+                    backgroundColor: Colors.white,
+                    elevation: 1,
+                    shadowColor: Colors.black.withValues(alpha: 0.06),
+                  ),
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 18),
                 ),
-                const Text('전체 알림', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                ...chips.map(
-                  (c) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(c),
-                      selected: filter == c,
-                      onSelected: (_) => setState(() => filter = c),
-                      selectedColor: const Color(0xFF0B6BFF),
-                      labelStyle: TextStyle(color: filter == c ? Colors.white : Colors.black),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    '전체 알림',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Link26Surface.textPrimary,
+                      letterSpacing: -0.4,
                     ),
                   ),
                 ),
-                const Spacer(),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.calendar_month),
-                  label: const Text('날짜 선택'),
-                ),
               ],
+            ),
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...chips.map(
+                    (c) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(
+                          c,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: filter == c ? Colors.white : Link26Surface.textPrimary,
+                          ),
+                        ),
+                        selected: filter == c,
+                        onSelected: (_) => setState(() => filter = c),
+                        selectedColor: Link26Surface.accent,
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Link26Surface.outline),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        showCheckmark: false,
+                      ),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Link26Surface.accent,
+                      side: const BorderSide(color: Link26Surface.outline),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.calendar_month, size: 20),
+                    label: const Text('날짜 선택', style: TextStyle(fontWeight: FontWeight.w800)),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 18),
             const Text(
               '2024년 5월 20일 (월)',
-              style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w900),
+              style: TextStyle(
+                color: Link26Surface.textMuted,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 10),
             ...filtered.map(
@@ -95,65 +135,81 @@ class _AlarmTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCall = item.type == AlarmType.call;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0D000000), blurRadius: 12),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: isCall ? const Color(0xFF0B6BFF) : const Color(0xFF7C3AED),
-            child: Icon(
-              isCall ? Icons.call : Icons.notifications_none,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      item.time,
-                      style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isCall ? '전화' : '알림',
-                      style: TextStyle(
-                        color: isCall ? const Color(0xFF0B6BFF) : const Color(0xFF7C3AED),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${item.medicineName} ${item.dose}',
-                  style: const TextStyle(color: Color(0xFF475569)),
-                ),
-              ],
-            ),
-          ),
-          if (item.completed)
-            const Text('✓ 완료', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w900))
-          else
-            ElevatedButton(
-              onPressed: onDone,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Link26ElevatedCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Link26Surface.chipTint,
+              child: Icon(
+                isCall ? Icons.call_outlined : Icons.notifications_none_rounded,
+                color: Link26Surface.accent,
               ),
-              child: const Text('복용 완료'),
             ),
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        item.time,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Link26Surface.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Link26Surface.badgeTint,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          isCall ? '전화' : '알림',
+                          style: const TextStyle(
+                            color: Link26Surface.accent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${item.medicineName} ${item.dose}',
+                    style: const TextStyle(
+                      color: Link26Surface.textSecondary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (item.completed)
+              const Text(
+                '✓ 완료',
+                style: TextStyle(
+                  color: Link26Surface.accent,
+                  fontWeight: FontWeight.w900,
+                ),
+              )
+            else
+              FilledButton(
+                onPressed: onDone,
+                style: Link26Surface.filledAccentButton(),
+                child: const Text('복용 완료', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+              ),
+          ],
+        ),
       ),
     );
   }

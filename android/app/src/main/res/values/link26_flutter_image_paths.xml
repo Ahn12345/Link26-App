@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Flutter `assets/images/` 실제 파일과 동일 경로. 네이티브 문자열 참고용.
+  색·간격: assets/design/link26_design_tokens.xml 과 android values/colors·dimens 동기화.
 -->
 <resources>
     <string name="flutter_image_applogo" translatable="false">assets/images/applogo.png</string>
-    <string name="flutter_image_home" translatable="false">assets/images/home.png</string>
     <string name="flutter_image_aichat" translatable="false">assets/images/aichat.png</string>
     <string name="flutter_image_setting" translatable="false">assets/images/setting.png</string>
     <string name="flutter_image_login" translatable="false">assets/images/login.png</string>
@@ -13,12 +13,12 @@
     <string name="flutter_image_emergencycall" translatable="false">assets/images/emergencycall.png</string>
     <string name="flutter_image_familyadd" translatable="false">assets/images/familyadd.png</string>
     <string name="flutter_image_signup" translatable="false">assets/images/signup.png</string>
+    <string name="flutter_image_home" translatable="false">assets/images/home.png</string>
     <string name="flutter_image_simplelogin1" translatable="false">assets/images/simplelogin1.png</string>
     <string name="flutter_image_simplelogin2" translatable="false">assets/images/simplelogin2.png</string>
 
     <string-array name="link26_flutter_image_paths" translatable="false">
         <item>assets/images/applogo.png</item>
-        <item>assets/images/home.png</item>
         <item>assets/images/aichat.png</item>
         <item>assets/images/setting.png</item>
         <item>assets/images/login.png</item>
@@ -27,6 +27,7 @@
         <item>assets/images/emergencycall.png</item>
         <item>assets/images/familyadd.png</item>
         <item>assets/images/signup.png</item>
+        <item>assets/images/home.png</item>
         <item>assets/images/simplelogin1.png</item>
         <item>assets/images/simplelogin2.png</item>
     </string-array>

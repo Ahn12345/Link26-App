@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Link26 이미지 카탈로그 — 실제 파일은 이 폴더의 PNG 와 1:1 대응.
+  색·간격·라운드 토큰: ../design/link26_design_tokens.xml
   앱 코드에서는 lib/core/constants/image_assets.dart (ImageAssets) 만 경로로 사용합니다.
-  이 XML은 기획/검수·에셋 추가 시 목록 동기화용입니다.
 -->
 <link26-images version="1">
   <image id="applogo" file="applogo.png" dart-const="ImageAssets.applogo"
