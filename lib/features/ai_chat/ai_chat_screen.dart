@@ -251,16 +251,23 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                 color: Link26UnifiedPage.background,
                                 child: LayoutBuilder(
                                   builder: (context, vp) {
+                                    final scrollPadBottom =
+                                        Link26ResponsiveUi.gapSm(w);
+                                    // 패딩만큼 빼야 말풍선이 입력/면책 바로 위에 붙습니다.
+                                    final minScrollBody =
+                                        vp.maxHeight - scrollPadBottom;
                                     return SingleChildScrollView(
                                       padding: EdgeInsets.fromLTRB(
                                         0,
-                                        Link26ResponsiveUi.gapSm(w),
                                         0,
-                                        Link26ResponsiveUi.gapSm(w),
+                                        0,
+                                        scrollPadBottom,
                                       ),
                                       child: ConstrainedBox(
                                         constraints: BoxConstraints(
-                                          minHeight: vp.maxHeight,
+                                          minHeight: minScrollBody > 0
+                                              ? minScrollBody
+                                              : vp.maxHeight,
                                         ),
                                         child: Column(
                                           mainAxisAlignment:
