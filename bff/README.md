@@ -2,7 +2,25 @@
 
 앱이 호출하는 NHIS(BFF) 경로와 맞춘 **심사·연동용** 서버입니다. CODEF/공단 실연동은 여기서 확장하면 됩니다.
 
-## 로컬 실행
+## Node 없이 실행 (Flutter SDK만 있을 때) — 권장
+
+프로젝트 **루트**에서:
+
+```bash
+dart run tool/link26_bff.dart
+```
+
+Windows PowerShell 예:
+
+```powershell
+cd C:\Users\byeon\OneDrive\문서\GitHub\Link26-App
+dart run tool/link26_bff.dart
+```
+
+`flutter doctor` 가 되는 PC면 보통 `dart` 명령도 됩니다. 안 되면 `flutter pub global` 대신 **전체 경로**:  
+`C:\path\to\flutter\bin\dart run tool/link26_bff.dart`
+
+## Node 로 실행 (선택)
 
 ```bash
 cd bff
