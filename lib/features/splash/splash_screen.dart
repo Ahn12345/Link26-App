@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/constants/build_identity.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 
 /// 네이티브 스플래시(`link26_splash_screen.xml`)와 동일 배경색만 유지해 깜빡임을 줄입니다.
@@ -34,11 +35,29 @@ class _SplashScreenState extends State<SplashScreen> {
     final primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: SplashScreen.splashColor,
-      body: Center(
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: CircularProgressIndicator(strokeWidth: 3, color: primary),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const Spacer(),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 3, color: primary),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(
+                BuildIdentity.marker,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: primary.withValues(alpha: 0.55),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
