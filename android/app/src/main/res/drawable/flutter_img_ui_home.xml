@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Flutter: assets/images/ui_home.png | PNG 복사 후: bitmap + @drawable/ui_home 등으로 교체 -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#E3ECF7" />
-</shape>
+<!-- Flutter: assets/images/Home.png (홈 탭) -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="fill"
+    android:src="@drawable/link26_home" />

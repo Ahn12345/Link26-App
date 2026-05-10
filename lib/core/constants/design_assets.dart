@@ -1,7 +1,6 @@
-/// 탭별 목업 경로(`assets/images/`) 및 표시 방식.
+/// 탭·배경용 `assets/images/` 경로.
 ///
-/// 파일명: `ui_home.png`, `ui_ai_chat.png`, `ui_more.png`
-/// 전환: [DesignAssets.imageFit] 한 줄 변경 시 세 탭 모두 적용.
+/// 단일 출처: `assets/images/link26_image_registry.xml` 과 동일한 PNG 파일명을 가리켜야 함.
 library;
 
 enum DesignFit {
@@ -16,18 +15,19 @@ enum DesignFit {
 }
 
 abstract final class DesignAssets {
-  static const home = 'assets/images/ui_home.png';
-  static const aiChat = 'assets/images/ui_ai_chat.png';
-  static const more = 'assets/images/ui_more.png';
+  /// 홈 탭 전체 배경 (`Home.png`).
+  static const homeFullBackground = 'assets/images/Home.png';
 
-  /// AI 채팅 탭 전체 배경 (시안 PNG).
+  /// (선택) 보조 배경 — 별도 파일이 없으면 null 로 두고 그라데이션만 노출.
+  static const String? homeBackground = null;
+
+  /// 목업·참고용: 홈 / AI / 더보기 탭에 대응하는 현재 에셋.
+  static const home = 'assets/images/Home.png';
+  static const aiChat = 'assets/images/aichat.png';
+  static const more = 'assets/images/setting.png';
+
+  /// AI 채팅 시안 배경.
   static const aiChatFullBackground = 'assets/images/aichat.png';
-
-  /// 홈 탭 전체 화면 배경(목 디자인 PNG 권장).
-  static const homeFullBackground = 'assets/images/home_full_background.png';
-
-  /// 보조 배경(위 파일 없을 때 시도).
-  static const homeBackground = 'assets/images/home_background.png';
 
   /// 배경까지 꽉 채우려면 [DesignFit.screenCover],
   /// 디자인 가로폭에 맞추고 세로 스크롤은 [DesignFit.widthScroll].

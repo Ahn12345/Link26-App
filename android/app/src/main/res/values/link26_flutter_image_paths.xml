@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Flutter pubspec: assets/images/ 와 동일한 파일명.
-  네이티브(Java/Kotlin)에서 Flutter 에셋 경로를 쓸 때 참고용.
-  실제 비트맵은 Flutter 번들에만 있으므로, ImageView에 넣으려면
-  동일 PNG를 res/drawable-nodpi/ 로 복사한 뒤 @drawable/ 래퍼를 쓰세요.
+  Flutter `assets/images/link26_image_registry.xml` 및 실제 PNG 와 동일 경로.
+  네이티브에서 Flutter 에셋 경로 문자열 참고용.
 -->
 <resources>
     <string name="flutter_image_applogo" translatable="false">assets/images/applogo.png</string>
-    <string name="flutter_image_ui_home" translatable="false">assets/images/ui_home.png</string>
-    <string name="flutter_image_ui_ai_chat" translatable="false">assets/images/ui_ai_chat.png</string>
-    <string name="flutter_image_ui_more" translatable="false">assets/images/ui_more.png</string>
+    <string name="flutter_image_home" translatable="false">assets/images/Home.png</string>
     <string name="flutter_image_aichat" translatable="false">assets/images/aichat.png</string>
-    <string name="flutter_image_home_full_background" translatable="false">assets/images/home_full_background.png</string>
-    <string name="flutter_image_home_background" translatable="false">assets/images/home_background.png</string>
+    <string name="flutter_image_setting" translatable="false">assets/images/setting.png</string>
+    <string name="flutter_image_login" translatable="false">assets/images/login.png</string>
+    <string name="flutter_image_logo" translatable="false">assets/images/logo.png</string>
     <string name="flutter_image_pillsearch" translatable="false">assets/images/pillsearch.png</string>
     <string name="flutter_image_emergencycall" translatable="false">assets/images/emergencycall.png</string>
     <string name="flutter_image_familyadd" translatable="false">assets/images/familyadd.png</string>
@@ -22,12 +19,11 @@
 
     <string-array name="link26_flutter_image_paths" translatable="false">
         <item>assets/images/applogo.png</item>
-        <item>assets/images/ui_home.png</item>
-        <item>assets/images/ui_ai_chat.png</item>
-        <item>assets/images/ui_more.png</item>
+        <item>assets/images/Home.png</item>
         <item>assets/images/aichat.png</item>
-        <item>assets/images/home_full_background.png</item>
-        <item>assets/images/home_background.png</item>
+        <item>assets/images/setting.png</item>
+        <item>assets/images/login.png</item>
+        <item>assets/images/logo.png</item>
         <item>assets/images/pillsearch.png</item>
         <item>assets/images/emergencycall.png</item>
         <item>assets/images/familyadd.png</item>
