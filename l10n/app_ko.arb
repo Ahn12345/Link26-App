@@ -83,6 +83,8 @@
   "later": "나중에",
   "loginFailed": "이메일 또는 비밀번호가 일치하지 않습니다.",
   "signupEmailTaken": "이미 가입된 이메일입니다.",
+  "signupNhisSyncFailed": "국민건강보험(연동 서버) 전송에 실패했습니다. 나중에 다시 시도해 주세요.",
+  "signupNhisRequiredFailed": "국민건강보험 연동이 완료되지 않아 가입할 수 없습니다. 네트워크·API 설정을 확인해 주세요.",
   "signupNameLabel": "표시 이름 (선택)",
   "socialLoginComingSoon": "소셜 로그인은 여기에 연결됩니다.",
   "socialLoginGoogle": "Google로 계속",

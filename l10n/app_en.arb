@@ -83,6 +83,8 @@
   "later": "Later",
   "loginFailed": "Email or password does not match.",
   "signupEmailTaken": "This email is already registered.",
+  "signupNhisSyncFailed": "NHIS sync failed. You can try again later.",
+  "signupNhisRequiredFailed": "NHIS registration is required but failed. Check API settings.",
   "signupNameLabel": "Display name (optional)",
   "socialLoginComingSoon": "Social sign-in will connect here.",
   "socialLoginGoogle": "Continue with Google",

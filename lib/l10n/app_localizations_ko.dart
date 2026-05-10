@@ -314,6 +314,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signupPhoneTaken => '이미 가입된 전화번호입니다.';
 
   @override
+  String get signupNhisSyncFailed =>
+      '국민건강보험(연동 서버) 전송에 실패했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get signupNhisRequiredFailed =>
+      '국민건강보험 연동이 완료되지 않아 가입할 수 없습니다. 네트워크·API 설정을 확인해 주세요.';
+
+  @override
   String get loginPhoneRequired => '전화번호를 입력하세요.';
 
   @override

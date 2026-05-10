@@ -322,6 +322,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupPhoneTaken => 'This phone number is already registered.';
 
   @override
+  String get signupNhisSyncFailed =>
+      'NHIS sync failed. You can try again later.';
+
+  @override
+  String get signupNhisRequiredFailed =>
+      'NHIS registration is required but failed. Check API settings.';
+
+  @override
   String get loginPhoneRequired => 'Please enter your phone number.';
 
   @override

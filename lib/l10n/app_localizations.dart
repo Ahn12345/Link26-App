@@ -139,6 +139,8 @@ abstract class AppLocalizations {
   String get loginFailed;
   String get signupEmailTaken;
   String get signupPhoneTaken;
+  String get signupNhisSyncFailed;
+  String get signupNhisRequiredFailed;
   String get loginPhoneRequired;
   String get signupNameLabel;
   String get signupPhoneLabel;

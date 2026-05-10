@@ -15,8 +15,10 @@ import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
+import 'package:link26_app/features/auth/services/nhis_signup_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
+import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -113,6 +115,34 @@ class _SignupPageState extends State<SignupPage> {
         );
         return;
       }
+
+      final phoneDigits = SignupValidators.digitsOnly(_phoneCtrl.text);
+      final rrnDigits = SignupValidators.digitsOnly(_rrnCtrl.text);
+      final rrnHash =
+          UserLocalRepository.residentRegistrationSha256(rrnDigits);
+
+      final nhisResult = await NhisSignupSync.syncAfterLocalRegister(
+        displayName: _nameCtrl.text.trim(),
+        phoneDigits: phoneDigits,
+        gender: _gender!,
+        residentRegistrationHash: rrnHash,
+      );
+
+      if (!context.mounted) return;
+
+      if (nhisResult == NhisSignupSyncResult.failed) {
+        if (NhisRuntimeConfig.signupRequired) {
+          await UserLocalRepository.deleteUserByPhone(phoneDigits);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.signupNhisRequiredFailed)),
+          );
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.signupNhisSyncFailed)),
+        );
+      }
+
       await HiraLinkService.afterRegistration();
       await AuthSession.signIn();
       if (context.mounted) {

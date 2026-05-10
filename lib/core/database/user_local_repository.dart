@@ -15,7 +15,7 @@ abstract final class UserLocalRepository {
     final dbPath = p.join(dir.path, 'link26_users.db');
     _db = await openDatabase(
       dbPath,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE users (
@@ -27,6 +27,9 @@ abstract final class UserLocalRepository {
             gender TEXT,
             resident_registration_hash TEXT,
             privacy_consent INTEGER NOT NULL DEFAULT 0,
+            nhis_sync_ok INTEGER,
+            nhis_sync_error TEXT,
+            nhis_synced_at INTEGER,
             created_at INTEGER NOT NULL
           )
         ''');
@@ -40,6 +43,13 @@ abstract final class UserLocalRepository {
           await db.execute(
             'ALTER TABLE users ADD COLUMN privacy_consent INTEGER NOT NULL DEFAULT 0',
           );
+        }
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE users ADD COLUMN nhis_sync_ok INTEGER');
+          await db.execute(
+              'ALTER TABLE users ADD COLUMN nhis_sync_error TEXT');
+          await db.execute(
+              'ALTER TABLE users ADD COLUMN nhis_synced_at INTEGER');
         }
       },
     );
@@ -65,6 +75,38 @@ abstract final class UserLocalRepository {
     return sha256
         .convert(utf8.encode(thirteenDigitDigitsOnly.trim()))
         .toString();
+  }
+
+  /// NHIS·BFF 전송용 (DB [resident_registration_hash] 와 동일 알고리즘).
+  static String residentRegistrationSha256(String thirteenDigitDigitsOnly) =>
+      _hashResidentRegistration(thirteenDigitDigitsOnly);
+
+  static Future<void> updateNhisSyncStatus(
+    String phoneDigits, {
+    required bool ok,
+    String? errorMessage,
+  }) async {
+    final db = await _open();
+    await db.update(
+      'users',
+      {
+        'nhis_sync_ok': ok ? 1 : 0,
+        'nhis_sync_error': errorMessage,
+        'nhis_synced_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'phone = ?',
+      whereArgs: [phoneDigits],
+    );
+  }
+
+  /// NHIS 필수 연동 실패 시 로컬 가입 롤백.
+  static Future<void> deleteUserByPhone(String phoneDigits) async {
+    final db = await _open();
+    await db.delete(
+      'users',
+      where: 'phone = ?',
+      whereArgs: [phoneDigits],
+    );
   }
 
   static Future<bool> emailExists(String email) async {
