@@ -4,6 +4,16 @@ import 'package:link26_app/models/link_models.dart';
 import '../../core/services/local_medicine_list_store.dart';
 import '../search/pill_search_screen.dart';
 
+/// 홈 대시보드 색·그림자 (목업 / 고퀄 카드 UI)
+abstract final class _HomeDashTokens {
+  static const surface = Color(0xFFFFFFFF);
+  static const outlineSoft = Color(0xFFE8EEF5);
+  static const textPrimary = Color(0xFF0F172A);
+  static const textSecondary = Color(0xFF475569);
+  static const textMuted = Color(0xFF64748B);
+  static const accentBlue = Color(0xFF0B6BFF);
+}
+
 /// [MainShell] 홈 탭 본문 — 우측 목업과 같은 대시보드(검색·요약·알림·복용완료·내 약·배너).
 class HomeDashboardContent extends StatefulWidget {
   const HomeDashboardContent({super.key});
@@ -76,17 +86,30 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   const Expanded(
                     child: Text(
                       '건강한 하루를 시작하세요',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const AlarmListScreen(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        height: 1.25,
+                        color: _HomeDashTokens.textPrimary,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    icon: const Icon(Icons.notifications_none),
+                  ),
+                  Material(
+                    color: _HomeDashTokens.surface,
+                    shape: const CircleBorder(),
+                    elevation: 1,
+                    shadowColor: Colors.black.withValues(alpha: 0.06),
+                    child: IconButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AlarmListScreen(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      color: _HomeDashTokens.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -136,13 +159,39 @@ class _SearchBox extends StatelessWidget {
   final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(26),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: const Color(0xFFCBD5E1), width: 1.4)),
-        child: const Row(children: [Expanded(child: Text('약 이름, 성분, 복용 시간 등을 검색하세요', style: TextStyle(color: Color(0xFF475569)))), Icon(Icons.search, size: 28)]),
+    const radius = 32.0;
+    return Material(
+      color: _HomeDashTokens.surface,
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.07),
+      borderRadius: BorderRadius.circular(radius),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(radius),
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: _HomeDashTokens.outlineSoft, width: 1),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '약 이름, 성분, 복용 시간 등을 검색하세요',
+                    style: TextStyle(
+                      color: _HomeDashTokens.textSecondary,
+                      fontSize: 15,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+                Icon(Icons.search_rounded, size: 26, color: _HomeDashTokens.textMuted),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -157,7 +206,14 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Card(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('오늘 복용 & 등록된 약', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        const Text(
+          '오늘 복용 & 등록된 약',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: _HomeDashTokens.textPrimary,
+          ),
+        ),
         const SizedBox(height: 16),
         Row(children: [
           const Expanded(child: _Metric(label: '오늘 복용', value: '3/4')),
@@ -176,11 +232,31 @@ class _Metric extends StatelessWidget {
   final String label;
   final String value;
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(color: Color(0xFF475569), fontSize: 15)),
-        const SizedBox(height: 6),
-        Text(value, style: const TextStyle(color: Color(0xFF0B6BFF), fontSize: 30, fontWeight: FontWeight.w900)),
-      ]);
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: _HomeDashTokens.textMuted,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: _HomeDashTokens.accentBlue,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              height: 1.05,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
+      );
 }
 
 class _TodayAlarmCard extends StatelessWidget {
@@ -192,17 +268,54 @@ class _TodayAlarmCard extends StatelessWidget {
       child: Row(children: [
         const _RoundIcon(icon: Icons.notifications_none, color: Color(0xFF0B6BFF), soft: Color(0xFFEAF2FF)),
         const SizedBox(width: 14),
-        const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [Text('08:00', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), SizedBox(width: 8), _Pill('알림')]),
-          SizedBox(height: 4), Text('알로디핀 5mg', style: TextStyle(color: Color(0xFF334155), fontSize: 16)),
-        ])),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '08:00',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: _HomeDashTokens.textPrimary,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  _Pill('알림'),
+                ],
+              ),
+              SizedBox(height: 6),
+              Text(
+                '알로디핀 5mg',
+                style: TextStyle(
+                  color: _HomeDashTokens.textSecondary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
         FilledButton(
           onPressed: () {},
           style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: _HomeDashTokens.accentBlue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
-          child: const Text('복용 완료'),
+          child: const Text(
+            '복용 완료',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+          ),
         ),
       ]),
     );
@@ -233,7 +346,37 @@ class _AlarmMiniTile extends StatelessWidget {
       child: Row(children: [
         _RoundIcon(icon: type == '전화' ? Icons.call_outlined : Icons.notifications_none, color: const Color(0xFF0B6BFF), soft: const Color(0xFFEAF2FF)),
         const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [const Text('08:00', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), const SizedBox(width: 8), _Pill(type)]), const SizedBox(height: 4), Text(name, style: const TextStyle(color: Color(0xFF334155), fontSize: 16))])),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    '08:00',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: _HomeDashTokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _Pill(type),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                name,
+                style: const TextStyle(
+                  color: _HomeDashTokens.textSecondary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
         const Icon(Icons.check, color: Color(0xFF0B6BFF), size: 30),
       ]),
     );
@@ -249,7 +392,32 @@ class _MedicineTile extends StatelessWidget {
       child: Row(children: [
         const _RoundIcon(icon: Icons.medication_outlined, color: Color(0xFF0B6BFF), soft: Color(0xFFEAF2FF)),
         const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${medicine.name} (${medicine.englishName})', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), Text('${medicine.dose}   ${medicine.frequency}   ${medicine.time}', style: const TextStyle(color: Color(0xFF475569), fontSize: 15))])),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${medicine.name} (${medicine.englishName})',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: _HomeDashTokens.textPrimary,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${medicine.dose}   ${medicine.frequency}   ${medicine.time}',
+                style: const TextStyle(
+                  color: _HomeDashTokens.textMuted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
         const Icon(Icons.medication, color: Color(0xFF0B6BFF), size: 26),
       ]),
     );
@@ -278,13 +446,18 @@ class _RegisteredMedicineTile extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: _HomeDashTokens.textPrimary,
+                  ),
                 ),
                 Text(
                   '등록됨 · 상세는 검색에서 추가·수정',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 14,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -301,11 +474,31 @@ class _BannerCard extends StatelessWidget {
   const _BannerCard();
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(top: 4),
-        padding: const EdgeInsets.all(18),
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFD7E4FF))),
-        child: const Text('광고 배너 영역\n간단 보조 식품 추천', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF1E3A8A), fontWeight: FontWeight.w700)),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F1FF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD7E4FF)),
+          boxShadow: [
+            BoxShadow(
+              color: _HomeDashTokens.accentBlue.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Text(
+          '광고 배너 영역\n간단 보조 식품 추천',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF1E3A8A),
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            height: 1.45,
+          ),
+        ),
       );
 }
 
@@ -392,7 +585,39 @@ class _SectionTitle extends StatelessWidget {
   final IconData? icon;
   final VoidCallback? onTap;
   @override
-  Widget build(BuildContext context) => Row(children: [Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))), if (action != null) TextButton.icon(onPressed: onTap, icon: Icon(icon, size: 18), label: Text(action!))]);
+  Widget build(BuildContext context) => Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+                color: _HomeDashTokens.textPrimary,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          if (action != null)
+            TextButton.icon(
+              onPressed: onTap,
+              icon: Icon(icon, size: 18, color: _HomeDashTokens.accentBlue),
+              label: Text(
+                action!,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: _HomeDashTokens.accentBlue,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+        ],
+      );
 }
 
 class _Card extends StatelessWidget {
@@ -403,14 +628,20 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: padding,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFD7E4FF)),
+          color: _HomeDashTokens.surface,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: _HomeDashTokens.outlineSoft),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 14,
+              spreadRadius: 0,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: _HomeDashTokens.accentBlue.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -431,5 +662,20 @@ class _Pill extends StatelessWidget {
   const _Pill(this.text);
   final String text;
   @override
-  Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFEAF2FF), borderRadius: BorderRadius.circular(6)), child: Text(text, style: const TextStyle(color: Color(0xFF0B6BFF), fontSize: 12, fontWeight: FontWeight.w800)));
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF2FF),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: _HomeDashTokens.accentBlue,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+      );
 }
