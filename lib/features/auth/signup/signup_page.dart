@@ -133,6 +133,7 @@ class _SignupPageState extends State<SignupPage> {
       if (nhisResult == NhisSignupSyncResult.failed) {
         if (NhisRuntimeConfig.signupRequired) {
           await UserLocalRepository.deleteUserByPhone(phoneDigits);
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.signupNhisRequiredFailed)),
           );
