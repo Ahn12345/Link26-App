@@ -5,6 +5,7 @@ import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -45,12 +46,15 @@ class AuthWelcomeScreen extends StatelessWidget {
               final pad = Link26Layout.pageInsets(w);
               final logoH = Link26ResponsiveImageHeights.authWelcome(w);
               final logoW = Link26ResponsiveImageHeights.authWelcomeDisplayWidth(w);
+              final authPadV = Link26ResponsiveUi.authCardPadVertical(w);
+              final authPadH = Link26ResponsiveUi.authCardPadHorizontal(w);
+              final welcomeTop = Link26ResponsiveUi.welcomeTopInset(w);
               return Padding(
                 padding: pad,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 12),
+                    SizedBox(height: welcomeTop),
                     Align(
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(
@@ -58,7 +62,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                           maxWidth: Link26ResponsiveTokens.contentMaxWidth,
                         ),
                         child: Link26ElevatedCard(
-                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                          padding: EdgeInsets.symmetric(vertical: authPadV, horizontal: authPadH),
                           child: Column(
                             children: [
                               Center(
@@ -71,22 +75,22 @@ class AuthWelcomeScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                               Text(
                                 l10n.appTitle,
-                                style: const TextStyle(
-                                  fontSize: 22,
+                                style: TextStyle(
+                                  fontSize: Link26ResponsiveUi.appMarketingTitle(w),
                                   fontWeight: FontWeight.w900,
                                   color: Link26Surface.textPrimary,
                                   letterSpacing: -0.4,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 10),
+                              SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                               Text(
                                 l10n.authWelcomeSubtitle,
-                                style: const TextStyle(
-                                  fontSize: 15,
+                                style: TextStyle(
+                                  fontSize: Link26ResponsiveUi.appMarketingSubtitle(w),
                                   color: Link26Surface.textSecondary,
                                   fontWeight: FontWeight.w600,
                                   height: 1.4,
@@ -117,7 +121,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                               ),
                               child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                             OutlinedButton(
                               onPressed: () =>
                                   Navigator.of(context).pushNamed(SignupPage.routeName),
@@ -128,7 +132,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                   ],
                 ),
               );

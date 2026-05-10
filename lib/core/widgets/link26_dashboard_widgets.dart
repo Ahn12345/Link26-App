@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 
 /// 홈 대시보드와 동일한 그림자·테두리 카드.
@@ -56,13 +57,17 @@ class Link26SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final titleSize = Link26ResponsiveUi.sectionHeader(w);
+    final actionSize = Link26ResponsiveUi.sectionAction(w);
+    final iconSz = Link26ResponsiveUi.sectionHeaderIcon(w);
     return Row(
       children: [
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 17,
+            style: TextStyle(
+              fontSize: titleSize,
               fontWeight: FontWeight.w900,
               color: Link26Surface.textPrimary,
             ),
@@ -71,13 +76,13 @@ class Link26SectionHeader extends StatelessWidget {
         if (action != null)
           TextButton.icon(
             onPressed: onAction,
-            icon: Icon(icon, size: 18, color: Link26Surface.accent),
+            icon: Icon(icon, size: iconSz, color: Link26Surface.accent),
             label: Text(
               action!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
                 color: Link26Surface.accent,
-                fontSize: 14,
+                fontSize: actionSize,
               ),
             ),
             style: TextButton.styleFrom(

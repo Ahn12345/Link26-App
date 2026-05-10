@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -110,17 +111,17 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: Link26ResponsiveUi.gapXl(w)),
               Text(
                 l10n.signup,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
+                style: TextStyle(
+                  fontSize: Link26ResponsiveUi.appMarketingTitle(w),
                   fontWeight: FontWeight.w900,
                   color: Link26Surface.textPrimary,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: Link26ResponsiveUi.gapLg(w)),
               TextField(
                 controller: _nameCtrl,
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),

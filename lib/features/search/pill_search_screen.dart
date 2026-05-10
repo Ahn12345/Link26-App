@@ -4,6 +4,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import '../../core/constants/image_assets.dart';
 import '../../core/layout/link26_responsive_image_tokens.g.dart';
 import '../../core/layout/link26_responsive_layout.dart';
+import '../../core/layout/link26_responsive_ui_tokens.g.dart';
 import '../../core/services/local_medicine_list_store.dart';
 import '../../core/theme/link26_surface_style.dart';
 import '../../core/widgets/decoded_asset_image.dart';
@@ -50,7 +51,7 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
         child: Link26ResponsiveList(
           children: [
             Link26ElevatedCard(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -67,16 +68,17 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                   TextField(
                     controller: _ctrl,
                     decoration: Link26Surface.inputDecoration(
                       labelText: l10n.pillSearchLabel,
                       hintText: l10n.pillSearchHint,
                     ),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Link26Surface.textPrimary,
                       fontWeight: FontWeight.w600,
+                      fontSize: Link26ResponsiveUi.body(w),
                     ),
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _add(),
@@ -84,7 +86,7 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: Link26ResponsiveUi.gapLg(w)),
             FilledButton.icon(
               onPressed: _add,
               style: Link26Surface.filledAccentButton(

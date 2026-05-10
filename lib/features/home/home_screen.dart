@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/alarms/all_alarms_screen.dart';
@@ -89,6 +90,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     // [MainShell] extendBody: true 이면 본문이 하단 네비 뒤로 깔리므로 여백을 둡니다.
     final bottomPad =
         MediaQuery.of(context).padding.bottom + 88;
+    final w = MediaQuery.sizeOf(context).width;
 
     return ColoredBox(
       color: Colors.transparent,
@@ -97,17 +99,22 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 28 + bottomPad),
+              padding: EdgeInsets.fromLTRB(
+                Link26ResponsiveUi.homeScrollPadH(w),
+                Link26ResponsiveUi.homeScrollPadTop(w),
+                Link26ResponsiveUi.homeScrollPadH(w),
+                Link26ResponsiveUi.homeScrollBottomExtra(w) + bottomPad,
+              ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           '건강한 하루를 시작하세요',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: Link26ResponsiveUi.screenHeadline(w),
                             fontWeight: FontWeight.w900,
                             height: 1.25,
                             color: Link26Surface.textPrimary,
@@ -128,12 +135,12 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                   _SearchPill(
                     onTap: () =>
                         Navigator.of(context).pushNamed(PillSearchScreen.routeName),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                   Link26ElevatedCard(
                     child: Row(
                       children: [
@@ -143,7 +150,11 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                             value: '$completed/${alarms.length}',
                           ),
                         ),
-                        Container(width: 1, height: 54, color: Link26Surface.outline),
+                        Container(
+                          width: 1,
+                          height: Link26ResponsiveUi.statDividerHeight(w),
+                          color: Link26Surface.outline,
+                        ),
                         Expanded(
                           child: _Stat(
                             title: '등록된 약',
@@ -153,7 +164,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                   Link26SectionHeader(
                     title: '오늘의 알림',
                     action: '전체보기',
@@ -165,33 +176,33 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                   _AlarmPreviewCard(
                     item: alarms.first,
                     onDone: () => setState(() => alarms.first.completed = true),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
+                  SizedBox(height: Link26ResponsiveUi.gapXl(w)),
+                  Text(
                     '복용 완료',
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: Link26ResponsiveUi.subsectionHeader(w),
                       fontWeight: FontWeight.w900,
                       color: Link26Surface.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                   ...alarms
                       .where((e) => e.completed)
                       .map((e) => _CompletedTile(item: e)),
-                  const SizedBox(height: 18),
+                  SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                   Link26SectionHeader(
                     title: '내 약 목록',
                     action: '+ 추가',
                     onAction: _openAddMedicine,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                   ...medicines.map((m) => _MedicineTile(medicine: m)),
-                  const SizedBox(height: 12),
+                  SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                   const _AdBanner(),
                 ]),
               ),
@@ -210,7 +221,10 @@ class _SearchPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const r = 30.0;
+    final w = MediaQuery.sizeOf(context).width;
+    final r = Link26ResponsiveUi.searchPillRadius(w);
+    final h = Link26ResponsiveUi.searchPillHeight(w);
+    final pad = Link26ResponsiveUi.searchPillInlinePad(w);
     return Material(
       color: Colors.white,
       elevation: 2,
@@ -220,28 +234,32 @@ class _SearchPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(r),
         onTap: onTap,
         child: Ink(
-          height: 52,
+          height: h,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(r),
             border: Border.all(color: Link26Surface.outline),
           ),
           child: Row(
             children: [
-              SizedBox(width: 16),
+              SizedBox(width: pad),
               Expanded(
                 child: Text(
                   '약 이름, 성분, 복용 시간 등을 검색하세요',
                   style: TextStyle(
                     color: Link26Surface.textSecondary,
-                    fontSize: 15,
+                    fontSize: Link26ResponsiveUi.searchHint(w),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              SizedBox(width: 12),
-              Icon(Icons.search_rounded, color: Link26Surface.textMuted, size: 26),
-              SizedBox(width: 16),
+              SizedBox(width: Link26ResponsiveUi.gapSm(w)),
+              Icon(
+                Icons.search_rounded,
+                color: Link26Surface.textMuted,
+                size: Link26ResponsiveUi.searchIconSize(w),
+              ),
+              SizedBox(width: pad),
             ],
           ),
         ),
@@ -258,23 +276,24 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: Link26Surface.textMuted,
-            fontSize: 13,
+            fontSize: Link26ResponsiveUi.statLabel(w),
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: Link26ResponsiveUi.gapSm(w)),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             color: Link26Surface.accent,
-            fontSize: 30,
+            fontSize: Link26ResponsiveUi.statValue(w),
             fontWeight: FontWeight.w900,
             height: 1.05,
             letterSpacing: -0.5,
@@ -293,15 +312,17 @@ class _AlarmPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final avR = Link26ResponsiveUi.alarmAvatarRadius(w);
     return Link26ElevatedCard(
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 24,
-            backgroundColor: Color(0xFFEAF3FF),
-            child: Icon(Icons.notifications_none_rounded, color: Link26Surface.accent),
+          CircleAvatar(
+            radius: avR,
+            backgroundColor: const Color(0xFFEAF3FF),
+            child: const Icon(Icons.notifications_none_rounded, color: Link26Surface.accent),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: Link26ResponsiveUi.alarmRowGap(w)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,36 +331,36 @@ class _AlarmPreviewCard extends StatelessWidget {
                   children: [
                     Text(
                       item.time,
-                      style: const TextStyle(
-                        fontSize: 17,
+                      style: TextStyle(
+                        fontSize: Link26ResponsiveUi.alarmTime(w),
                         fontWeight: FontWeight.w800,
                         color: Link26Surface.textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: Link26ResponsiveUi.gapSm(w)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEAF2FF),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
+                      child: Text(
                         '알림',
                         style: TextStyle(
                           color: Link26Surface.accent,
-                          fontSize: 11,
+                          fontSize: Link26ResponsiveUi.caption(w),
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: Link26ResponsiveUi.alarmMetaGap(w)),
                 Text(
                   '${item.medicineName} ${item.dose}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Link26Surface.textSecondary,
-                    fontSize: 15,
+                    fontSize: Link26ResponsiveUi.body(w),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -369,41 +390,53 @@ class _CompletedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
+      padding: EdgeInsets.only(top: Link26ResponsiveUi.completedTileGapTop(w)),
       child: Link26ElevatedCard(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: Link26ResponsiveUi.profileRowGap(w),
+          vertical: Link26ResponsiveUi.gapSm(w) + Link26ResponsiveUi.gapXs(w),
+        ),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 22,
+              radius: Link26ResponsiveUi.completedAvatarRadius(w),
               backgroundColor: const Color(0xFFEAF3FF),
               child: Icon(
                 item.type == AlarmType.call ? Icons.call_outlined : Icons.notifications_none_rounded,
                 color: Link26Surface.accent,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: Link26ResponsiveUi.gapMd(w)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '${item.time} · ${item.type == AlarmType.call ? '전화' : '알림'}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w800,
                       color: Link26Surface.textPrimary,
+                      fontSize: Link26ResponsiveUi.completedRowTitle(w),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: Link26ResponsiveUi.gapXs(w)),
                   Text(
                     '${item.medicineName} ${item.dose}',
-                    style: const TextStyle(color: Link26Surface.textSecondary, fontSize: 14),
+                    style: TextStyle(
+                      color: Link26Surface.textSecondary,
+                      fontSize: Link26ResponsiveUi.bodySmall(w),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.check_circle, color: Link26Surface.accent, size: 28),
+            Icon(
+              Icons.check_circle,
+              color: Link26Surface.accent,
+              size: Link26ResponsiveUi.searchIconSize(w) + Link26ResponsiveUi.gapXs(w),
+            ),
           ],
         ),
       ),
@@ -418,37 +451,41 @@ class _MedicineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
+      padding: EdgeInsets.only(top: Link26ResponsiveUi.medicineTileGapTop(w)),
       child: Link26ElevatedCard(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: Link26ResponsiveUi.profileRowGap(w),
+          vertical: Link26ResponsiveUi.gapSm(w) + Link26ResponsiveUi.gapXs(w),
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircleAvatar(
-              radius: 22,
-              backgroundColor: Color(0xFFEAF3FF),
-              child: Icon(Icons.medication_outlined, color: Link26Surface.accent),
+            CircleAvatar(
+              radius: Link26ResponsiveUi.medicineAvatarRadius(w),
+              backgroundColor: const Color(0xFFEAF3FF),
+              child: const Icon(Icons.medication_outlined, color: Link26Surface.accent),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: Link26ResponsiveUi.gapMd(w)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     medicine.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 16,
+                      fontSize: Link26ResponsiveUi.medicineName(w),
                       color: Link26Surface.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: Link26ResponsiveUi.gapXs(w)),
                   Text(
                     '${medicine.dose}   ${medicine.frequency}   ${medicine.time}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Link26Surface.textMuted,
-                      fontSize: 13,
+                      fontSize: Link26ResponsiveUi.medicineMeta(w),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -471,8 +508,12 @@ class _AdBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      padding: EdgeInsets.symmetric(
+        horizontal: Link26ResponsiveUi.adBannerPadH(w),
+        vertical: Link26ResponsiveUi.adBannerPadV(w),
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -492,15 +533,15 @@ class _AdBanner extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(
+      child: Center(
         child: Text(
           '광고 배너 영역\n간단 보조 식품 추천',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            fontSize: 15,
+            fontSize: Link26ResponsiveUi.adBannerText(w),
             height: 1.45,
-            color: Color(0xFF1E3A8A),
+            color: const Color(0xFF1E3A8A),
           ),
         ),
       ),

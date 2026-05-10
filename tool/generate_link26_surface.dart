@@ -128,6 +128,7 @@ $gradientLines
 
   _writeResponsiveTokens(root, design);
   _writeResponsiveImageTokens(root);
+  _writeResponsiveUiTokens(root);
 }
 
 void _writeResponsiveTokens(Directory root, XmlElement design) {
@@ -267,6 +268,60 @@ class _ScreenImageSpec {
   final double medium;
   final double expanded;
   final double widthCap;
+}
+
+/// `assets/design/link26_responsive_ui.xml` → `link26_responsive_ui_tokens.g.dart`
+void _writeResponsiveUiTokens(Directory root) {
+  final xmlPath = '${root.path}/assets/design/link26_responsive_ui.xml';
+  final file = File(xmlPath);
+  if (!file.existsSync()) {
+    print('Skip responsive UI tokens (missing $xmlPath)');
+    return;
+  }
+  final doc = XmlDocument.parse(file.readAsStringSync());
+  final rootEl = doc.rootElement;
+  if (rootEl.localName != 'link26-responsive-ui') {
+    throw StateError('Root must be link26-responsive-ui');
+  }
+
+  final idPattern = RegExp(r'^[a-z][a-zA-Z0-9]*$');
+  final buf = StringBuffer()
+    ..writeln('// GENERATED FILE - do not edit by hand.')
+    ..writeln('// Source: assets/design/link26_responsive_ui.xml')
+    ..writeln('// Regenerate: dart run tool/generate_link26_surface.dart')
+    ..writeln()
+    ..writeln("import 'link26_responsive_tokens.g.dart';")
+    ..writeln()
+    ..writeln('abstract final class Link26ResponsiveUi {');
+
+  for (final el in rootEl.findElements('token')) {
+    final id = el.getAttribute('id');
+    if (id == null || id.isEmpty) continue;
+    if (!idPattern.hasMatch(id)) {
+      throw StateError('token id "$id" must be lowerCamelCase');
+    }
+    final c = double.parse(el.getAttribute('compact') ?? '');
+    final m = double.parse(el.getAttribute('medium') ?? '');
+    final e = double.parse(el.getAttribute('expanded') ?? '');
+    buf
+      ..writeln('  static double $id(double width) {')
+      ..writeln('    if (width < Link26ResponsiveTokens.breakpointCompact) {')
+      ..writeln('      return $c;')
+      ..writeln('    }')
+      ..writeln('    if (width < Link26ResponsiveTokens.breakpointMedium) {')
+      ..writeln('      return $m;')
+      ..writeln('    }')
+      ..writeln('    return $e;')
+      ..writeln('  }')
+      ..writeln();
+  }
+
+  buf.writeln('}');
+
+  final outPath = '${root.path}/lib/core/layout/link26_responsive_ui_tokens.g.dart';
+  File(outPath).parent.createSync(recursive: true);
+  File(outPath).writeAsStringSync(buf.toString());
+  print('Wrote $outPath');
 }
 
 String _hexToDart(String hex) {

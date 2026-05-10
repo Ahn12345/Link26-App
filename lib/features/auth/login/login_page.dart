@@ -7,6 +7,7 @@ import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -104,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Link26ElevatedCard(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -119,13 +120,13 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                     Text(
                       l10n.authWelcomeSubtitle,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Link26Surface.textSecondary,
-                        fontSize: 15,
+                        fontSize: Link26ResponsiveUi.body(w),
                         height: 1.4,
                         fontWeight: FontWeight.w600,
                       ),
@@ -133,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: Link26ResponsiveUi.gapXl(w)),
               Semantics(
                 button: true,
                 label: l10n.socialLoginGoogle,
@@ -144,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                   label: Text(l10n.socialLoginGoogle),
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: Link26ResponsiveUi.gapSm(w)),
               Semantics(
                 button: true,
                 label: l10n.socialLoginApple,
@@ -155,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
                   label: Text(l10n.socialLoginApple),
                 ),
               ),
-              const SizedBox(height: 22),
+              SizedBox(height: Link26ResponsiveUi.chatHeaderTitleGap(w) + Link26ResponsiveUi.gapXs(w)),
               Row(
                 children: [
                   const Expanded(child: Divider(color: Link26Surface.outline)),
@@ -163,17 +164,17 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       l10n.loginDividerEmail,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Link26Surface.textMuted,
                         fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                        fontSize: Link26ResponsiveUi.bodySmall(w),
                       ),
                     ),
                   ),
                   const Expanded(child: Divider(color: Link26Surface.outline)),
                 ],
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: Link26ResponsiveUi.gapXl(w)),
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
@@ -181,20 +182,20 @@ class _LoginPageState extends State<LoginPage> {
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
                 decoration: Link26Surface.inputDecoration(labelText: l10n.loginEmailLabel),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: Link26ResponsiveUi.gapMd(w)),
               TextField(
                 controller: _passwordCtrl,
                 obscureText: true,
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
                 decoration: Link26Surface.inputDecoration(labelText: l10n.loginPasswordLabel),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: Link26ResponsiveUi.authCardPadVertical(w)),
               FilledButton(
                 onPressed: () => _submit(context),
                 style: Link26Surface.filledAccentButton(minimumSize: const Size.fromHeight(52)),
                 child: Text(l10n.continueCta, style: const TextStyle(fontWeight: FontWeight.w800)),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: Link26ResponsiveUi.gapLg(w)),
             ],
           ),
         ),

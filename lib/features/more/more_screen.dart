@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -32,6 +33,8 @@ class _MoreBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
+    final w = MediaQuery.sizeOf(context).width;
+    final logoSz = Link26ResponsiveUi.moreLogoSize(w);
     return SafeArea(
       child: Link26ResponsiveList(
         bottomInset: bottomPad + 4,
@@ -39,11 +42,11 @@ class _MoreBody extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   '더보기',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: Link26ResponsiveUi.screenHeadline(w),
                     fontWeight: FontWeight.w900,
                     height: 1.25,
                     color: Link26Surface.textPrimary,
@@ -53,39 +56,59 @@ class _MoreBody extends StatelessWidget {
               ),
               DecodedAssetImage(
                 ImageAssets.applogo,
-                height: 40,
-                width: 40,
+                height: logoSz,
+                width: logoSz,
                 fit: BoxFit.contain,
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: Link26ResponsiveUi.gapXl(w)),
           Link26ElevatedCard(
-            padding: const EdgeInsets.all(14),
-            child: const Row(
+            padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
+            child: Row(
               children: [
                 CircleAvatar(
-                  radius: 28,
+                  radius: Link26ResponsiveUi.profileAvatarRadius(w),
                   backgroundColor: Link26Surface.chipTint,
-                  child: Text('김', style: TextStyle(color: Link26Surface.accent, fontSize: 24, fontWeight: FontWeight.w800)),
+                  child: Text(
+                    '김',
+                    style: TextStyle(
+                      color: Link26Surface.accent,
+                      fontSize: Link26ResponsiveUi.menuProfileInitial(w),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
-                SizedBox(width: 14),
+                SizedBox(width: Link26ResponsiveUi.profileRowGap(w)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('김건강', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Link26Surface.textPrimary)),
-                      SizedBox(height: 4),
-                      Text('kimhealth@example.com', style: TextStyle(color: Link26Surface.textSecondary, fontSize: 14)),
+                      Text(
+                        '김건강',
+                        style: TextStyle(
+                          fontSize: Link26ResponsiveUi.menuProfileName(w),
+                          fontWeight: FontWeight.w900,
+                          color: Link26Surface.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapXs(w)),
+                      Text(
+                        'kimhealth@example.com',
+                        style: TextStyle(
+                          color: Link26Surface.textSecondary,
+                          fontSize: Link26ResponsiveUi.menuProfileEmail(w),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: Link26ResponsiveUi.gapLg(w)),
           const Link26SectionHeader(title: '메뉴'),
-          const SizedBox(height: 8),
+          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
           _MenuTile(
             icon: Icons.group_outlined,
             title: '가족 계정',
@@ -143,8 +166,9 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: Link26ResponsiveUi.menuTileBottomGap(w)),
       child: Link26ElevatedCard(
         padding: EdgeInsets.zero,
         child: Material(
@@ -153,21 +177,36 @@ class _MenuTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: EdgeInsets.symmetric(
+                horizontal: Link26ResponsiveUi.menuTileHPadding(w),
+                vertical: Link26ResponsiveUi.menuTileVPadding(w),
+              ),
               child: Row(
                 children: [
                   CircleAvatar(
                     backgroundColor: Link26Surface.chipTint,
                     child: Icon(icon, color: Link26Surface.accent),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: Link26ResponsiveUi.gapMd(w)),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: Link26Surface.textPrimary)),
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: Link26Surface.textPrimary,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text(subtitle, style: const TextStyle(fontSize: 13, color: Link26Surface.textSecondary)),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: Link26ResponsiveUi.menuTileSubtitle(w),
+                            color: Link26Surface.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  UI/UX 타이포·간격 (반응형). breakpoint 는 link26_design_tokens.xml <responsive/> 와 동일.
+  생성: dart run tool/generate_link26_surface.dart → lib/core/layout/link26_responsive_ui_tokens.g.dart
+-->
+<link26-responsive-ui version="1">
+  <!-- 타이포: fontSize (논리 px) -->
+  <token id="screenHeadline" compact="22" medium="24" expanded="26" />
+  <token id="appMarketingTitle" compact="20" medium="22" expanded="24" />
+  <token id="appMarketingSubtitle" compact="14" medium="15" expanded="16" />
+  <token id="sectionHeader" compact="16" medium="17" expanded="18" />
+  <token id="sectionAction" compact="13" medium="14" expanded="14" />
+  <token id="subsectionHeader" compact="16" medium="17" expanded="17" />
+  <token id="searchHint" compact="14" medium="15" expanded="15" />
+  <token id="statLabel" compact="12" medium="13" expanded="13" />
+  <token id="statValue" compact="26" medium="30" expanded="34" />
+  <token id="body" compact="14" medium="15" expanded="15" />
+  <token id="bodySmall" compact="13" medium="14" expanded="14" />
+  <token id="caption" compact="10" medium="11" expanded="11" />
+  <token id="chatTitle" compact="18" medium="20" expanded="22" />
+  <token id="chatCounter" compact="13" medium="14" expanded="14" />
+  <token id="chatHint" compact="11" medium="12" expanded="12" />
+  <token id="menuProfileName" compact="17" medium="18" expanded="19" />
+  <token id="menuProfileEmail" compact="13" medium="14" expanded="14" />
+  <token id="menuProfileInitial" compact="22" medium="24" expanded="26" />
+  <token id="menuTileSubtitle" compact="12" medium="13" expanded="13" />
+  <token id="moreLogoSize" compact="36" medium="40" expanded="44" />
+  <token id="adBannerText" compact="14" medium="15" expanded="16" />
+  <token id="medicineName" compact="15" medium="16" expanded="17" />
+  <token id="medicineMeta" compact="12" medium="13" expanded="13" />
+  <token id="alarmTime" compact="16" medium="17" expanded="17" />
+  <token id="completedRowTitle" compact="14" medium="15" expanded="15" />
+  <token id="sectionHeaderIcon" compact="16" medium="18" expanded="18" />
+
+  <!-- 간격·크기 -->
+  <token id="homeScrollPadH" compact="18" medium="20" expanded="22" />
+  <token id="homeScrollPadTop" compact="14" medium="16" expanded="18" />
+  <token id="homeScrollBottomExtra" compact="26" medium="28" expanded="30" />
+  <token id="gapXs" compact="6" medium="8" expanded="8" />
+  <token id="gapSm" compact="8" medium="10" expanded="10" />
+  <token id="gapMd" compact="12" medium="14" expanded="14" />
+  <token id="gapLg" compact="16" medium="18" expanded="20" />
+  <token id="gapXl" compact="18" medium="20" expanded="22" />
+  <token id="searchPillHeight" compact="48" medium="52" expanded="54" />
+  <token id="searchPillRadius" compact="28" medium="30" expanded="30" />
+  <token id="searchIconSize" compact="24" medium="26" expanded="28" />
+  <token id="searchPillInlinePad" compact="14" medium="16" expanded="16" />
+  <token id="statDividerHeight" compact="48" medium="54" expanded="56" />
+  <token id="alarmAvatarRadius" compact="22" medium="24" expanded="24" />
+  <token id="alarmRowGap" compact="12" medium="14" expanded="14" />
+  <token id="alarmMetaGap" compact="6" medium="6" expanded="8" />
+  <token id="completedTileGapTop" compact="8" medium="10" expanded="10" />
+  <token id="medicineTileGapTop" compact="8" medium="10" expanded="10" />
+  <token id="profileAvatarRadius" compact="26" medium="28" expanded="30" />
+  <token id="profileCardPadding" compact="12" medium="14" expanded="16" />
+  <token id="profileRowGap" compact="12" medium="14" expanded="14" />
+  <token id="menuTileHPadding" compact="10" medium="12" expanded="12" />
+  <token id="menuTileVPadding" compact="8" medium="10" expanded="10" />
+  <token id="menuTileBottomGap" compact="8" medium="10" expanded="10" />
+  <token id="authCardPadVertical" compact="20" medium="24" expanded="24" />
+  <token id="authCardPadHorizontal" compact="18" medium="20" expanded="20" />
+  <token id="welcomeTopInset" compact="10" medium="12" expanded="12" />
+  <token id="adBannerPadH" compact="18" medium="20" expanded="22" />
+  <token id="adBannerPadV" compact="20" medium="22" expanded="24" />
+  <token id="chatHeaderPadV" compact="12" medium="14" expanded="14" />
+  <token id="chatHeaderTitleGap" compact="10" medium="12" expanded="12" />
+  <token id="chatHeaderRowGap" compact="10" medium="12" expanded="12" />
+  <token id="progressBarHeight" compact="7" medium="8" expanded="8" />
+  <token id="completedAvatarRadius" compact="20" medium="22" expanded="22" />
+  <token id="medicineAvatarRadius" compact="20" medium="22" expanded="22" />
+</link26-responsive-ui>

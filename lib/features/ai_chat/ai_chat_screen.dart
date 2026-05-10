@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
@@ -172,6 +173,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                       limit: _dailyLimit,
                       embedded: embedded,
                       horizontalPad: side,
+                      layoutWidth: w,
                     ),
                     Expanded(
                       child: ColoredBox(
@@ -249,37 +251,41 @@ class _ChatHeader extends StatelessWidget {
     required this.limit,
     required this.embedded,
     required this.horizontalPad,
+    required this.layoutWidth,
   });
 
   final int used;
   final int limit;
   final bool embedded;
   final double horizontalPad;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
     final progress = limit > 0 ? used / limit : 0.0;
     final leftPad = horizontalPad + (embedded ? 0 : 36);
+    final w = layoutWidth;
+    final padV = Link26ResponsiveUi.chatHeaderPadV(w);
 
     return Material(
       color: Colors.white,
       elevation: 2,
       shadowColor: Colors.black.withValues(alpha: 0.06),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(leftPad, 14, horizontalPad, 14),
+        padding: EdgeInsets.fromLTRB(leftPad, padV, horizontalPad, padV),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'AI 약 정보',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: Link26ResponsiveUi.chatTitle(w),
                 fontWeight: FontWeight.w900,
                 color: Link26Surface.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: Link26ResponsiveUi.chatHeaderTitleGap(w)),
             Row(
               children: [
                 Expanded(
@@ -287,28 +293,28 @@ class _ChatHeader extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress.clamp(0.0, 1.0),
-                      minHeight: 8,
+                      minHeight: Link26ResponsiveUi.progressBarHeight(w),
                       backgroundColor: Link26Surface.outline,
                       color: Link26Surface.accent,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: Link26ResponsiveUi.chatHeaderRowGap(w)),
                 Text(
                   '$used/$limit',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                    fontSize: Link26ResponsiveUi.chatCounter(w),
                     color: Link26Surface.accent,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: Link26ResponsiveUi.gapSm(w)),
             Text(
               '오전 4시에 초기화됩니다',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: Link26ResponsiveUi.chatHint(w),
                 color: Colors.grey.shade500,
               ),
             ),
