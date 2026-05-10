@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
@@ -9,7 +8,7 @@ import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
 import '../more/more_screen.dart';
 
-/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅 · 더보기(실제 메뉴 UI).
+/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅 · 더보기.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -50,55 +49,30 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBody: true,
-      backgroundColor: scheme.surface,
-      body: Stack(
-        fit: StackFit.expand,
+      backgroundColor: const Color(0xFFEEF4FA),
+      body: IndexedStack(
+        index: _index,
+        sizing: StackFit.expand,
         children: [
-          IndexedStack(
-            index: _index,
-            sizing: StackFit.expand,
-            children: [
-              FullScreenAssetBackground(
-                assetPath: DesignAssets.homeFullBackground,
-                fallbackAssetPath: DesignAssets.homeBackground,
-                child: const HomeDashboardContent(),
-              ),
-              const AiChatScreen(showScaffold: false, embeddedInShell: true),
-              const MoreScreen(showScaffold: false),
-            ],
+          FullScreenAssetBackground(
+            assetPath: DesignAssets.homeFullBackground,
+            fallbackAssetPath: DesignAssets.homeBackground,
+            child: const HomeDashboardContent(),
           ),
-          if (kDebugMode)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Material(
-                color: Colors.deepOrange,
-                elevation: 6,
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                    child: Text(
-                      'DEBUG · 이 줄이 보이면 최신 main_shell.dart 입니다 (문서/GitHub/Link26-App)',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          ColoredBox(
+            color: scheme.surface,
+            child: const AiChatScreen(showScaffold: false, embeddedInShell: true),
+          ),
+          ColoredBox(
+            color: scheme.surface,
+            child: const MoreScreen(showScaffold: false),
+          ),
         ],
       ),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           navigationBarTheme: NavigationBarThemeData(
-            indicatorColor: scheme.primaryContainer.withValues(alpha: 0.65),
+            indicatorColor: scheme.primary.withValues(alpha: 0.14),
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
                 return TextStyle(
@@ -116,31 +90,31 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           ),
         ),
         child: Material(
-          color: scheme.surface,
-          elevation: 8,
-          shadowColor: Colors.black.withValues(alpha: 0.08),
+          color: Colors.white,
+          elevation: 12,
+          shadowColor: Colors.black.withValues(alpha: 0.06),
           child: SafeArea(
             top: false,
             child: NavigationBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.white,
               elevation: 0,
               surfaceTintColor: Colors.transparent,
               selectedIndex: _index,
               onDestinationSelected: (i) => setState(() => _index = i),
               destinations: [
                 NavigationDestination(
-                  icon: const Icon(Icons.home_outlined),
-                  selectedIcon: const Icon(Icons.home),
+                  icon: Icon(Icons.home_outlined, color: scheme.onSurfaceVariant),
+                  selectedIcon: Icon(Icons.home, color: scheme.primary),
                   label: l10n.homeTitle,
                 ),
                 NavigationDestination(
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  selectedIcon: const Icon(Icons.chat_bubble),
+                  icon: Icon(Icons.chat_bubble_outline, color: scheme.onSurfaceVariant),
+                  selectedIcon: Icon(Icons.chat_bubble, color: scheme.primary),
                   label: l10n.aiChatTitle,
                 ),
                 NavigationDestination(
-                  icon: const Icon(Icons.more_horiz),
-                  selectedIcon: const Icon(Icons.more_horiz),
+                  icon: Icon(Icons.more_horiz, color: scheme.onSurfaceVariant),
+                  selectedIcon: Icon(Icons.more_horiz, color: scheme.primary),
                   label: l10n.moreTitle,
                 ),
               ],

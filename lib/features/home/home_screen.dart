@@ -8,7 +8,7 @@ import 'package:link26_app/models/medicine.dart';
 
 /// 홈 대시보드 색·타이포 (목업 기준)
 abstract final class _Dash {
-  static const accent = Color(0xFF0B6BFF);
+  static const accent = Color(0xFF0047AB);
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF475569);
   static const textMuted = Color(0xFF64748B);
@@ -38,6 +38,12 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       frequency: '1일 2회',
       time: '08:00',
     ),
+    const Medicine(
+      name: '오메프라졸 (Omeprazole)',
+      dose: '20mg',
+      frequency: '1일 1회',
+      time: '09:00',
+    ),
   ];
 
   final List<AlarmItem> alarms = [
@@ -47,6 +53,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       medicineName: '알로디핀',
       dose: '5mg',
       type: AlarmType.app,
+      completed: false,
     ),
     AlarmItem(
       date: '2024년 5월 20일 (월)',
@@ -61,6 +68,14 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       time: '08:00',
       medicineName: '메트프로민',
       dose: '500mg',
+      type: AlarmType.app,
+      completed: true,
+    ),
+    AlarmItem(
+      date: '2024년 5월 20일 (월)',
+      time: '12:00',
+      medicineName: '비타민 D',
+      dose: '1000IU',
       type: AlarmType.app,
       completed: true,
     ),
