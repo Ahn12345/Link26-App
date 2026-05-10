@@ -7,6 +7,7 @@ import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_parser.dart';
+import 'package:link26_app/integrations/nhis/nhis_mock_payloads.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/models/medicine.dart';
 
@@ -23,6 +24,16 @@ abstract final class NhisMedicinesSync {
     try {
       await dotenv.load(fileName: '.env');
     } catch (_) {}
+
+    if (NhisRuntimeConfig.useMock) {
+      if (kDebugMode) {
+        debugPrint('NHIS medications: 목(mock) 병합 — 네트워크 미사용');
+      }
+      final fromApi =
+          NhisMedicationsParser.parseResponseBody(NhisMockPayloads.medicationsJson);
+      await _mergeIntoLocal(fromApi);
+      return NhisMedicinesSyncResult.success;
+    }
 
     if (NhisRuntimeConfig.baseUrl.isEmpty) {
       return NhisMedicinesSyncResult.skipped;

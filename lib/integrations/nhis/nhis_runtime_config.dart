@@ -4,6 +4,12 @@ import '../../core/constants/api_keys.dart';
 
 /// `.env` 우선, 없으면 빌드 시 [ApiConfig.nhisBaseUrl] (`--dart-define=NHIS_BASE_URL=...`).
 abstract final class NhisRuntimeConfig {
+  /// `true`이면 NHIS/BFF **HTTP 호출 없이** 목 응답으로 연동만 검증합니다. 실서버 준비 후 `false`.
+  static bool get useMock {
+    final s = dotenv.env['NHIS_USE_MOCK']?.trim().toLowerCase();
+    return s == 'true' || s == '1' || s == 'yes';
+  }
+
   static String get baseUrl {
     final v = dotenv.env['NHIS_BASE_URL']?.trim() ?? '';
     if (v.isNotEmpty) return v;

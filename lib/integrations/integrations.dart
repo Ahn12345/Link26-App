@@ -19,6 +19,7 @@ export 'nhis/nhis_mapper.dart';
 export 'nhis/nhis_request_models.dart';
 export 'nhis/nhis_response_models.dart';
 export 'nhis/nhis_http_message.dart';
+export 'nhis/nhis_mock_payloads.dart';
 export 'nhis/nhis_medications_client.dart';
 export 'nhis/nhis_medications_parser.dart';
 export 'nhis/nhis_runtime_config.dart';

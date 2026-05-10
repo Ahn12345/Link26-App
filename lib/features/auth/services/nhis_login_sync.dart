@@ -18,6 +18,18 @@ abstract final class NhisLoginSync {
       await dotenv.load(fileName: '.env');
     } catch (_) {}
 
+    if (NhisRuntimeConfig.useMock) {
+      if (kDebugMode) {
+        debugPrint('NHIS login: 목(mock) 성공 — 네트워크 미사용');
+      }
+      await UserLocalRepository.updateNhisSyncStatus(
+        user.phoneDigits,
+        ok: true,
+        errorMessage: 'mock',
+      );
+      return NhisLoginSyncResult.success;
+    }
+
     if (NhisRuntimeConfig.baseUrl.isEmpty) {
       return NhisLoginSyncResult.skipped;
     }
