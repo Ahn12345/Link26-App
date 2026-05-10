@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:link26_app/core/constants/storage_keys.dart';
-import 'package:link26_app/core/debug_build_label.dart';
 import 'package:link26_app/core/theme/app_theme.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_screen.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
@@ -103,50 +101,10 @@ class Link26AppState extends State<Link26App> {
         if (child == null) return const SizedBox.shrink();
         final mq = MediaQuery.maybeOf(context) ??
             MediaQueryData.fromView(View.of(context));
-        Widget wrapped = MediaQuery(
+        return MediaQuery(
           data: mq.copyWith(textScaler: TextScaler.linear(_textScale)),
           child: child,
         );
-        if (kDebugMode) {
-          final tagLine = kLink26BuildTag.isEmpty
-              ? 'LINK26_TAG 없음 · 터미널: flutter run --dart-define=LINK26_TAG=이름'
-              : 'LINK26_TAG=$kLink26BuildTag';
-          wrapped = Stack(
-            fit: StackFit.expand,
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(child: wrapped),
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                child: Material(
-                  color: Colors.red.shade900,
-                  elevation: 6,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        'DEBUG  $tagLine',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                          height: 1.25,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-        return wrapped;
       },
       home: const AuthWelcomeScreen(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -8,6 +8,7 @@ import '../../core/layout/link26_responsive_ui_tokens.g.dart';
 import '../../core/services/local_medicine_list_store.dart';
 import '../../core/theme/link26_surface_style.dart';
 import '../../core/widgets/decoded_asset_image.dart';
+import '../../core/widgets/link26_brand_backdrop.dart';
 import '../../core/widgets/link26_dashboard_widgets.dart';
 
 /// 약 검색 + 내 약 목록에 추가 (`pillsearch.png`).
@@ -44,58 +45,80 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
     final l10n = AppLocalizations.of(context);
     final w = MediaQuery.sizeOf(context).width;
     final heroH = Link26ResponsiveImageHeights.pillSearch(w);
-    final heroW = Link26ResponsiveImageHeights.pillSearchDisplayWidth(w);
+    final inner = Link26Layout.innerWidth(w);
+    final heroW = Link26ResponsiveImageHeights.pillSearchDisplayWidth(w)
+        .clamp(0.0, inner);
+    final topUnderAppBar =
+        MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.pillSearchTitle)),
-      body: SafeArea(
-        child: Link26ResponsiveList(
-          children: [
-            Link26ElevatedCard(
-              padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: SizedBox(
-                      width: heroW,
-                      child: DecodedAssetImage(
-                        ImageAssets.pillsearch,
-                        height: heroH,
-                        fit: BoxFit.contain,
-                        borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
-                        errorBuilder: (context, error, stackTrace) =>
-                            const SizedBox.shrink(),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Link26Surface.textPrimary,
+        title: Text(l10n.pillSearchTitle),
+      ),
+      body: Link26BrandBackdrop(
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.only(top: topUnderAppBar),
+            child: Link26ResponsiveList(
+              children: [
+                Link26ElevatedCard(
+                  padding: EdgeInsets.symmetric(
+                    vertical: Link26ResponsiveUi.authCardPadVertical(w),
+                    horizontal: Link26ResponsiveUi.authCardPadHorizontal(w),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: SizedBox(
+                          width: heroW,
+                          child: DecodedAssetImage(
+                            ImageAssets.pillsearch,
+                            height: heroH,
+                            fit: BoxFit.contain,
+                            borderRadius: BorderRadius.circular(
+                              Link26Surface.radiusInput,
+                            ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+                      TextField(
+                        controller: _ctrl,
+                        decoration: Link26Surface.inputDecoration(
+                          labelText: l10n.pillSearchLabel,
+                          hintText: l10n.pillSearchHint,
+                        ),
+                        style: TextStyle(
+                          color: Link26Surface.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: Link26ResponsiveUi.body(w),
+                        ),
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _add(),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: Link26ResponsiveUi.gapLg(w)),
-                  TextField(
-                    controller: _ctrl,
-                    decoration: Link26Surface.inputDecoration(
-                      labelText: l10n.pillSearchLabel,
-                      hintText: l10n.pillSearchHint,
-                    ),
-                    style: TextStyle(
-                      color: Link26Surface.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: Link26ResponsiveUi.body(w),
-                    ),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _add(),
+                ),
+                SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+                FilledButton.icon(
+                  onPressed: _add,
+                  style: Link26Surface.filledAccentButton(
+                    minimumSize: const Size(double.infinity, 52),
                   ),
-                ],
-              ),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.homeAddMedicine),
+                ),
+              ],
             ),
-            SizedBox(height: Link26ResponsiveUi.gapLg(w)),
-            FilledButton.icon(
-              onPressed: _add,
-              style: Link26Surface.filledAccentButton(
-                minimumSize: const Size(double.infinity, 52),
-              ),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.homeAddMedicine),
-            ),
-          ],
+          ),
         ),
       ),
     );

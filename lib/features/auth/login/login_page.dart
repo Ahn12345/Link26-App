@@ -10,6 +10,7 @@ import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
@@ -96,120 +97,162 @@ class _LoginPageState extends State<LoginPage> {
     final w = MediaQuery.sizeOf(context).width;
     final heroH = Link26ResponsiveImageHeights.login(w);
 
+    final topUnderAppBar =
+        MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.login)),
-      body: SafeArea(
-        child: Link26ResponsiveScroll(
-          child: LayoutBuilder(
-            builder: (context, c) {
-              final contentW = c.maxWidth;
-              final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w).clamp(0.0, contentW);
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Link26ElevatedCard(
-                    padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(
-                          child: SizedBox(
-                            width: heroW,
-                            child: DecodedAssetImage(
-                              ImageAssets.login,
-                              height: heroH,
-                              fit: BoxFit.contain,
-                              borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                        Text(
-                          l10n.authWelcomeSubtitle,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Link26Surface.textSecondary,
-                            fontSize: Link26ResponsiveUi.body(w),
-                            height: 1.4,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.gapXl(w)),
-                  Semantics(
-                    button: true,
-                    label: l10n.socialLoginGoogle,
-                    child: OutlinedButton.icon(
-                      style: outlineBtn,
-                      onPressed: () => _socialStub(context),
-                      icon: const Icon(Icons.g_mobiledata, size: 28, color: Link26Surface.textPrimary),
-                      label: Text(l10n.socialLoginGoogle),
-                    ),
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                  Semantics(
-                    button: true,
-                    label: l10n.socialLoginApple,
-                    child: OutlinedButton.icon(
-                      style: outlineBtn,
-                      onPressed: () => _socialStub(context),
-                      icon: const Icon(Icons.apple, size: 22, color: Link26Surface.textPrimary),
-                      label: Text(l10n.socialLoginApple),
-                    ),
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.chatHeaderTitleGap(w) + Link26ResponsiveUi.gapXs(w)),
-                  Row(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Link26Surface.textPrimary,
+        title: Text(l10n.login),
+      ),
+      body: Link26BrandBackdrop(
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.only(top: topUnderAppBar),
+            child: Link26ResponsiveScroll(
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  final contentW = c.maxWidth;
+                  final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w)
+                      .clamp(0.0, contentW);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Expanded(child: Divider(color: Link26Surface.outline)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          l10n.loginDividerEmail,
-                          style: TextStyle(
-                            color: Link26Surface.textMuted,
-                            fontWeight: FontWeight.w700,
-                            fontSize: Link26ResponsiveUi.bodySmall(w),
-                          ),
+                      Link26ElevatedCard(
+                        padding: EdgeInsets.symmetric(
+                          vertical:
+                              Link26ResponsiveUi.authCardPadVertical(w),
+                          horizontal:
+                              Link26ResponsiveUi.authCardPadHorizontal(w),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Center(
+                              child: SizedBox(
+                                width: heroW,
+                                child: DecodedAssetImage(
+                                  ImageAssets.login,
+                                  height: heroH,
+                                  fit: BoxFit.contain,
+                                  borderRadius: BorderRadius.circular(
+                                    Link26Surface.radiusInput,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                            Text(
+                              l10n.authWelcomeSubtitle,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Link26Surface.textSecondary,
+                                fontSize: Link26ResponsiveUi.body(w),
+                                height: 1.4,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Expanded(child: Divider(color: Link26Surface.outline)),
+                      SizedBox(height: Link26ResponsiveUi.gapXl(w)),
+                      Semantics(
+                        button: true,
+                        label: l10n.socialLoginGoogle,
+                        child: OutlinedButton.icon(
+                          style: outlineBtn,
+                          onPressed: () => _socialStub(context),
+                          icon: const Icon(Icons.g_mobiledata,
+                              size: 28, color: Link26Surface.textPrimary),
+                          label: Text(l10n.socialLoginGoogle),
+                        ),
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                      Semantics(
+                        button: true,
+                        label: l10n.socialLoginApple,
+                        child: OutlinedButton.icon(
+                          style: outlineBtn,
+                          onPressed: () => _socialStub(context),
+                          icon: const Icon(Icons.apple,
+                              size: 22, color: Link26Surface.textPrimary),
+                          label: Text(l10n.socialLoginApple),
+                        ),
+                      ),
+                      SizedBox(
+                        height: Link26ResponsiveUi.chatHeaderTitleGap(w) +
+                            Link26ResponsiveUi.gapXs(w),
+                      ),
+                      Row(
+                        children: [
+                          const Expanded(
+                              child: Divider(color: Link26Surface.outline)),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              l10n.loginDividerEmail,
+                              style: TextStyle(
+                                color: Link26Surface.textMuted,
+                                fontWeight: FontWeight.w700,
+                                fontSize: Link26ResponsiveUi.bodySmall(w),
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                              child: Divider(color: Link26Surface.outline)),
+                        ],
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapXl(w)),
+                      TextField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        autocorrect: false,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Link26Surface.textPrimary,
+                          fontSize: Link26ResponsiveUi.body(w),
+                        ),
+                        decoration: Link26Surface.inputDecoration(
+                          labelText: l10n.loginEmailLabel,
+                        ),
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                      TextField(
+                        controller: _passwordCtrl,
+                        obscureText: true,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Link26Surface.textPrimary,
+                          fontSize: Link26ResponsiveUi.body(w),
+                        ),
+                        decoration: Link26Surface.inputDecoration(
+                          labelText: l10n.loginPasswordLabel,
+                        ),
+                      ),
+                      SizedBox(
+                        height: Link26ResponsiveUi.authCardPadVertical(w),
+                      ),
+                      FilledButton(
+                        onPressed: () => _submit(context),
+                        style: Link26Surface.filledAccentButton(
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: Text(
+                          l10n.continueCta,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                     ],
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.gapXl(w)),
-                  TextField(
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Link26Surface.textPrimary,
-                      fontSize: Link26ResponsiveUi.body(w),
-                    ),
-                    decoration: Link26Surface.inputDecoration(labelText: l10n.loginEmailLabel),
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                  TextField(
-                    controller: _passwordCtrl,
-                    obscureText: true,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Link26Surface.textPrimary,
-                      fontSize: Link26ResponsiveUi.body(w),
-                    ),
-                    decoration: Link26Surface.inputDecoration(labelText: l10n.loginPasswordLabel),
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.authCardPadVertical(w)),
-                  FilledButton(
-                    onPressed: () => _submit(context),
-                    style: Link26Surface.filledAccentButton(minimumSize: const Size.fromHeight(52)),
-                    child: Text(l10n.continueCta, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  ),
-                  SizedBox(height: Link26ResponsiveUi.gapLg(w)),
-                ],
-              );
-            },
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
