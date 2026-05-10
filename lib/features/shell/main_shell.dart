@@ -59,10 +59,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             fallbackAssetPath: DesignAssets.homeBackground,
             child: const HomeDashboardContent(),
           ),
-          ColoredBox(
-            color: scheme.surface,
-            child: const AiChatScreen(showScaffold: false, embeddedInShell: true),
-          ),
+          const AiChatScreen(showScaffold: false, embeddedInShell: true),
           ColoredBox(
             color: scheme.surface,
             child: const MoreScreen(showScaffold: false),

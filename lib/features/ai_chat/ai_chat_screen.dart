@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/constants/design_assets.dart';
+import 'package:link26_app/core/widgets/full_screen_asset_background.dart';
 import 'package:link26_app/models/link_models.dart';
 
 /// 카카오 functional 스타일 AI 채팅 + GitHub용 [showScaffold] / 라우트 호환.
 ///
-/// [embeddedInShell]: `MainShell` 탭으로 넣을 때 뒤로가기 숨김·요약 카드 표시.
+/// [embeddedInShell]: 탭 모드에서는 `aichat.png`만 보이고 입력창만 얹음. 라우트 진입 시 헤더·데모 대화 표시.
 class AiChatScreen extends StatelessWidget {
   const AiChatScreen({
     super.key,
@@ -21,13 +23,17 @@ class AiChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = Theme.of(context).scaffoldBackgroundColor;
-    final body = ColoredBox(
-      color: bg,
-      child: _AiChatBody(embeddedInShell: embeddedInShell),
+    final inner = _AiChatBody(embeddedInShell: embeddedInShell);
+    final layered = FullScreenAssetBackground(
+      assetPath: DesignAssets.aiChatFullBackground,
+      fallbackAssetPath: DesignAssets.aiChat,
+      child: inner,
     );
-    if (!showScaffold) return body;
-    return Scaffold(backgroundColor: bg, body: body);
+    if (!showScaffold) return layered;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: layered,
+    );
   }
 }
 
@@ -42,34 +48,39 @@ class _AiChatBody extends StatefulWidget {
 
 class _AiChatBodyState extends State<_AiChatBody> {
   final controller = TextEditingController();
-  final messages = <ChatMessage>[
-    const ChatMessage(
-      text:
-          '안녕하세요! 처방전 약 정보를 확인하는 방법을 안내해드릴게요.\n\n처방전이나 약 사진을 업로드하시면 약 정보를 확인해드릴 수 있어요.\n\n💡 사진 촬영 팁\n• 약 이름과 용량이 선명하게 보이도록 촬영해주세요\n• 처방전의 경우 약 이름 부분이 잘 보이게 촬영해주세요\n• 밝은 곳에서 촬영하시면 더 정확합니다',
-      isUser: false,
-      time: '오전 10:48',
-    ),
-    const ChatMessage(
-      text: '사진을 확인했습니다! 🙂\n다음과 같은 약이 처방되었어요.',
-      isUser: false,
-      time: '오전 10:50',
-      cardTitle: '아세트아미노펜 500mg',
-      cardSubtitle: '1일 3회, 1회 3정, 식후 복용\n5일분 처방',
-    ),
-    const ChatMessage(
-      text: '처방전 사진을 추가로 업로드합니다.',
-      isUser: true,
-      time: '오전 10:51',
-    ),
-    const ChatMessage(
-      text:
-          '추가로 업로드해주신 처방전도 확인했습니다! 🙂\n아래 약이 추가로 처방되었어요.',
-      isUser: false,
-      time: '오전 10:52',
-      cardTitle: '로라타딘 10mg',
-      cardSubtitle: '1일 1정, 1일 1회, 취침 전 복용\n5일분 처방',
-    ),
-  ];
+
+  /// 하단 탭 + `aichat.png` 배경일 때는 PNG가 화면 전체 UI를 담당하므로 데모 말풍선을 넣지 않음.
+  /// `/ai-chat` 라우트로 단독 진입 시에만 예시 대화를 채움.
+  late final List<ChatMessage> messages = widget.embeddedInShell
+      ? <ChatMessage>[]
+      : <ChatMessage>[
+            const ChatMessage(
+              text:
+                  '안녕하세요! 처방전 약 정보를 확인하는 방법을 안내해드릴게요.\n\n처방전이나 약 사진을 업로드하시면 약 정보를 확인해드릴 수 있어요.\n\n💡 사진 촬영 팁\n• 약 이름과 용량이 선명하게 보이도록 촬영해주세요\n• 처방전의 경우 약 이름 부분이 잘 보이게 촬영해주세요\n• 밝은 곳에서 촬영하시면 더 정확합니다',
+              isUser: false,
+              time: '오전 10:48',
+            ),
+            const ChatMessage(
+              text: '사진을 확인했습니다! 🙂\n다음과 같은 약이 처방되었어요.',
+              isUser: false,
+              time: '오전 10:50',
+              cardTitle: '아세트아미노펜 500mg',
+              cardSubtitle: '1일 3회, 1회 3정, 식후 복용\n5일분 처방',
+            ),
+            const ChatMessage(
+              text: '처방전 사진을 추가로 업로드합니다.',
+              isUser: true,
+              time: '오전 10:51',
+            ),
+            const ChatMessage(
+              text:
+                  '추가로 업로드해주신 처방전도 확인했습니다! 🙂\n아래 약이 추가로 처방되었어요.',
+              isUser: false,
+              time: '오전 10:52',
+              cardTitle: '로라타딘 10mg',
+              cardSubtitle: '1일 1정, 1일 1회, 취침 전 복용\n5일분 처방',
+            ),
+          ];
 
   @override
   void dispose() {
@@ -116,84 +127,103 @@ class _AiChatBodyState extends State<_AiChatBody> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final embedded = widget.embeddedInShell;
+
+    final inputBar = Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Material(
+        color: Colors.white.withValues(alpha: embedded ? 0.92 : 1),
+        elevation: embedded ? 8 : 0,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: '궁금한 내용을 입력하세요...',
+                    filled: true,
+                    fillColor: embedded ? Colors.white.withValues(alpha: 0.6) : null,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                ),
+              ),
+              IconButton(onPressed: addImageMessage, icon: const Icon(Icons.image_outlined)),
+              CircleAvatar(
+                backgroundColor: scheme.primary,
+                child: IconButton(
+                  onPressed: sendMessage,
+                  icon: const Icon(Icons.send, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
     return SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-            child: Row(
-              children: [
-                if (!widget.embeddedInShell)
+          if (!embedded) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+              child: Row(
+                children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new),
                     onPressed: () => Navigator.maybePop(context),
                   ),
-                if (!widget.embeddedInShell) const SizedBox(width: 10),
-                const CircleAvatar(
-                  backgroundColor: Color(0xFF0B6BFF),
-                  child: Icon(Icons.smart_toy, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'AI 처방전 도우미',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                      ),
-                      Text(
-                        '언제든지 궁금한 점을 물어보세요!',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                      ),
-                    ],
+                  const SizedBox(width: 10),
+                  CircleAvatar(
+                    backgroundColor: scheme.primary,
+                    child: const Icon(Icons.smart_toy, color: Colors.white),
                   ),
-                ),
-                TextButton.icon(
-                  onPressed: () => setState(() => messages.clear()),
-                  icon: const Icon(Icons.add),
-                  label: const Text('새 대화'),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: _BioLinkSummaryCard(),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (_, i) => _MessageBubble(message: messages[i]),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: '궁금한 내용을 입력하세요...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'AI 처방전 도우미',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                        ),
+                        Text(
+                          '언제든지 궁금한 점을 물어보세요!',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                IconButton(onPressed: addImageMessage, icon: const Icon(Icons.image_outlined)),
-                CircleAvatar(
-                  backgroundColor: const Color(0xFF0B6BFF),
-                  child: IconButton(
-                    onPressed: sendMessage,
-                    icon: const Icon(Icons.send, color: Colors.white),
+                  TextButton.icon(
+                    onPressed: () => setState(() => messages.clear()),
+                    icon: const Icon(Icons.add),
+                    label: const Text('새 대화'),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const Divider(height: 1),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: _BioLinkSummaryCard(),
+            ),
+          ],
+          Expanded(
+            child: messages.isEmpty
+                ? const SizedBox.shrink()
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: messages.length,
+                    itemBuilder: (_, i) => _MessageBubble(message: messages[i]),
+                  ),
           ),
+          inputBar,
         ],
       ),
     );

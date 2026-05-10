@@ -20,6 +20,9 @@ abstract final class DesignAssets {
   static const aiChat = 'assets/images/ui_ai_chat.png';
   static const more = 'assets/images/ui_more.png';
 
+  /// AI 채팅 탭 전체 배경 (시안 PNG).
+  static const aiChatFullBackground = 'assets/images/aichat.png';
+
   /// 홈 탭 전체 화면 배경(목 디자인 PNG 권장).
   static const homeFullBackground = 'assets/images/home_full_background.png';
 
