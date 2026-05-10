@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import '../../core/constants/design_assets.dart';
 import '../../core/services/monthly_hira_auth_gate.dart';
-import '../ai_chat/ai_chat_screen.dart';
-import '../home/home_screen.dart';
-import '../more/more_screen.dart';
+import '../../core/widgets/design_backdrop.dart';
 
-/// 하단 탭: 홈 · AI 채팅 · 더보기
+/// 하단 탭: 홈 · AI 채팅 · 더보기 — 본문은 `assets/images/` 목업 이미지로 채움.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -45,16 +44,25 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final pageBg = Theme.of(context).scaffoldBackgroundColor;
     return Scaffold(
-      backgroundColor: pageBg,
+      extendBody: true,
+      backgroundColor: Colors.black,
       body: IndexedStack(
         index: _index,
         sizing: StackFit.expand,
-        children: const [
-          HomeDashboardContent(),
-          AiChatScreen(showScaffold: false),
-          MoreScreen(showScaffold: false),
+        children: [
+          DesignBackdrop(
+            assetPath: DesignAssets.home,
+            fit: DesignAssets.imageFit,
+          ),
+          DesignBackdrop(
+            assetPath: DesignAssets.aiChat,
+            fit: DesignAssets.imageFit,
+          ),
+          DesignBackdrop(
+            assetPath: DesignAssets.more,
+            fit: DesignAssets.imageFit,
+          ),
         ],
       ),
       bottomNavigationBar: Theme(
