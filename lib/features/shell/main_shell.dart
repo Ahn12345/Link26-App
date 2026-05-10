@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
@@ -50,17 +51,48 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     return Scaffold(
       extendBody: true,
       backgroundColor: scheme.surface,
-      body: IndexedStack(
-        index: _index,
-        sizing: StackFit.expand,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          FullScreenAssetBackground(
-            assetPath: DesignAssets.homeFullBackground,
-            fallbackAssetPath: DesignAssets.homeBackground,
-            child: const HomeDashboardContent(),
+          IndexedStack(
+            index: _index,
+            sizing: StackFit.expand,
+            children: [
+              FullScreenAssetBackground(
+                assetPath: DesignAssets.homeFullBackground,
+                fallbackAssetPath: DesignAssets.homeBackground,
+                child: const HomeDashboardContent(),
+              ),
+              const AiChatScreen(showScaffold: false, embeddedInShell: true),
+              const MoreScreen(showScaffold: false),
+            ],
           ),
-          const AiChatScreen(showScaffold: false, embeddedInShell: true),
-          const MoreScreen(showScaffold: false),
+          if (kDebugMode)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Material(
+                color: Colors.deepOrange,
+                elevation: 6,
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: Text(
+                      'DEBUG · 이 줄이 보이면 최신 main_shell.dart 입니다 (문서/GitHub/Link26-App)',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: Theme(
