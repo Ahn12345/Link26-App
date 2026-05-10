@@ -21,13 +21,27 @@ class FullScreenAssetBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.maybeOf(context);
+    final int? cacheW;
+    final int? cacheH;
+    if (mq != null) {
+      final dpr = mq.devicePixelRatio;
+      cacheW = (mq.size.width * dpr).round().clamp(1, 4096);
+      cacheH = (mq.size.height * dpr).round().clamp(1, 4096);
+    } else {
+      cacheW = null;
+      cacheH = null;
+    }
+
     Widget imageLayer(String path) => Image.asset(
           path,
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
           width: double.infinity,
           height: double.infinity,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
+          cacheWidth: cacheW,
+          cacheHeight: cacheH,
           errorBuilder: (context, error, stackTrace) =>
               const SizedBox.shrink(),
         );
@@ -55,7 +69,9 @@ class FullScreenAssetBackground extends StatelessWidget {
               alignment: Alignment.topCenter,
               width: double.infinity,
               height: double.infinity,
-              filterQuality: FilterQuality.high,
+              filterQuality: FilterQuality.medium,
+              cacheWidth: cacheW,
+              cacheHeight: cacheH,
               errorBuilder: (context, error, stackTrace) {
                 final fb = fallbackAssetPath;
                 if (fb != null && fb.isNotEmpty) {

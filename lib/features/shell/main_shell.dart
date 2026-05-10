@@ -23,6 +23,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   /// AI 탭으로 전환할 때마다 증가 → 첫 말풍선 접속 시각 갱신.
   int _aiVisitStamp = 0;
 
+  /// IndexedStack 이 숨긴 탭도 빌드하므로, 큰 `setting.png` 는 더보기 최초 진입 시에만 로드.
+  bool _moreTabMaterialized = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,11 +69,16 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             embeddedInShell: true,
             visitStamp: _aiVisitStamp,
           ),
-          FullScreenAssetBackground(
-            assetPath: ImageAssets.setting,
-            fallbackAssetPath: null,
-            child: const MoreScreen(showScaffold: false),
-          ),
+          _moreTabMaterialized
+              ? FullScreenAssetBackground(
+                  assetPath: ImageAssets.setting,
+                  fallbackAssetPath: null,
+                  child: const MoreScreen(showScaffold: false),
+                )
+              : const ColoredBox(
+                  color: Color(0xFFEEF4FA),
+                  child: SizedBox.expand(),
+                ),
         ],
       ),
       bottomNavigationBar: Theme(
@@ -110,6 +118,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
                   _index = i;
                   if (i == 1 && from != 1) {
                     _aiVisitStamp++;
+                  }
+                  if (i == 2) {
+                    _moreTabMaterialized = true;
                   }
                 });
               },

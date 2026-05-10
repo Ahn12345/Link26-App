@@ -30,6 +30,17 @@ class DesignBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mq = MediaQuery.maybeOf(context);
+    final int? cacheW;
+    final int? cacheH;
+    if (mq != null) {
+      final dpr = mq.devicePixelRatio;
+      cacheW = (mq.size.width * dpr).round().clamp(1, 4096);
+      cacheH = (mq.size.height * dpr).round().clamp(1, 4096);
+    } else {
+      cacheW = null;
+      cacheH = null;
+    }
 
     Widget missing(String msg) => ColoredBox(
           color: theme.scaffoldBackgroundColor,
@@ -61,7 +72,9 @@ class DesignBackdrop extends StatelessWidget {
                 width: double.infinity,
                 height: double.infinity,
                 alignment: alignment,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
+                cacheWidth: cacheW,
+                cacheHeight: cacheH,
                 errorBuilder: (context, error, stackTrace) => ColoredBox(
                   color: theme.scaffoldBackgroundColor,
                   child: Center(
@@ -93,7 +106,9 @@ class DesignBackdrop extends StatelessWidget {
           width: double.infinity,
           height: double.infinity,
           alignment: alignment,
-          filterQuality: FilterQuality.high,
+          filterQuality: FilterQuality.medium,
+          cacheWidth: cacheW,
+          cacheHeight: cacheH,
           errorBuilder: (context, error, stackTrace) => missing(
             '이미지를 불러올 수 없습니다.\n\n$assetPath\n\n'
             '`assets/images/` 에 파일을 넣은 뒤 재실행 하세요.',
@@ -110,7 +125,8 @@ class DesignBackdrop extends StatelessWidget {
                 width: w,
                 fit: BoxFit.fitWidth,
                 alignment: alignment,
-                filterQuality: FilterQuality.high,
+                filterQuality: FilterQuality.medium,
+                cacheWidth: (w * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, 4096),
                 errorBuilder: (context, error, stackTrace) => missing(
                   '이미지를 불러올 수 없습니다.\n\n$assetPath',
                 ),
@@ -130,7 +146,13 @@ class DesignBackdrop extends StatelessWidget {
                   width: constraints.maxWidth,
                   height: constraints.maxHeight,
                   alignment: alignment,
-                  filterQuality: FilterQuality.high,
+                  filterQuality: FilterQuality.medium,
+                  cacheWidth: (constraints.maxWidth * MediaQuery.devicePixelRatioOf(context))
+                      .round()
+                      .clamp(1, 4096),
+                  cacheHeight: (constraints.maxHeight * MediaQuery.devicePixelRatioOf(context))
+                      .round()
+                      .clamp(1, 4096),
                   errorBuilder: (context, error, stackTrace) => missing(
                     '이미지를 불러올 수 없습니다.\n\n$assetPath',
                   ),

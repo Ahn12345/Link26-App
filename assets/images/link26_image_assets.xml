@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Link26 이미지 카탈로그 — 실제 파일은 이 폴더의 PNG 와 1:1 대응.
+  앱 코드에서는 lib/core/constants/image_assets.dart (ImageAssets) 만 경로로 사용합니다.
+  이 XML은 기획/검수·에셋 추가 시 목록 동기화용입니다.
+-->
+<link26-images version="1">
+  <image id="applogo" file="applogo.png" dart-const="ImageAssets.applogo"
+         usage="런처·스플래시·브랜드 소형 아이콘" />
+  <image id="logo" file="logo.png" dart-const="ImageAssets.logo"
+         usage="환영·더보기 등 브랜드 로고" />
+  <image id="login" file="login.png" dart-const="ImageAssets.login"
+         usage="로그인 화면 일러스트" />
+  <image id="signup" file="signup.png" dart-const="ImageAssets.signup"
+         usage="회원가입 화면 일러스트" />
+  <image id="home" file="Home.png" dart-const="ImageAssets.home"
+         usage="전체 목업 참고용(홈 탭 배경에는 사용하지 않음 — 대시보드와 중복 방지)" />
+  <image id="aichat" file="aichat.png" dart-const="ImageAssets.aichat"
+         usage="AI 채팅 탭·관련 화면 에셋" />
+  <image id="setting" file="setting.png" dart-const="ImageAssets.setting"
+         usage="더보기 탭 전체 배경(탭 최초 진입 시에만 로드)" />
+  <image id="pillsearch" file="pillsearch.png" dart-const="ImageAssets.pillsearch"
+         usage="약 검색 화면 히어로" />
+  <image id="emergencycall" file="emergencycall.png" dart-const="ImageAssets.emergencycall"
+         usage="비상 연락·설정 일러스트" />
+  <image id="familyadd" file="familyadd.png" dart-const="ImageAssets.familyadd"
+         usage="가족 추가 안내 일러스트" />
+  <image id="simplelogin1" file="simplelogin1.png" dart-const="ImageAssets.simplelogin1"
+         usage="월간 HIRA 간편인증 안내 1단계" />
+  <image id="simplelogin2" file="simplelogin2.png" dart-const="ImageAssets.simplelogin2"
+         usage="월간 HIRA 간편인증 안내 2단계" />
+</link26-images>
