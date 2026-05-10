@@ -24,6 +24,13 @@ abstract final class NhisRuntimeConfig {
     return '/v1/login';
   }
 
+  /// 복약·약 목록 GET 경로 (쿼리 `phone` 등은 클라이언트에서 붙임).
+  static String get medicinesPath {
+    final p = dotenv.env['NHIS_MEDICINES_PATH']?.trim() ?? '';
+    if (p.isNotEmpty) return p.startsWith('/') ? p : '/$p';
+    return '/v1/medications';
+  }
+
   /// 공공데이터포털 등 `serviceKey` 쿼리가 필요할 때.
   static String? get serviceKey {
     final k = dotenv.env['NHIS_SERVICE_KEY']?.trim();

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// 건강보험심사평가원·공단 연계 스텁.
-/// 실제 간편인증·API URL·인증서는 이후 [ApiConfig] 및 서버 BFF와 연결.
+/// 복약 목록 NHIS/BFF 동기화는 홈 [HomeDashboardContent] 진입·당겨서 새로고침에서 수행합니다.
 abstract final class HiraLinkService {
   static Future<void> afterRegistration() async {
     debugPrint('HIRA: post-registration link (stub)');

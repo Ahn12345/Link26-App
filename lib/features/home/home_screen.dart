@@ -1,6 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
+import 'package:link26_app/core/services/auth_session.dart';
+import 'package:link26_app/core/services/local_medicine_list_store.dart';
+import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/alarms/all_alarms_screen.dart';
@@ -18,26 +22,10 @@ class HomeDashboardContent extends StatefulWidget {
 }
 
 class _HomeDashboardContentState extends State<HomeDashboardContent> {
-  final List<Medicine> medicines = [
-    const Medicine(
-      name: '아스피린 (Aspirin)',
-      dose: '100mg',
-      frequency: '1일 1회',
-      time: '08:00',
-    ),
-    const Medicine(
-      name: '메트프로민 (Metformin)',
-      dose: '500mg',
-      frequency: '1일 2회',
-      time: '08:00',
-    ),
-    const Medicine(
-      name: '오메프라졸 (Omeprazole)',
-      dose: '20mg',
-      frequency: '1일 1회',
-      time: '09:00',
-    ),
-  ];
+  List<Medicine> medicines = [];
+
+  String _normMedName(String name) =>
+      name.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
   final List<AlarmItem> alarms = [
     AlarmItem(
@@ -74,6 +62,52 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrapMedicines());
+  }
+
+  Future<void> _bootstrapMedicines() async {
+    await _reloadMedicinesFromStores();
+    final phone = await AuthSession.activePhoneDigits();
+    if (!mounted) return;
+    if (phone != null && phone.isNotEmpty) {
+      await NhisMedicinesSync.syncNow(phoneDigits: phone);
+      if (mounted) await _reloadMedicinesFromStores();
+    }
+  }
+
+  Future<void> _reloadMedicinesFromStores() async {
+    final cached = await NhisMedicineCacheStore.loadMedicines();
+    final manualNames = await LocalMedicineListStore.load();
+    final byName = <String, Medicine>{};
+    for (final m in cached) {
+      final k = _normMedName(m.name);
+      if (k.isEmpty) continue;
+      byName[k] = m;
+    }
+    for (final n in manualNames) {
+      final k = _normMedName(n);
+      if (k.isEmpty) continue;
+      byName.putIfAbsent(
+        k,
+        () => Medicine(name: n.trim(), dose: '-', frequency: '-', time: '-'),
+      );
+    }
+    final merged = byName.values.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    if (mounted) setState(() => medicines = merged);
+  }
+
+  Future<void> _refreshMedicinesFromServer() async {
+    final phone = await AuthSession.activePhoneDigits();
+    if (phone != null && phone.isNotEmpty) {
+      await NhisMedicinesSync.syncNow(phoneDigits: phone);
+    }
+    if (mounted) await _reloadMedicinesFromStores();
+  }
+
   Future<void> _openAddMedicine() async {
     final result = await showModalBottomSheet<Medicine>(
       context: context,
@@ -81,7 +115,10 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       backgroundColor: Colors.transparent,
       builder: (_) => const AddMedicineSheet(),
     );
-    if (result != null) setState(() => medicines.add(result));
+    if (result == null) return;
+    await LocalMedicineListStore.add(result.name);
+    await NhisMedicineCacheStore.upsert(result);
+    await _reloadMedicinesFromStores();
   }
 
   @override
@@ -96,8 +133,11 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       color: Colors.transparent,
       child: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          slivers: [
+        child: RefreshIndicator(
+          onRefresh: _refreshMedicinesFromServer,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
                 Link26ResponsiveUi.homeScrollPadH(w),
@@ -137,8 +177,11 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                   _SearchPill(
-                    onTap: () =>
-                        Navigator.of(context).pushNamed(PillSearchScreen.routeName),
+                    onTap: () async {
+                      await Navigator.of(context)
+                          .pushNamed(PillSearchScreen.routeName);
+                      if (mounted) await _reloadMedicinesFromStores();
+                    },
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                   Link26ElevatedCard(
@@ -201,13 +244,30 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     onAction: _openAddMedicine,
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                  ...medicines.map((m) => _MedicineTile(medicine: m)),
+                  if (medicines.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: Link26ResponsiveUi.gapMd(w),
+                        bottom: Link26ResponsiveUi.gapSm(w),
+                      ),
+                      child: Text(
+                        '검색·동기화로 약을 추가해 보세요',
+                        style: TextStyle(
+                          color: Link26Surface.textMuted,
+                          fontSize: Link26ResponsiveUi.bodySmall(w),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  else
+                    ...medicines.map((m) => _MedicineTile(medicine: m)),
                   SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                   const _AdBanner(),
                 ]),
               ),
             ),
           ],
+        ),
         ),
       ),
     );

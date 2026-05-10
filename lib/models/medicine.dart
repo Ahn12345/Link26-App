@@ -11,4 +11,20 @@ class Medicine {
     required this.frequency,
     required this.time,
   });
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'dose': dose,
+        'frequency': frequency,
+        'time': time,
+      };
+
+  factory Medicine.fromJson(Map<String, dynamic> json) {
+    return Medicine(
+      name: '${json['name'] ?? ''}',
+      dose: '${json['dose'] ?? json['dosage'] ?? '-'}',
+      frequency: '${json['frequency'] ?? json['freq'] ?? '-'}',
+      time: '${json['time'] ?? json['schedule'] ?? '-'}',
+    );
+  }
 }

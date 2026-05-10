@@ -18,6 +18,8 @@ export 'nhis/nhis_endpoints.dart';
 export 'nhis/nhis_mapper.dart';
 export 'nhis/nhis_request_models.dart';
 export 'nhis/nhis_response_models.dart';
+export 'nhis/nhis_medications_client.dart';
+export 'nhis/nhis_medications_parser.dart';
 export 'nhis/nhis_runtime_config.dart';
 export 'nhis/nhis_signup_client.dart';
 export 'simple_auth/simple_auth_api_client.dart';

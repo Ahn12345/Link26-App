@@ -9,6 +9,9 @@ abstract final class StorageKeys {
   static const hiraMonthlyAuthMonth = 'hira_monthly_auth_month_v1';
   static const localMyMedicinesJson = 'local_my_medicines_json_v1';
 
+  /// [Medicine] 목록 JSON (이름·용량·복용법·시간) — NHIS/BFF 동기화·수동 추가 병합.
+  static const nhisSyncedMedicinesJsonV1 = 'nhis_synced_medicines_json_v1';
+
   /// AI 채팅 탭 마지막 접속 시각(epoch ms). 서버/DB 연동 시 동일 시점을 동기화하면 됨.
   static const aiChatLastAccessMs = 'ai_chat_last_access_ms_v1';
 
