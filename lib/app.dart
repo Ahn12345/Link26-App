@@ -93,6 +93,7 @@ class Link26AppState extends State<Link26App> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       locale: _localeOverride,
       title: 'Link App',
       theme: AppTheme.light,
