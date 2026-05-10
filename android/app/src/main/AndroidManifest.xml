@@ -8,6 +8,9 @@
 
     <uses-sdk android:minSdkVersion="24" />
 
+    <!-- 릴리즈 빌드에도 NHIS/BFF·기타 HTTP 통신에 필요 (debug 전용 매니페스트만 있으면 release 에서 누락됨). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:label="Link26"
         android:icon="@mipmap/ic_launcher"

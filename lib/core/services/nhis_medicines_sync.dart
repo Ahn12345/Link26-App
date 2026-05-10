@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:link26_app/core/domain/result.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_parser.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
@@ -31,7 +32,10 @@ abstract final class NhisMedicinesSync {
     final result = await client.fetchMedicationsRaw(phoneDigits: phoneDigits);
 
     if (result is Failure<String>) {
-      debugPrint('NHIS medications: ${result.error.message}');
+      final msg = nhisHttpUserMessage(result.error);
+      debugPrint(
+        'NHIS medications GET 실패: $msg (base=${NhisRuntimeConfig.baseUrl} path=${NhisRuntimeConfig.medicinesPath})',
+      );
       return NhisMedicinesSyncResult.failed;
     }
 

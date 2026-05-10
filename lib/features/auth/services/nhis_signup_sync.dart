@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
+import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/nhis/nhis_signup_client.dart';
 
@@ -40,7 +42,14 @@ abstract final class NhisSignupSync {
       return NhisSignupSyncResult.success;
     }
 
-    final msg = result is Failure<String> ? result.error.message : 'nhis_error';
+    final msg = result is Failure<String>
+        ? nhisHttpUserMessage(result.error)
+        : 'nhis_error';
+    if (kDebugMode) {
+      debugPrint(
+        'NHIS signup POST 실패: $msg (base=${NhisRuntimeConfig.baseUrl} path=${NhisRuntimeConfig.signupPath})',
+      );
+    }
     await UserLocalRepository.updateNhisSyncStatus(
       phoneDigits,
       ok: false,
