@@ -3,24 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/models/link_models.dart';
 
 /// 카카오 functional 스타일 AI 채팅 + GitHub용 [showScaffold] / 라우트 호환.
+///
+/// [embeddedInShell]: `MainShell` 탭으로 넣을 때 뒤로가기 숨김·요약 카드 표시.
 class AiChatScreen extends StatelessWidget {
-  const AiChatScreen({super.key, this.showScaffold = true});
+  const AiChatScreen({
+    super.key,
+    this.showScaffold = true,
+    this.embeddedInShell = false,
+  });
 
   static const routeName = '/ai-chat';
 
   final bool showScaffold;
 
+  /// 하단 네비 탭 안에서 쓸 때 true.
+  final bool embeddedInShell;
+
   @override
   Widget build(BuildContext context) {
     final bg = Theme.of(context).scaffoldBackgroundColor;
-    final body = ColoredBox(color: bg, child: const _AiChatBody());
+    final body = ColoredBox(
+      color: bg,
+      child: _AiChatBody(embeddedInShell: embeddedInShell),
+    );
     if (!showScaffold) return body;
     return Scaffold(backgroundColor: bg, body: body);
   }
 }
 
 class _AiChatBody extends StatefulWidget {
-  const _AiChatBody();
+  const _AiChatBody({required this.embeddedInShell});
+
+  final bool embeddedInShell;
 
   @override
   State<_AiChatBody> createState() => _AiChatBodyState();
@@ -109,11 +123,12 @@ class _AiChatBodyState extends State<_AiChatBody> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new),
-                  onPressed: () => Navigator.maybePop(context),
-                ),
-                const SizedBox(width: 10),
+                if (!widget.embeddedInShell)
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new),
+                    onPressed: () => Navigator.maybePop(context),
+                  ),
+                if (!widget.embeddedInShell) const SizedBox(width: 10),
                 const CircleAvatar(
                   backgroundColor: Color(0xFF0B6BFF),
                   child: Icon(Icons.smart_toy, color: Colors.white),
@@ -143,6 +158,10 @@ class _AiChatBodyState extends State<_AiChatBody> {
             ),
           ),
           const Divider(height: 1),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: _BioLinkSummaryCard(),
+          ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -177,6 +196,130 @@ class _AiChatBodyState extends State<_AiChatBody> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 데모용: 복용 안전·상호작용 비중을 막대로 표현 (실데이터 연결 시 교체).
+class _BioLinkSummaryCard extends StatelessWidget {
+  const _BioLinkSummaryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 0,
+      color: const Color(0xFFF0F7FF),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFBFD7FF)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.insights, color: Theme.of(context).colorScheme.primary, size: 22),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '바이오링크 요약 (데모)',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '처방 조합 기준 상호작용 비중 · 오늘 복용 안전도',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 96,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: const [
+                    Expanded(
+                      flex: 62,
+                      child: _SummaryBar(
+                        label: '양호',
+                        fraction: 1,
+                        color: Color(0xFF22C55E),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      flex: 24,
+                      child: _SummaryBar(
+                        label: '주의',
+                        fraction: 0.55,
+                        color: Color(0xFFF59E0B),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      flex: 14,
+                      child: _SummaryBar(
+                        label: '확인',
+                        fraction: 0.35,
+                        color: Color(0xFFEF4444),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryBar extends StatelessWidget {
+  const _SummaryBar({
+    required this.label,
+    required this.fraction,
+    required this.color,
+  });
+
+  final String label;
+  final double fraction;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: FractionallySizedBox(
+              widthFactor: 1,
+              heightFactor: fraction.clamp(0.15, 1.0),
+              alignment: Alignment.bottomCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+        ),
+      ],
     );
   }
 }

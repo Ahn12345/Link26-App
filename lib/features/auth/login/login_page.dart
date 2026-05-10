@@ -4,6 +4,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
+import 'package:link26_app/core/widgets/app_brand_logo.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 
@@ -17,9 +18,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static const _illustration1 = 'assets/images/simplelogin1.png';
-  static const _illustration2 = 'assets/images/simplelogin2.png';
-
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
 
@@ -81,67 +79,78 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final fieldBorder = OutlineInputBorder(borderRadius: BorderRadius.circular(12));
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.login)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  _illustration1,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    debugPrint('login art 1: $error');
-                    return Icon(
-                      Icons.login,
-                      size: 120,
-                      color: Theme.of(context).colorScheme.primary,
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  _illustration2,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    debugPrint('login art 2: $error');
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.login,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () => _socialStub(context),
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: Text(l10n.socialLoginGoogle),
-              ),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => _socialStub(context),
-                icon: const Icon(Icons.apple, size: 22),
-                label: Text(l10n.socialLoginApple),
+              Center(child: AppBrandLogo(width: 96)),
+              const SizedBox(height: 12),
+              Text(
+                l10n.authWelcomeSubtitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 28),
+              Semantics(
+                button: true,
+                label: l10n.socialLoginGoogle,
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _socialStub(context),
+                    icon: Icon(Icons.g_mobiledata, size: 28, color: scheme.onSurface),
+                    label: Text(l10n.socialLoginGoogle),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Semantics(
+                button: true,
+                label: l10n.socialLoginApple,
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _socialStub(context),
+                    icon: Icon(Icons.apple, size: 22, color: scheme.onSurface),
+                    label: Text(l10n.socialLoginApple),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: scheme.outlineVariant)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      l10n.loginDividerEmail,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: scheme.outlineVariant)),
+                ],
+              ),
+              const SizedBox(height: 20),
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
                 decoration: InputDecoration(
                   labelText: l10n.loginEmailLabel,
-                  border: const OutlineInputBorder(),
+                  border: fieldBorder,
+                  enabledBorder: fieldBorder,
                 ),
               ),
               const SizedBox(height: 12),
@@ -150,14 +159,20 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: l10n.loginPasswordLabel,
-                  border: const OutlineInputBorder(),
+                  border: fieldBorder,
+                  enabledBorder: fieldBorder,
                 ),
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => _submit(context),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 child: Text(l10n.continueCta),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),

@@ -274,4 +274,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get socialLoginApple => 'Apple로 계속';
+
+  @override
+  String get loginDividerEmail => '또는 이메일로 로그인';
 }

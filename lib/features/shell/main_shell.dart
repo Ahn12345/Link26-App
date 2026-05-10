@@ -4,9 +4,10 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import '../../core/constants/design_assets.dart';
 import '../../core/services/monthly_hira_auth_gate.dart';
 import '../../core/widgets/design_backdrop.dart';
+import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
 
-/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅 · 더보기(목업 이미지).
+/// 하단 탭: 홈(배경 + 대시보드) · AI 채팅(위젯) · 더보기(목업 이미지).
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -47,7 +48,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.black,
+      backgroundColor: scheme.surface,
       body: IndexedStack(
         index: _index,
         sizing: StackFit.expand,
@@ -58,10 +59,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             backgroundOpacity: 0.2,
             child: const HomeDashboardContent(),
           ),
-          DesignBackdrop(
-            assetPath: DesignAssets.aiChat,
-            fit: DesignAssets.imageFit,
-          ),
+          const AiChatScreen(showScaffold: false, embeddedInShell: true),
           DesignBackdrop(
             assetPath: DesignAssets.more,
             fit: DesignAssets.imageFit,

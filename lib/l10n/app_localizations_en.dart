@@ -283,4 +283,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialLoginApple => 'Continue with Apple';
+
+  @override
+  String get loginDividerEmail => 'Or continue with email';
 }

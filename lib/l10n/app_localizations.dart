@@ -129,6 +129,7 @@ abstract class AppLocalizations {
   String get socialLoginComingSoon;
   String get socialLoginGoogle;
   String get socialLoginApple;
+  String get loginDividerEmail;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

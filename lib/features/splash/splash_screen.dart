@@ -14,11 +14,31 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _intro = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 880),
+  );
+  late final Animation<double> _fade = CurvedAnimation(
+    parent: _intro,
+    curve: const Interval(0, 0.65, curve: Curves.easeOut),
+  );
+  late final Animation<double> _scale = Tween<double>(begin: 0.88, end: 1).animate(
+    CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic),
+  );
+
   @override
   void initState() {
     super.initState();
+    _intro.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) => _goNext());
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
   }
 
   Future<void> _goNext() async {
@@ -38,22 +58,41 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: scheme.surface,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const AppBrandLogo(width: 160),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: scheme.primary,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              scheme.primaryContainer.withValues(alpha: 0.45),
+              scheme.surface,
+              scheme.secondaryContainer.withValues(alpha: 0.25),
+            ],
+          ),
+        ),
+        child: Center(
+          child: FadeTransition(
+            opacity: _fade,
+            child: ScaleTransition(
+              scale: _scale,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppBrandLogo(width: 160),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
