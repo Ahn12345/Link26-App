@@ -3,6 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:link26_app/core/constants/storage_keys.dart';
+import 'package:link26_app/core/debug_build_label.dart';
 import 'package:link26_app/core/theme/app_theme.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_screen.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
@@ -101,10 +102,20 @@ class Link26AppState extends State<Link26App> {
         if (child == null) return const SizedBox.shrink();
         final mq = MediaQuery.maybeOf(context) ??
             MediaQueryData.fromView(View.of(context));
-        return MediaQuery(
+        Widget wrapped = MediaQuery(
           data: mq.copyWith(textScaler: TextScaler.linear(_textScale)),
           child: child,
         );
+        if (kLink26ShowBuildTagBanner) {
+          wrapped = Banner(
+            message: kLink26BuildTag,
+            location: BannerLocation.topEnd,
+            color: Colors.deepOrange,
+            textDirection: TextDirection.ltr,
+            child: wrapped,
+          );
+        }
+        return wrapped;
       },
       home: const AuthWelcomeScreen(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
