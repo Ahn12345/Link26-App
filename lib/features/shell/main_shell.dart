@@ -157,7 +157,7 @@ class _ActiveTabBody extends StatelessWidget {
         break;
       case 2:
         child = const FullScreenAssetBackground(
-          assetPath: ImageAssets.setting,
+          assetPath: ImageAssets.moreTabBackground,
           fallbackAssetPath: null,
           child: MoreScreen(showScaffold: false),
         );

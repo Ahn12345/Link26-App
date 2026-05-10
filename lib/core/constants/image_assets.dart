@@ -9,6 +9,7 @@ abstract final class ImageAssets {
   static const logo = 'assets/images/logo.png';
   static const login = 'assets/images/login.png';
   static const signup = 'assets/images/signup.png';
+  static const home = 'assets/images/home.png';
   static const aichat = 'assets/images/aichat.png';
   static const setting = 'assets/images/setting.png';
   static const pillsearch = 'assets/images/pillsearch.png';
@@ -19,4 +20,8 @@ abstract final class ImageAssets {
 
   /// 홈 탭: 전체 목업 PNG 를 깔지 않음(대시보드와 중복 방지).
   static const String homeTabBackground = '';
+
+  /// 더보기 탭: `setting.png` 목업을 배경으로 깔면 리스트·카드와 시안이 이중으로 보일 수 있음.
+  /// 배경 이미지가 필요하면 [setting] 등으로 바꿉니다.
+  static const String moreTabBackground = '';
 }

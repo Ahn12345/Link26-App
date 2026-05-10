@@ -42,5 +42,5 @@ flutter:
   assets:
     - .env
     - assets/images/
-    # DUR CSV 는 현재 Dart 에서 로드하지 않음 — APK/AAB 용량 절감을 위해 번들에서 제외.
-    # 필요 시 네트워크·다운로드 또는 별도 모듈로 제공하세요.
+    - lib/data/DUR1/
+    - lib/data/DUR2/

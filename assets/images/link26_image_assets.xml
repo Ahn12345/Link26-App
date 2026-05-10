@@ -13,6 +13,8 @@
          usage="로그인 화면 일러스트" />
   <image id="signup" file="signup.png" dart-const="ImageAssets.signup"
          usage="회원가입 화면 일러스트" />
+  <image id="home" file="home.png" dart-const="ImageAssets.home"
+         usage="전체 목업 참고용(필요 시 화면에서만 사용 — 홈 탭 배경 중복 주의)" />
   <image id="aichat" file="aichat.png" dart-const="ImageAssets.aichat"
          usage="AI 채팅 탭·관련 화면 에셋" />
   <image id="setting" file="setting.png" dart-const="ImageAssets.setting"

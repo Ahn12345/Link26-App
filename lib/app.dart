@@ -95,7 +95,7 @@ class Link26AppState extends State<Link26App> {
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: _localeOverride,
-      title: 'Link26 App',
+      title: 'Link App',
       theme: AppTheme.light,
       builder: (context, child) {
         if (child == null) return const SizedBox.shrink();

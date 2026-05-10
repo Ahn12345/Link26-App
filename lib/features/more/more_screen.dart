@@ -35,7 +35,7 @@ class _MoreBody extends StatelessWidget {
         children: [
           Center(
             child: DecodedAssetImage(
-              ImageAssets.logo,
+              ImageAssets.applogo,
               height: 72,
               fit: BoxFit.contain,
             ),
