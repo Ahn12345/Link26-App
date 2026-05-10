@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/models/alarm_item.dart';
 
@@ -33,7 +34,7 @@ class _AllAlarmsScreenState extends State<AllAlarmsScreen> {
   Widget build(BuildContext context) {
     const chips = ['전체', '알림', '전화', '복용 완료'];
     return Scaffold(
-      backgroundColor: Link26Surface.scaffoldBg,
+      backgroundColor: Link26UnifiedPage.background,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),

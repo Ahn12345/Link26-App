@@ -148,7 +148,7 @@ class _ActiveTabBody extends StatelessWidget {
         break;
       case 1:
         child = ColoredBox(
-          color: Link26Surface.scaffoldBg,
+          color: Link26UnifiedPage.background,
           child: AiChatScreen(
             showScaffold: false,
             embeddedInShell: true,

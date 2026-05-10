@@ -10,6 +10,7 @@ import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/ai_chat_conversation_cache.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
@@ -43,10 +44,10 @@ class AiChatScreen extends StatelessWidget {
       visitStamp: visitStamp,
     );
     if (!showScaffold) {
-      return ColoredBox(color: Link26Surface.scaffoldBg, child: body);
+      return ColoredBox(color: Link26UnifiedPage.background, child: body);
     }
     return Scaffold(
-      backgroundColor: Link26Surface.scaffoldBg,
+      backgroundColor: Link26UnifiedPage.background,
       body: body,
     );
   }
@@ -245,7 +246,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                           SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                           Expanded(
                             child: ColoredBox(
-                              color: Link26Surface.scaffoldBg,
+                              color: Link26UnifiedPage.background,
                               child: ListView(
                                 padding: EdgeInsets.fromLTRB(
                                   0,

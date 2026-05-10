@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 
 /// Global theme configuration.
 abstract final class AppTheme {
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
-      seedColor: Link26Surface.accent,
+      seedColor: Link26UnifiedPage.ctaBlue,
       brightness: Brightness.light,
     );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: Link26Surface.scaffoldBg,
+      scaffoldBackgroundColor: Link26UnifiedPage.background,
       navigationBarTheme: NavigationBarThemeData(
-        indicatorColor: scheme.primaryContainer.withValues(alpha: 0.65),
+        indicatorColor: Link26Surface.chipTint,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
@@ -22,7 +23,7 @@ abstract final class AppTheme {
         centerTitle: true,
         elevation: 0,
         scrolledUnderElevation: 0,
-        backgroundColor: Link26Surface.scaffoldBg,
+        backgroundColor: Link26UnifiedPage.background,
         foregroundColor: Link26Surface.textPrimary,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: const TextStyle(
@@ -33,7 +34,7 @@ abstract final class AppTheme {
         iconTheme: const IconThemeData(color: Link26Surface.textSecondary),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: Link26Surface.filledAccentButton(),
+        style: Link26UnifiedPage.filledCtaButton(),
       ),
     );
   }
