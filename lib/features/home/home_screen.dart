@@ -94,6 +94,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   @override
   Widget build(BuildContext context) {
     final completed = alarms.where((e) => e.completed).length;
+    // [MainShell] extendBody: true 이면 본문이 하단 네비 뒤로 깔리므로 여백을 둡니다.
+    final bottomPad =
+        MediaQuery.of(context).padding.bottom + 88;
 
     return ColoredBox(
       color: Colors.transparent,
@@ -102,7 +105,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 28 + bottomPad),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   Row(

@@ -148,13 +148,17 @@ class _AiChatBodyState extends State<_AiChatBody> {
   @override
   Widget build(BuildContext context) {
     final embedded = widget.embeddedInShell;
+    final shellNavPad =
+        embedded ? MediaQuery.of(context).padding.bottom + 88.0 : 0.0;
 
     return SafeArea(
       bottom: true,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Column(
+          Padding(
+            padding: EdgeInsets.only(bottom: shellNavPad),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _ChatHeader(
@@ -188,6 +192,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                 onCamera: openCamera,
               ),
             ],
+          ),
           ),
           if (!embedded)
             Positioned(

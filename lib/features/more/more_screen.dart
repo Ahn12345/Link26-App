@@ -26,9 +26,10 @@ class _MoreBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom + 88;
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomPad),
         children: [
           Container(
             padding: const EdgeInsets.all(22),
