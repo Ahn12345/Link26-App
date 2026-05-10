@@ -82,6 +82,7 @@
   "monthlyHiraComplete": "Done",
   "later": "Later",
   "loginFailed": "Name and phone do not match our records.",
+  "loginRedirectToSignup": "No local account found. Please sign up first.",
   "loginNameLabel": "Name",
   "loginNameRequired": "Please enter your name.",
   "loginNhisSyncFailed": "NHIS login sync failed. You can try again later.",

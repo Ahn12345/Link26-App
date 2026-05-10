@@ -309,6 +309,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '이름과 전화번호가 저장된 정보와 일치하지 않습니다.';
 
   @override
+  String get loginRedirectToSignup =>
+      '등록된 회원 정보가 없습니다. 회원가입을 진행해 주세요.';
+
+  @override
   String get loginNameLabel => '이름';
 
   @override

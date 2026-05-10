@@ -316,6 +316,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginFailed => 'Name and phone do not match our records.';
 
   @override
+  String get loginRedirectToSignup =>
+      'No local account found. Please sign up first.';
+
+  @override
   String get loginNameLabel => 'Name';
 
   @override

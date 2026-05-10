@@ -87,8 +87,9 @@ class _LoginPageState extends State<LoginPage> {
       if (!context.mounted) return;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loginFailed)),
+          SnackBar(content: Text(l10n.loginRedirectToSignup)),
         );
+        await Navigator.of(context).pushReplacementNamed(SignupPage.routeName);
         return;
       }
 

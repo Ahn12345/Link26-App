@@ -137,6 +137,7 @@ abstract class AppLocalizations {
   String get monthlyHiraComplete;
   String get later;
   String get loginFailed;
+  String get loginRedirectToSignup;
   String get loginNameLabel;
   String get loginNameRequired;
   String get loginNhisSyncFailed;
