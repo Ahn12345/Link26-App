@@ -5,6 +5,27 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+/// 로컬 SQLite `users` 행 — 로그인 세션·NHIS 연동용.
+class LocalUserRecord {
+  const LocalUserRecord({
+    required this.id,
+    required this.email,
+    required this.displayName,
+    required this.phoneDigits,
+    required this.gender,
+    required this.residentRegistrationHash,
+    required this.privacyConsent,
+  });
+
+  final int id;
+  final String email;
+  final String displayName;
+  final String phoneDigits;
+  final String gender;
+  final String? residentRegistrationHash;
+  final bool privacyConsent;
+}
+
 /// 로컬 SQLite — 첫 실행 시 회원 없으면 회원가입 유도. 실서비스는 서버 DB와 동기화 가정.
 abstract final class UserLocalRepository {
   static Database? _db;
@@ -167,10 +188,39 @@ abstract final class UserLocalRepository {
     );
   }
 
-  /// 전화번호만으로 로그인(로컬에 동일 번호가 있으면 성공).
-  static Future<bool> verifyPhoneForLogin(String phone) async {
+  static LocalUserRecord? _mapRowToUser(Map<String, Object?> row) {
+    try {
+      final id = row['id'] as int;
+      final email = row['email'] as String;
+      final displayName = (row['display_name'] as String?)?.trim() ?? '';
+      final phone = row['phone'] as String?;
+      final gender = (row['gender'] as String?)?.trim() ?? '';
+      final rrn = row['resident_registration_hash'] as String?;
+      final privacy = (row['privacy_consent'] as int? ?? 0) == 1;
+      if (phone == null || phone.isEmpty) return null;
+      return LocalUserRecord(
+        id: id,
+        email: email,
+        displayName: displayName,
+        phoneDigits: phone,
+        gender: gender,
+        residentRegistrationHash: rrn,
+        privacyConsent: privacy,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 표시 이름과 전화번호가 같은 행에 일치할 때만 사용자를 반환합니다.
+  static Future<LocalUserRecord?> findUserByNameAndPhone({
+    required String displayName,
+    required String phone,
+  }) async {
     final p = phone.replaceAll(RegExp(r'\D'), '');
-    if (p.length < 10) return false;
+    if (p.length < 10) return null;
+    final name = displayName.trim();
+    if (name.isEmpty) return null;
     final db = await _open();
     final rows = await db.query(
       'users',
@@ -178,7 +228,26 @@ abstract final class UserLocalRepository {
       whereArgs: [p],
       limit: 1,
     );
-    return rows.isNotEmpty;
+    if (rows.isEmpty) return null;
+    final user = _mapRowToUser(rows.first);
+    if (user == null) return null;
+    if (user.displayName != name) return null;
+    return user;
+  }
+
+  /// 전화번호로 로컬 사용자 한 명 조회(이름 검증 없음).
+  static Future<LocalUserRecord?> findUserByPhone(String phone) async {
+    final p = phone.replaceAll(RegExp(r'\D'), '');
+    if (p.length < 10) return null;
+    final db = await _open();
+    final rows = await db.query(
+      'users',
+      where: 'phone = ?',
+      whereArgs: [p],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _mapRowToUser(rows.first);
   }
 
   static Future<bool> verifyCredentials(String email, String password) async {

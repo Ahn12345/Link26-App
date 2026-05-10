@@ -305,7 +305,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get later => '나중에';
 
   @override
-  String get loginFailed => '가입된 전화번호가 아닙니다.';
+  String get loginFailed =>
+      '이름과 전화번호가 저장된 정보와 일치하지 않습니다.';
+
+  @override
+  String get loginNameLabel => '이름';
+
+  @override
+  String get loginNameRequired => '이름을 입력하세요.';
+
+  @override
+  String get loginNhisSyncFailed =>
+      '국민건강보험(연동 서버) 로그인 연동에 실패했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get loginNhisRequiredFailed =>
+      '국민건강보험 연동이 완료되지 않아 로그인할 수 없습니다. 네트워크·API 설정을 확인해 주세요.';
 
   @override
   String get signupEmailTaken => '이미 가입된 이메일입니다.';
@@ -377,4 +392,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get loginDividerEmail => '또는 전화번호로 로그인';
+
+  @override
+  String get loginDividerLocalAccount => '이름과 전화번호로 로그인';
 }

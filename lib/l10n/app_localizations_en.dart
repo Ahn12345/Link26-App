@@ -313,7 +313,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get later => 'Later';
 
   @override
-  String get loginFailed => 'This phone number is not registered.';
+  String get loginFailed => 'Name and phone do not match our records.';
+
+  @override
+  String get loginNameLabel => 'Name';
+
+  @override
+  String get loginNameRequired => 'Please enter your name.';
+
+  @override
+  String get loginNhisSyncFailed =>
+      'NHIS login sync failed. You can try again later.';
+
+  @override
+  String get loginNhisRequiredFailed =>
+      'NHIS login is required but failed. Check API settings.';
 
   @override
   String get signupEmailTaken => 'This email is already registered.';
@@ -389,4 +403,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginDividerEmail => 'Or continue with phone';
+
+  @override
+  String get loginDividerLocalAccount => 'Sign in with name and phone';
 }

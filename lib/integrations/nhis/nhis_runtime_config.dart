@@ -17,6 +17,13 @@ abstract final class NhisRuntimeConfig {
     return '/v1/signup';
   }
 
+  /// 로그인(세션) 연동 POST 경로.
+  static String get loginPath {
+    final p = dotenv.env['NHIS_LOGIN_PATH']?.trim() ?? '';
+    if (p.isNotEmpty) return p.startsWith('/') ? p : '/$p';
+    return '/v1/login';
+  }
+
   /// 공공데이터포털 등 `serviceKey` 쿼리가 필요할 때.
   static String? get serviceKey {
     final k = dotenv.env['NHIS_SERVICE_KEY']?.trim();
@@ -27,6 +34,12 @@ abstract final class NhisRuntimeConfig {
   /// `true`이면 NHIS 전송 실패 시 로컬 가입 롤백 후 화면 유지.
   static bool get signupRequired {
     final s = dotenv.env['NHIS_SIGNUP_REQUIRED']?.trim().toLowerCase();
+    return s == 'true' || s == '1' || s == 'yes';
+  }
+
+  /// `true`이면 NHIS 로그인 연동 실패 시 홈으로 진입하지 않습니다.
+  static bool get loginRequired {
+    final s = dotenv.env['NHIS_LOGIN_REQUIRED']?.trim().toLowerCase();
     return s == 'true' || s == '1' || s == 'yes';
   }
 }

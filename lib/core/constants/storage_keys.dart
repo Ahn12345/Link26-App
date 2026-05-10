@@ -3,6 +3,8 @@ abstract final class StorageKeys {
   static const localeOverride = 'app_locale_override_v1';
   static const textScaleFactor = 'app_text_scale_factor_v1';
   static const sessionSignedInV1 = 'session_signed_in_v1';
+  /// 로그인한 로컬 사용자 전화번호(숫자만). [AuthSession.signIn] 시 저장.
+  static const sessionActivePhoneV1 = 'session_active_phone_v1';
   /// `yyyy-MM` of last completed monthly HIRA easy-auth (25일 플로우).
   static const hiraMonthlyAuthMonth = 'hira_monthly_auth_month_v1';
   static const localMyMedicinesJson = 'local_my_medicines_json_v1';

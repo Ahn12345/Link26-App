@@ -11,12 +11,10 @@ class NhisSignupClient {
 
   final ApiClient _api;
 
-  Future<Result<String>> submitRegistration({
-    required String displayName,
-    required String phoneDigits,
-    required String gender,
-    required String residentRegistrationHash,
-  }) async {
+  Future<Result<String>> _post(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
     final base = NhisRuntimeConfig.baseUrl;
     if (base.isEmpty) {
       return const Failure(
@@ -24,7 +22,7 @@ class NhisSignupClient {
       );
     }
 
-    var uri = buildUri(NhisRuntimeConfig.signupPath, base: base);
+    var uri = buildUri(path, base: base);
     final key = NhisRuntimeConfig.serviceKey;
     if (key != null) {
       final q = Map<String, String>.from(uri.queryParameters);
@@ -32,15 +30,39 @@ class NhisSignupClient {
       uri = uri.replace(queryParameters: q);
     }
 
-    return _api.post(
-      uri,
-      body: {
-        'displayName': displayName,
-        'phone': phoneDigits,
-        'gender': gender,
-        'residentRegistrationHash': residentRegistrationHash,
-        'privacyConsent': true,
-      },
-    );
+    return _api.post(uri, body: body);
+  }
+
+  Future<Result<String>> submitRegistration({
+    required String displayName,
+    required String phoneDigits,
+    required String gender,
+    required String residentRegistrationHash,
+  }) async {
+    return _post(NhisRuntimeConfig.signupPath, {
+      'flow': 'signup',
+      'displayName': displayName,
+      'phone': phoneDigits,
+      'gender': gender,
+      'residentRegistrationHash': residentRegistrationHash,
+      'privacyConsent': true,
+    });
+  }
+
+  /// 로그인 직후 BFF·게이트웨이에 동일 식별 정보를 전달합니다(주민번호는 DB에 저장된 해시만).
+  Future<Result<String>> submitLogin({
+    required String displayName,
+    required String phoneDigits,
+    required String gender,
+    required String residentRegistrationHash,
+  }) async {
+    return _post(NhisRuntimeConfig.loginPath, {
+      'flow': 'login',
+      'displayName': displayName,
+      'phone': phoneDigits,
+      'gender': gender,
+      'residentRegistrationHash': residentRegistrationHash,
+      'privacyConsent': true,
+    });
   }
 }

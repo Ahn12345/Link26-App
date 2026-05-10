@@ -145,7 +145,7 @@ class _SignupPageState extends State<SignupPage> {
       }
 
       await HiraLinkService.afterRegistration();
-      await AuthSession.signIn();
+      await AuthSession.signIn(phoneDigits: phoneDigits);
       if (context.mounted) {
         await Navigator.of(context).pushNamedAndRemoveUntil(
           MainShell.routeName,

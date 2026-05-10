@@ -14,9 +14,11 @@ import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/features/auth/services/nhis_login_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
+import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,6 +30,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   bool _busy = false;
 
@@ -47,13 +50,21 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _phoneCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final name = _nameCtrl.text.trim();
     final phone = _phoneCtrl.text;
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loginNameRequired)),
+      );
+      return;
+    }
     if (SignupValidators.digitsOnly(phone).isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.loginPhoneRequired)),
@@ -69,16 +80,34 @@ class _LoginPageState extends State<LoginPage> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final ok =
-          await UserLocalRepository.verifyPhoneForLogin(phone);
+      final user = await UserLocalRepository.findUserByNameAndPhone(
+        displayName: name,
+        phone: phone,
+      );
       if (!context.mounted) return;
-      if (!ok) {
+      if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.loginFailed)),
         );
         return;
       }
-      await AuthSession.signIn();
+
+      final nhisResult = await NhisLoginSync.syncAfterLocalLogin(user: user);
+      if (!context.mounted) return;
+
+      if (nhisResult == NhisLoginSyncResult.failed) {
+        if (NhisRuntimeConfig.loginRequired) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.loginNhisRequiredFailed)),
+          );
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loginNhisSyncFailed)),
+        );
+      }
+
+      await AuthSession.signIn(phoneDigits: user.phoneDigits);
       await HiraLinkService.afterLogin();
       if (context.mounted) {
         await Navigator.of(context).pushNamedAndRemoveUntil(
@@ -117,7 +146,9 @@ class _LoginPageState extends State<LoginPage> {
     );
     final w = MediaQuery.sizeOf(context).width;
     final heroH = Link26ResponsiveImageHeights.login(w);
+    final nameOk = _nameCtrl.text.trim().isNotEmpty;
     final phoneOk = SignupValidators.isPhoneKr(_phoneCtrl.text);
+    final canLocalLogin = nameOk && phoneOk;
 
     final topUnderAppBar =
         MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
@@ -216,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
-                                l10n.loginDividerEmail,
+                                l10n.loginDividerLocalAccount,
                                 style: TextStyle(
                                   color: Link26Surface.textMuted,
                                   fontWeight: FontWeight.w700,
@@ -229,6 +260,20 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapXl(w)),
+                        TextField(
+                          controller: _nameCtrl,
+                          onChanged: (_) => setState(() {}),
+                          textInputAction: TextInputAction.next,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Link26Surface.textPrimary,
+                            fontSize: Link26ResponsiveUi.body(w),
+                          ),
+                          decoration: Link26Surface.inputDecoration(
+                            labelText: l10n.loginNameLabel,
+                          ),
+                        ),
+                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                         TextField(
                           controller: _phoneCtrl,
                           onChanged: (_) => setState(() {}),
@@ -250,7 +295,7 @@ class _LoginPageState extends State<LoginPage> {
                           height: Link26ResponsiveUi.authCardPadVertical(w),
                         ),
                         FilledButton(
-                          onPressed: (_busy || !phoneOk)
+                          onPressed: (_busy || !canLocalLogin)
                               ? null
                               : () => _submit(context),
                           style: Link26UnifiedPage.filledCtaButton(

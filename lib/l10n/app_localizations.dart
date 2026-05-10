@@ -137,6 +137,10 @@ abstract class AppLocalizations {
   String get monthlyHiraComplete;
   String get later;
   String get loginFailed;
+  String get loginNameLabel;
+  String get loginNameRequired;
+  String get loginNhisSyncFailed;
+  String get loginNhisRequiredFailed;
   String get signupEmailTaken;
   String get signupPhoneTaken;
   String get signupNhisSyncFailed;
@@ -160,6 +164,7 @@ abstract class AppLocalizations {
   String get socialLoginGoogle;
   String get socialLoginApple;
   String get loginDividerEmail;
+  String get loginDividerLocalAccount;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
