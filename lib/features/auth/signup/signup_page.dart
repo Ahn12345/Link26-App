@@ -3,6 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
@@ -77,7 +78,9 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final heroH = Link26Layout.heroImageHeight(MediaQuery.sizeOf(context).width);
+    final w = MediaQuery.sizeOf(context).width;
+    final heroH = Link26ResponsiveImageHeights.signup(w);
+    final heroW = Link26ResponsiveImageHeights.signupDisplayWidth(w);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.signup)),
       body: SafeArea(
@@ -87,19 +90,24 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               Link26ElevatedCard(
                 padding: const EdgeInsets.all(16),
-                child: DecodedAssetImage(
-                  ImageAssets.signup,
-                  height: heroH,
-                  fit: BoxFit.contain,
-                  borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
-                  errorBuilder: (context, error, stackTrace) {
-                    debugPrint('signup art: $error');
-                    return const Icon(
-                      Icons.person_add_alt_1,
-                      size: 120,
-                      color: Link26Surface.accent,
-                    );
-                  },
+                child: Center(
+                  child: SizedBox(
+                    width: heroW,
+                    child: DecodedAssetImage(
+                      ImageAssets.signup,
+                      height: heroH,
+                      fit: BoxFit.contain,
+                      borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('signup art: $error');
+                        return const Icon(
+                          Icons.person_add_alt_1,
+                          size: 120,
+                          color: Link26Surface.accent,
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

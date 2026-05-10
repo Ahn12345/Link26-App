@@ -2,6 +2,7 @@
 <!--
   Link26 이미지 카탈로그 — 실제 파일은 이 폴더의 PNG 와 1:1 대응.
   색·간격·라운드 토큰: ../design/link26_design_tokens.xml
+  화면별 PNG 반응형(높이·너비 상한): ../design/link26_responsive_images.xml
   앱 코드에서는 lib/core/constants/image_assets.dart (ImageAssets) 만 경로로 사용합니다.
 -->
 <link26-images version="1">

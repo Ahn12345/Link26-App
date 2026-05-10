@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -42,7 +43,8 @@ class AuthWelcomeScreen extends StatelessWidget {
             builder: (context, c) {
               final w = c.maxWidth;
               final pad = Link26Layout.pageInsets(w);
-              final heroH = Link26Layout.heroImageHeight(w);
+              final logoH = Link26ResponsiveImageHeights.authWelcome(w);
+              final logoW = Link26ResponsiveImageHeights.authWelcomeDisplayWidth(w);
               return Padding(
                 padding: pad,
                 child: Column(
@@ -59,10 +61,15 @@ class AuthWelcomeScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
                           child: Column(
                             children: [
-                              DecodedAssetImage(
-                                ImageAssets.logo,
-                                height: heroH * 0.72,
-                                fit: BoxFit.contain,
+                              Center(
+                                child: SizedBox(
+                                  width: logoW,
+                                  child: DecodedAssetImage(
+                                    ImageAssets.logo,
+                                    height: logoH,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 16),
                               Text(

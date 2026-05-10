@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/models/link_models.dart';
 
 /// 시안 기준 AI 약 정보 채팅 (`#3B6CF5` 등).
@@ -151,6 +154,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
         final side = Link26Layout.chatListHorizontal(w);
         final inner = w - 2 * side;
         final bubbleMax = Link26Layout.chatBubbleMaxWidth(inner);
+        final aiArtH = Link26ResponsiveImageHeights.aiChat(w);
+        final aiArtW = Link26ResponsiveImageHeights.aiChatDisplayWidth(w);
 
         return SafeArea(
           bottom: true,
@@ -174,6 +179,20 @@ class _AiChatBodyState extends State<_AiChatBody> {
                         child: ListView(
                           padding: EdgeInsets.fromLTRB(side, 16, side, 8),
                           children: [
+                            Center(
+                              child: SizedBox(
+                                width: aiArtW,
+                                child: DecodedAssetImage(
+                                  ImageAssets.aichat,
+                                  height: aiArtH,
+                                  fit: BoxFit.contain,
+                                  borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const SizedBox.shrink(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
                             _AiWelcomeBubble(
                               timeLabel: _welcomeAccessLabel ?? '…',
                               maxBubbleWidth: bubbleMax,

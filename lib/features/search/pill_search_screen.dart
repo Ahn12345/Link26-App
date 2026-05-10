@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/constants/image_assets.dart';
+import '../../core/layout/link26_responsive_image_tokens.g.dart';
 import '../../core/layout/link26_responsive_layout.dart';
 import '../../core/services/local_medicine_list_store.dart';
 import '../../core/theme/link26_surface_style.dart';
@@ -40,7 +41,9 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final heroH = Link26Layout.heroImageHeight(MediaQuery.sizeOf(context).width);
+    final w = MediaQuery.sizeOf(context).width;
+    final heroH = Link26ResponsiveImageHeights.pillSearch(w);
+    final heroW = Link26ResponsiveImageHeights.pillSearchDisplayWidth(w);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.pillSearchTitle)),
       body: SafeArea(
@@ -51,13 +54,18 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  DecodedAssetImage(
-                    ImageAssets.pillsearch,
-                    height: heroH,
-                    fit: BoxFit.contain,
-                    borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox.shrink(),
+                  Center(
+                    child: SizedBox(
+                      width: heroW,
+                      child: DecodedAssetImage(
+                        ImageAssets.pillsearch,
+                        height: heroH,
+                        fit: BoxFit.contain,
+                        borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(

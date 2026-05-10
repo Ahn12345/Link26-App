@@ -4,6 +4,7 @@
   - Flutter 색·라운드: 프로젝트 루트에서  dart run tool/generate_link26_surface.dart
   - Android: values/colors.xml · values/dimens.xml 과 동일 hex/dp 유지 (수동 동기화)
   - 이미지 목록: assets/images/link26_image_assets.xml
+  - 화면별 PNG 반응형: assets/design/link26_responsive_images.xml
 -->
 <link26-design version="1">
   <colors>

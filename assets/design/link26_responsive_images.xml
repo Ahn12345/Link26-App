@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  화면별 PNG(히어로) 반응형 높이·너비 상한.
+  - breakpoint 는 link26_design_tokens.xml 의 <responsive/> 와 동일하게 적용됩니다.
+  - 생성: dart run tool/generate_link26_surface.dart → link26_responsive_image_tokens.g.dart
+  - PNG 파일 목록: assets/images/link26_image_assets.xml
+-->
+<link26-responsive-images version="1">
+  <!-- 환영: logo.png -->
+  <screen id="authWelcome" image="logo.png">
+    <height compact="100" medium="124" expanded="144" />
+    <widthFraction cap="0.92" />
+  </screen>
+  <!-- 로그인: login.png -->
+  <screen id="login" image="login.png">
+    <height compact="130" medium="168" expanded="200" />
+    <widthFraction cap="1" />
+  </screen>
+  <!-- 회원가입: signup.png -->
+  <screen id="signup" image="signup.png">
+    <height compact="130" medium="168" expanded="200" />
+    <widthFraction cap="1" />
+  </screen>
+  <!-- AI 채팅 헤더 일러스트: aichat.png -->
+  <screen id="aiChat" image="aichat.png">
+    <height compact="76" medium="96" expanded="118" />
+    <widthFraction cap="0.52" />
+  </screen>
+  <!-- 약 검색: pillsearch.png -->
+  <screen id="pillSearch" image="pillsearch.png">
+    <height compact="118" medium="158" expanded="200" />
+    <widthFraction cap="1" />
+  </screen>
+</link26-responsive-images>

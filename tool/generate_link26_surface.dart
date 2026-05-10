@@ -127,6 +127,7 @@ $gradientLines
   print('Wrote $outPath');
 
   _writeResponsiveTokens(root, design);
+  _writeResponsiveImageTokens(root);
 }
 
 void _writeResponsiveTokens(Directory root, XmlElement design) {
@@ -175,6 +176,97 @@ abstract final class Link26ResponsiveTokens {
 }
 ''');
   print('Wrote $outPath');
+}
+
+/// `assets/design/link26_responsive_images.xml` → `link26_responsive_image_tokens.g.dart`
+void _writeResponsiveImageTokens(Directory root) {
+  final xmlPath = '${root.path}/assets/design/link26_responsive_images.xml';
+  final file = File(xmlPath);
+  if (!file.existsSync()) {
+    print('Skip responsive image tokens (missing $xmlPath)');
+    return;
+  }
+  final doc = XmlDocument.parse(file.readAsStringSync());
+  final rootEl = doc.rootElement;
+  if (rootEl.localName != 'link26-responsive-images') {
+    throw StateError('Root must be link26-responsive-images');
+  }
+
+  final screens = <_ScreenImageSpec>[];
+  for (final el in rootEl.findElements('screen')) {
+    final id = el.getAttribute('id');
+    if (id == null || id.isEmpty) continue;
+    final hEl = el.getElement('height');
+    if (hEl == null) {
+      throw StateError('screen "$id" missing <height/>');
+    }
+    final c = double.parse(hEl.getAttribute('compact') ?? '');
+    final m = double.parse(hEl.getAttribute('medium') ?? '');
+    final e = double.parse(hEl.getAttribute('expanded') ?? '');
+    final wfEl = el.getElement('widthFraction');
+    final cap = double.tryParse(wfEl?.getAttribute('cap') ?? '') ?? 1.0;
+    screens.add(_ScreenImageSpec(id: id, compact: c, medium: m, expanded: e, widthCap: cap));
+  }
+
+  final buf = StringBuffer()
+    ..writeln('// GENERATED FILE - do not edit by hand.')
+    ..writeln('// Source: assets/design/link26_responsive_images.xml')
+    ..writeln('// Regenerate: dart run tool/generate_link26_surface.dart')
+    ..writeln()
+    ..writeln("import 'link26_responsive_layout.dart';")
+    ..writeln("import 'link26_responsive_tokens.g.dart';")
+    ..writeln()
+    ..writeln('abstract final class Link26ResponsiveImageHeights {');
+
+  final idPattern = RegExp(r'^[a-z][a-zA-Z0-9]*$');
+
+  for (final s in screens) {
+    if (!idPattern.hasMatch(s.id)) {
+      throw StateError(
+        'screen id "${s.id}" must be a lowerCamelCase Dart identifier (e.g. pillSearch)',
+      );
+    }
+    final base = s.id;
+    buf
+      ..writeln('  static double $base(double width) {')
+      ..writeln('    if (width < Link26ResponsiveTokens.breakpointCompact) {')
+      ..writeln('      return ${s.compact};')
+      ..writeln('    }')
+      ..writeln('    if (width < Link26ResponsiveTokens.breakpointMedium) {')
+      ..writeln('      return ${s.medium};')
+      ..writeln('    }')
+      ..writeln('    return ${s.expanded};')
+      ..writeln('  }')
+      ..writeln()
+      ..writeln(
+        '  static double ${base}DisplayWidth(double width) => '
+        '(Link26Layout.innerWidth(width) * ${s.widthCap}).clamp(0.0, double.infinity);',
+      )
+      ..writeln();
+  }
+
+  buf.writeln('}');
+
+  final outPath = '${root.path}/lib/core/layout/link26_responsive_image_tokens.g.dart';
+  File(outPath).parent.createSync(recursive: true);
+  File(outPath).writeAsStringSync(buf.toString());
+  print('Wrote $outPath');
+}
+
+class _ScreenImageSpec {
+  const _ScreenImageSpec({
+    required this.id,
+    required this.compact,
+    required this.medium,
+    required this.expanded,
+    required this.widthCap,
+  });
+
+  final String id;
+  final double compact;
+  final double medium;
+  final double expanded;
+  final double widthCap;
 }
 
 String _hexToDart(String hex) {
