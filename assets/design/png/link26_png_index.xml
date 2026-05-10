@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  PNG 1:1 스펙 인덱스 — 각 파일은 동일 폴더의 link26_png_<catalogId>.xml
-  원본 목록: assets/images/link26_image_assets.xml
-  반응형 높이/너비: ../link26_responsive_images.xml (해당 시)
+  PNG 1:1 스펙 — 각 link26_png_<catalogId>.xml (실측 <measured/> 는 sync 도구가 갱신)
+  카탈로그·원본 PNG: assets/images/link26_image_assets.xml
+  제작 스냅샷: assets/images/link26_image_production.xml
+  동기화: dart run tool/sync_image_specs_from_assets.dart
+  반응형: ../link26_responsive_images.xml
 -->
 <link26-png-index version="1">
   <entry catalogId="applogo" spec="link26_png_applogo.xml" />

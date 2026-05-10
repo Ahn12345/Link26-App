@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Link26 이미지 카탈로그 — 실제 파일은 이 폴더의 PNG 와 1:1 대응.
-  색·간격·라운드 토큰: ../design/link26_design_tokens.xml
-  화면별 PNG 반응형(높이·너비 상한): ../design/link26_responsive_images.xml
-  앱 코드에서는 lib/core/constants/image_assets.dart (ImageAssets) 만 경로로 사용합니다.
-  PNG별 상세 스펙(XML): ../design/png/link26_png_index.xml 및 link26_png_<id>.xml
+  원본: 이 폴더의 PNG + 본 카탈로그(1:1). 제작 산출(XML)은 동기화 도구가 갱신합니다.
+  워크플로: PNG 교체/추가 → link26_image_assets.xml 에 <image> 등록 →
+  dart run tool/sync_image_specs_from_assets.dart
+  → link26_image_production.xml(실측 스냅샷) + ../design/png/link26_png_<id>.xml 내 <measured/>
+  플레이스홀더만 필요할 때: dart run tool/gen_image_assets.dart 후 위 sync 재실행.
+  색·간격·라운드: ../design/link26_design_tokens.xml
+  반응형 상한: ../design/link26_responsive_images.xml
+  Dart 경로: lib/core/constants/image_assets.dart (ImageAssets)
+  PNG 인덱스: ../design/png/link26_png_index.xml
 -->
 <link26-images version="1">
   <image id="applogo" file="applogo.png" dart-const="ImageAssets.applogo"

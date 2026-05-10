@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="signup" file="signup.png" dartConst="ImageAssets.signup">
-  <summary usage="회원가입 화면 히어로 일러스트" />
-  <source path="assets/images/signup.png" />
-  <responsiveImageScreen ref="signup" />
+  <summary usage="회원가입 화면 히어로 일러스트"/>
+  <source path="assets/images/signup.png"/>
+  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T18:39:10.156203Z" path="assets/images/signup.png"/>
+  <responsiveImageScreen ref="signup"/>
   <flutter>
-    <file path="lib/features/auth/signup/signup_page.dart" />
+    <file path="lib/features/auth/signup/signup_page.dart"/>
   </flutter>
-  <android strings="@string/flutter_image_signup" layout="reference_signup_screen.xml" />
-  <screenSpec ref="../screens/link26_screen_signup.xml" />
+  <android strings="@string/flutter_image_signup" layout="reference_signup_screen.xml"/>
+  <screenSpec ref="../screens/link26_screen_signup.xml"/>
 </link26-png-spec>

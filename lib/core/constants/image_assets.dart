@@ -1,5 +1,7 @@
-// `assets/images/` 실제 파일만. 다른 경로 문자열을 코드에 흩뿌리지 않습니다.
-// 에셋 목록·용도는 `assets/images/link26_image_assets.xml` 과 함께 유지합니다.
+// `assets/images/` 실제 PNG. 다른 경로 문자열을 코드에 흩뿌리지 않습니다.
+// 목록·용도: `assets/images/link26_image_assets.xml`
+// PNG가 없으면: `dart run tool/gen_image_assets.dart`
+// PNG·카탈로그 기준 XML 제작 갱신: `dart run tool/sync_image_specs_from_assets.dart`
 
 abstract final class ImageAssets {
   /// PNG 목록·기능 매핑(XML). 런타임 로드용이 아니라 문서·동기화 참조.
