@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:link26_app/models/link_models.dart';
 
 import '../../core/services/local_medicine_list_store.dart';
@@ -146,6 +147,19 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
               const SizedBox(height: 10),
               ...listTiles,
               const _BannerCard(),
+              if (kDebugMode)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, bottom: 8),
+                  child: Center(
+                    child: Text(
+                      'UI: home_dashboard_v2',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
