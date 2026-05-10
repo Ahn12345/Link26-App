@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -14,6 +15,7 @@ import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
+import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 
 class SignupPage extends StatefulWidget {
@@ -26,55 +28,101 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _rrnCtrl = TextEditingController();
+
+  /// `male` | `female`
+  String? _gender;
+  bool _privacyAgreed = false;
+  bool _busy = false;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
     _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _rrnCtrl.dispose();
     super.dispose();
+  }
+
+  bool _allRequiredFilled(AppLocalizations l10n) {
+    if (_nameCtrl.text.trim().isEmpty) return false;
+    if (!SignupValidators.isPhoneKr(_phoneCtrl.text)) return false;
+    if (_gender == null) return false;
+    if (!SignupValidators.isRrn13Digits(_rrnCtrl.text)) return false;
+    if (!_privacyAgreed) return false;
+    return true;
   }
 
   Future<void> _submit(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final email = _emailCtrl.text.trim();
-    final password = _passwordCtrl.text.trim();
-    if (email.isEmpty || password.isEmpty) {
+    if (_nameCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.loginFieldsRequired)),
+        SnackBar(content: Text(l10n.signupNameRequired)),
       );
       return;
     }
-    if (await UserLocalRepository.emailExists(email)) {
-      if (!context.mounted) return;
+    if (!SignupValidators.isPhoneKr(_phoneCtrl.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.signupEmailTaken)),
+        SnackBar(content: Text(l10n.signupPhoneInvalid)),
       );
       return;
     }
+    if (_gender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupGenderRequired)),
+      );
+      return;
+    }
+    if (!SignupValidators.isRrn13Digits(_rrnCtrl.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupRrnInvalid)),
+      );
+      return;
+    }
+    if (!_privacyAgreed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupPrivacyRequired)),
+      );
+      return;
+    }
+
+    if (_busy) return;
+    setState(() => _busy = true);
     try {
-      await UserLocalRepository.register(
-        email: email,
-        password: password,
-        displayName: _nameCtrl.text.trim().isEmpty ? null : _nameCtrl.text.trim(),
-      );
-    } on DatabaseException {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.signupEmailTaken)),
-      );
-      return;
-    }
-    await HiraLinkService.afterRegistration();
-    await AuthSession.signIn();
-    if (context.mounted) {
-      await Navigator.of(context).pushNamedAndRemoveUntil(
-        MainShell.routeName,
-        (route) => false,
-      );
+      if (await UserLocalRepository.phoneExists(_phoneCtrl.text)) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.signupPhoneTaken)),
+        );
+        return;
+      }
+      try {
+        await UserLocalRepository.register(
+          displayName: _nameCtrl.text.trim(),
+          phone: SignupValidators.digitsOnly(_phoneCtrl.text),
+          gender: _gender!,
+          residentRegistrationDigits13:
+              SignupValidators.digitsOnly(_rrnCtrl.text),
+          privacyConsent: true,
+        );
+      } on DatabaseException {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.signupPhoneTaken)),
+        );
+        return;
+      }
+      await HiraLinkService.afterRegistration();
+      await AuthSession.signIn();
+      if (context.mounted) {
+        await Navigator.of(context).pushNamedAndRemoveUntil(
+          MainShell.routeName,
+          (route) => false,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -85,6 +133,8 @@ class _SignupPageState extends State<SignupPage> {
     final heroH = Link26ResponsiveImageHeights.signup(w);
     final topUnderAppBar =
         MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
+    final canSubmit = _allRequiredFilled(l10n) && !_busy;
+
     return Scaffold(
       backgroundColor: Link26UnifiedPage.background,
       extendBodyBehindAppBar: true,
@@ -167,55 +217,179 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                         TextField(
-                        controller: _nameCtrl,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Link26Surface.textPrimary,
-                          fontSize: Link26ResponsiveUi.body(w),
+                          controller: _nameCtrl,
+                          onChanged: (_) => setState(() {}),
+                          textInputAction: TextInputAction.next,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Link26Surface.textPrimary,
+                            fontSize: Link26ResponsiveUi.body(w),
+                          ),
+                          decoration: Link26Surface.inputDecoration(
+                            labelText: l10n.signupNameLabel,
+                          ),
                         ),
-                        decoration: Link26Surface.inputDecoration(
-                          labelText: l10n.signupNameLabel,
+                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                        TextField(
+                          controller: _phoneCtrl,
+                          onChanged: (_) => setState(() {}),
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(11),
+                          ],
+                          textInputAction: TextInputAction.next,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Link26Surface.textPrimary,
+                            fontSize: Link26ResponsiveUi.body(w),
+                          ),
+                          decoration: Link26Surface.inputDecoration(
+                            labelText: l10n.signupPhoneLabel,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                      TextField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Link26Surface.textPrimary,
-                          fontSize: Link26ResponsiveUi.body(w),
+                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                        Text(
+                          l10n.signupGenderLabel,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: Link26ResponsiveUi.bodySmall(w),
+                            color: Link26Surface.textSecondary,
+                          ),
                         ),
-                        decoration: Link26Surface.inputDecoration(
-                          labelText: l10n.loginEmailLabel,
+                        SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    setState(() => _gender = 'male'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Link26Surface.textPrimary,
+                                  backgroundColor: _gender == 'male'
+                                      ? Link26Surface.chipTint
+                                      : null,
+                                  side: BorderSide(
+                                    color: _gender == 'male'
+                                        ? Link26Surface.accent
+                                        : Link26Surface.outline,
+                                    width: _gender == 'male' ? 2 : 1,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      Link26Surface.radiusButton,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n.signupGenderMale,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: Link26ResponsiveUi.gapMd(w)),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    setState(() => _gender = 'female'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Link26Surface.textPrimary,
+                                  backgroundColor: _gender == 'female'
+                                      ? Link26Surface.chipTint
+                                      : null,
+                                  side: BorderSide(
+                                    color: _gender == 'female'
+                                        ? Link26Surface.accent
+                                        : Link26Surface.outline,
+                                    width: _gender == 'female' ? 2 : 1,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      Link26Surface.radiusButton,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n.signupGenderFemale,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                      TextField(
-                        controller: _passwordCtrl,
-                        obscureText: true,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Link26Surface.textPrimary,
-                          fontSize: Link26ResponsiveUi.body(w),
+                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                        TextField(
+                          controller: _rrnCtrl,
+                          onChanged: (_) => setState(() {}),
+                          keyboardType: TextInputType.number,
+                          obscureText: true,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(13),
+                          ],
+                          textInputAction: TextInputAction.done,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Link26Surface.textPrimary,
+                            fontSize: Link26ResponsiveUi.body(w),
+                          ),
+                          decoration: Link26Surface.inputDecoration(
+                            labelText: l10n.signupRrnLabel,
+                          ).copyWith(
+                            hintText: l10n.signupRrnHint,
+                            hintStyle: TextStyle(
+                              color: Link26Surface.textMuted,
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                            ),
+                          ),
                         ),
-                        decoration: Link26Surface.inputDecoration(
-                          labelText: l10n.loginPasswordLabel,
+                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                        CheckboxListTile(
+                          value: _privacyAgreed,
+                          onChanged: (v) =>
+                              setState(() => _privacyAgreed = v ?? false),
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          title: Text(
+                            l10n.signupPrivacyAgree,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              color: Link26Surface.textPrimary,
+                              height: 1.35,
+                            ),
+                          ),
+                          activeColor: Link26Surface.accent,
                         ),
-                      ),
-                      SizedBox(
-                        height: Link26ResponsiveUi.authCardPadVertical(w),
-                      ),
+                        SizedBox(
+                          height: Link26ResponsiveUi.authCardPadVertical(w),
+                        ),
                         FilledButton(
-                          onPressed: () => _submit(context),
+                          onPressed:
+                              canSubmit ? () => _submit(context) : null,
                           style: Link26UnifiedPage.filledCtaButton(
                             minimumSize: const Size.fromHeight(52),
                           ),
-                          child: Text(
-                            l10n.continueCta,
-                            style: const TextStyle(fontWeight: FontWeight.w800),
-                          ),
+                          child: _busy
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  l10n.continueCta,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w800),
+                                ),
                         ),
                       ],
                     ),

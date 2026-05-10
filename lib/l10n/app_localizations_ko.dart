@@ -305,13 +305,58 @@ class AppLocalizationsKo extends AppLocalizations {
   String get later => '나중에';
 
   @override
-  String get loginFailed => '이메일 또는 비밀번호가 일치하지 않습니다.';
+  String get loginFailed => '가입된 전화번호가 아닙니다.';
 
   @override
   String get signupEmailTaken => '이미 가입된 이메일입니다.';
 
   @override
-  String get signupNameLabel => '표시 이름 (선택)';
+  String get signupPhoneTaken => '이미 가입된 전화번호입니다.';
+
+  @override
+  String get loginPhoneRequired => '전화번호를 입력하세요.';
+
+  @override
+  String get signupNameLabel => '이름';
+
+  @override
+  String get signupPhoneLabel => '전화번호';
+
+  @override
+  String get signupPhoneInvalid => '전화번호를 올바르게 입력하세요. (숫자 10~11자리)';
+
+  @override
+  String get signupGenderLabel => '성별';
+
+  @override
+  String get signupGenderMale => '남자';
+
+  @override
+  String get signupGenderFemale => '여자';
+
+  @override
+  String get signupGenderRequired => '성별을 선택하세요.';
+
+  @override
+  String get signupRrnLabel => '주민등록번호';
+
+  @override
+  String get signupRrnHint => '하이픈 없이 숫자 13자리';
+
+  @override
+  String get signupRrnInvalid => '주민등록번호 13자리를 입력하세요.';
+
+  @override
+  String get signupPrivacyAgree => '(필수) 개인정보 수집·이용에 동의합니다.';
+
+  @override
+  String get signupPrivacyRequired => '개인정보 동의는 필수입니다.';
+
+  @override
+  String get signupNameRequired => '이름을 입력하세요.';
+
+  @override
+  String get signupRequiredIncomplete => '필수 항목을 모두 입력·동의해 주세요.';
 
   @override
   String get socialLoginComingSoon => '소셜 로그인은 여기에 연결됩니다.';
@@ -323,5 +368,5 @@ class AppLocalizationsKo extends AppLocalizations {
   String get socialLoginApple => 'Apple로 계속';
 
   @override
-  String get loginDividerEmail => '또는 이메일로 로그인';
+  String get loginDividerEmail => '또는 전화번호로 로그인';
 }

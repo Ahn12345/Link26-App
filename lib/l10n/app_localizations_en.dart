@@ -313,13 +313,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get later => 'Later';
 
   @override
-  String get loginFailed => 'Email or password does not match.';
+  String get loginFailed => 'This phone number is not registered.';
 
   @override
   String get signupEmailTaken => 'This email is already registered.';
 
   @override
-  String get signupNameLabel => 'Display name (optional)';
+  String get signupPhoneTaken => 'This phone number is already registered.';
+
+  @override
+  String get loginPhoneRequired => 'Please enter your phone number.';
+
+  @override
+  String get signupNameLabel => 'Full name';
+
+  @override
+  String get signupPhoneLabel => 'Phone number';
+
+  @override
+  String get signupPhoneInvalid =>
+      'Enter a valid phone number (10–11 digits).';
+
+  @override
+  String get signupGenderLabel => 'Gender';
+
+  @override
+  String get signupGenderMale => 'Male';
+
+  @override
+  String get signupGenderFemale => 'Female';
+
+  @override
+  String get signupGenderRequired => 'Please select a gender.';
+
+  @override
+  String get signupRrnLabel => 'Resident ID (KR, 13 digits)';
+
+  @override
+  String get signupRrnHint => '13 digits, no hyphen';
+
+  @override
+  String get signupRrnInvalid => 'Enter exactly 13 digits.';
+
+  @override
+  String get signupPrivacyAgree =>
+      '(Required) I agree to the collection and use of personal data.';
+
+  @override
+  String get signupPrivacyRequired => 'You must agree to personal data processing.';
+
+  @override
+  String get signupNameRequired => 'Please enter your name.';
+
+  @override
+  String get signupRequiredIncomplete =>
+      'Please complete and agree to all required fields.';
 
   @override
   String get socialLoginComingSoon =>
@@ -332,5 +380,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLoginApple => 'Continue with Apple';
 
   @override
-  String get loginDividerEmail => 'Or continue with email';
+  String get loginDividerEmail => 'Or continue with phone';
 }

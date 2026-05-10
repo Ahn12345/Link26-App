@@ -1,13 +1,10 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
-import 'package:link26_app/core/storage/token_storage.dart';
-import 'package:link26_app/features/auth/data/auth_api_service.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
@@ -18,6 +15,7 @@ import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
+import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,16 +28,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _ensureRegisteredUser(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureRegisteredUser());
   }
 
   Future<void> _ensureRegisteredUser() async {
@@ -52,100 +47,50 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
-  }
-
-  bool _remoteLoginConfigured() {
-    final base = dotenv.env['API_BASE_URL']?.trim() ?? '';
-    if (base.isEmpty) return false;
-    return !base.contains('example.com');
-  }
-
-  String _extractAccessToken(Map<String, dynamic> data) {
-    dynamic t = data['access_token'] ?? data['token'] ?? data['accessToken'];
-    if (t is String && t.isNotEmpty) return t;
-    final nested = data['data'];
-    if (nested is Map) {
-      final m = Map<String, dynamic>.from(nested);
-      t = m['access_token'] ?? m['token'] ?? m['accessToken'];
-      if (t is String) return t;
-    }
-    return '';
-  }
-
-  Future<bool> _tryRemoteLogin(String email, String password) async {
-    try {
-      final data = await AuthApiService().login(
-        email: email,
-        password: password,
-      );
-      final token = _extractAccessToken(data);
-      if (token.isEmpty) return false;
-      final rawName =
-          data['name'] ??
-          data['displayName'] ??
-          (data['user'] is Map ? (data['user'] as Map)['name'] : null);
-      final name = '$rawName'.trim();
-      await TokenStorage().saveSession(
-        token: token,
-        email: email.trim(),
-        name: name.isNotEmpty ? name : email.trim(),
-      );
-      await UserLocalRepository.upsertCredentials(
-        email: email,
-        password: password,
-        displayName: name.isEmpty ? null : name,
-      );
-      return true;
-    } on DioException {
-      return false;
-    } catch (_) {
-      return false;
-    }
   }
 
   Future<void> _submit(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final email = _emailCtrl.text.trim();
-    final password = _passwordCtrl.text.trim();
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.loginFieldsRequired)));
+    final phone = _phoneCtrl.text;
+    if (SignupValidators.digitsOnly(phone).isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loginPhoneRequired)),
+      );
+      return;
+    }
+    if (!SignupValidators.isPhoneKr(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupPhoneInvalid)),
+      );
       return;
     }
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      try {
-        await dotenv.load(fileName: '.env');
-      } catch (_) {}
-
-      var ok = await UserLocalRepository.verifyCredentials(email, password);
-      if (!ok && _remoteLoginConfigured()) {
-        ok = await _tryRemoteLogin(email, password);
-      }
+      final ok =
+          await UserLocalRepository.verifyPhoneForLogin(phone);
       if (!context.mounted) return;
       if (!ok) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.loginFailed)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loginFailed)),
+        );
         return;
       }
       await AuthSession.signIn();
       await HiraLinkService.afterLogin();
       if (context.mounted) {
-        await Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(MainShell.routeName, (route) => false);
+        await Navigator.of(context).pushNamedAndRemoveUntil(
+          MainShell.routeName,
+          (route) => false,
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${l10n.loginFailed}: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l10n.loginFailed}: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -155,8 +100,7 @@ class _LoginPageState extends State<LoginPage> {
   void _socialStub(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context).socialLoginComingSoon),
-      ),
+          content: Text(AppLocalizations.of(context).socialLoginComingSoon)),
     );
   }
 
@@ -173,6 +117,7 @@ class _LoginPageState extends State<LoginPage> {
     );
     final w = MediaQuery.sizeOf(context).width;
     final heroH = Link26ResponsiveImageHeights.login(w);
+    final phoneOk = SignupValidators.isPhoneKr(_phoneCtrl.text);
 
     final topUnderAppBar =
         MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
@@ -199,13 +144,13 @@ class _LoginPageState extends State<LoginPage> {
               child: LayoutBuilder(
                 builder: (context, c) {
                   final contentW = c.maxWidth;
-                  final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(
-                    w,
-                  ).clamp(0.0, contentW);
+                  final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w)
+                      .clamp(0.0, contentW);
                   return Link26FramedPageCard(
                     padding: EdgeInsets.symmetric(
                       vertical: Link26ResponsiveUi.authCardPadVertical(w),
-                      horizontal: Link26ResponsiveUi.authCardPadHorizontal(w),
+                      horizontal:
+                          Link26ResponsiveUi.authCardPadHorizontal(w),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -224,8 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         SizedBox(
-                          height: Link26ResponsiveUi.heroArtToContent(w),
-                        ),
+                            height: Link26ResponsiveUi.heroArtToContent(w)),
                         Text(
                           l10n.authWelcomeSubtitle,
                           textAlign: TextAlign.center,
@@ -243,11 +187,8 @@ class _LoginPageState extends State<LoginPage> {
                           child: OutlinedButton.icon(
                             style: outlineBtn,
                             onPressed: () => _socialStub(context),
-                            icon: const Icon(
-                              Icons.g_mobiledata,
-                              size: 28,
-                              color: Link26Surface.textPrimary,
-                            ),
+                            icon: const Icon(Icons.g_mobiledata,
+                                size: 28, color: Link26Surface.textPrimary),
                             label: Text(l10n.socialLoginGoogle),
                           ),
                         ),
@@ -258,28 +199,22 @@ class _LoginPageState extends State<LoginPage> {
                           child: OutlinedButton.icon(
                             style: outlineBtn,
                             onPressed: () => _socialStub(context),
-                            icon: const Icon(
-                              Icons.apple,
-                              size: 22,
-                              color: Link26Surface.textPrimary,
-                            ),
+                            icon: const Icon(Icons.apple,
+                                size: 22, color: Link26Surface.textPrimary),
                             label: Text(l10n.socialLoginApple),
                           ),
                         ),
                         SizedBox(
-                          height:
-                              Link26ResponsiveUi.chatHeaderTitleGap(w) +
+                          height: Link26ResponsiveUi.chatHeaderTitleGap(w) +
                               Link26ResponsiveUi.gapXs(w),
                         ),
                         Row(
                           children: [
                             const Expanded(
-                              child: Divider(color: Link26Surface.outline),
-                            ),
+                                child: Divider(color: Link26Surface.outline)),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
                                 l10n.loginDividerEmail,
                                 style: TextStyle(
@@ -290,42 +225,34 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             const Expanded(
-                              child: Divider(color: Link26Surface.outline),
-                            ),
+                                child: Divider(color: Link26Surface.outline)),
                           ],
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                         TextField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          autocorrect: false,
+                          controller: _phoneCtrl,
+                          onChanged: (_) => setState(() {}),
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(11),
+                          ],
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Link26Surface.textPrimary,
                             fontSize: Link26ResponsiveUi.body(w),
                           ),
                           decoration: Link26Surface.inputDecoration(
-                            labelText: l10n.loginEmailLabel,
-                          ),
-                        ),
-                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                        TextField(
-                          controller: _passwordCtrl,
-                          obscureText: true,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Link26Surface.textPrimary,
-                            fontSize: Link26ResponsiveUi.body(w),
-                          ),
-                          decoration: Link26Surface.inputDecoration(
-                            labelText: l10n.loginPasswordLabel,
+                            labelText: l10n.signupPhoneLabel,
                           ),
                         ),
                         SizedBox(
                           height: Link26ResponsiveUi.authCardPadVertical(w),
                         ),
                         FilledButton(
-                          onPressed: _busy ? null : () => _submit(context),
+                          onPressed: (_busy || !phoneOk)
+                              ? null
+                              : () => _submit(context),
                           style: Link26UnifiedPage.filledCtaButton(
                             minimumSize: const Size.fromHeight(52),
                           ),
@@ -341,8 +268,7 @@ class _LoginPageState extends State<LoginPage> {
                               : Text(
                                   l10n.continueCta,
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                                      fontWeight: FontWeight.w800),
                                 ),
                         ),
                       ],
