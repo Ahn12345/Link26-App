@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<link26-png-spec version="1" catalogId="pillsearch" file="pillsearch.png" dartConst="ImageAssets.pillsearch">
+  <summary usage="약 검색 화면 히어로" />
+  <source path="assets/images/pillsearch.png" />
+  <responsiveImageScreen ref="pillSearch" />
+  <flutter>
+    <file path="lib/features/search/pill_search_screen.dart" />
+  </flutter>
+  <android strings="@string/flutter_image_pillsearch" layout="reference_pill_search_screen.xml" />
+  <screenSpec ref="../screens/link26_screen_pill_search.xml" />
+</link26-png-spec>

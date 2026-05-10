@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<link26-png-spec version="1" catalogId="home" file="home.png" dartConst="ImageAssets.home">
+  <summary usage="전체 목업·기획 참고용 PNG (현재 lib 에서 미사용 가능)" />
+  <source path="assets/images/home.png" />
+  <responsiveImageScreen ref="" note="필요 시 ../link26_responsive_images.xml 에 screen 추가 후 codegen" />
+  <flutter note="현재 lib 미참조 가능 — 연동 시 file 요소로 경로 기재" />
+  <android strings="@string/flutter_image_home" />
+</link26-png-spec>

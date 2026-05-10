@@ -4,6 +4,7 @@
   색·간격·라운드 토큰: ../design/link26_design_tokens.xml
   화면별 PNG 반응형(높이·너비 상한): ../design/link26_responsive_images.xml
   앱 코드에서는 lib/core/constants/image_assets.dart (ImageAssets) 만 경로로 사용합니다.
+  PNG별 상세 스펙(XML): ../design/png/link26_png_index.xml 및 link26_png_<id>.xml
 -->
 <link26-images version="1">
   <image id="applogo" file="applogo.png" dart-const="ImageAssets.applogo"

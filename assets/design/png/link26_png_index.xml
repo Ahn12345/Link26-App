@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PNG 1:1 스펙 인덱스 — 각 파일은 동일 폴더의 link26_png_<catalogId>.xml
+  원본 목록: assets/images/link26_image_assets.xml
+  반응형 높이/너비: ../link26_responsive_images.xml (해당 시)
+-->
+<link26-png-index version="1">
+  <entry catalogId="applogo" spec="link26_png_applogo.xml" />
+  <entry catalogId="logo" spec="link26_png_logo.xml" />
+  <entry catalogId="login" spec="link26_png_login.xml" />
+  <entry catalogId="signup" spec="link26_png_signup.xml" />
+  <entry catalogId="home" spec="link26_png_home.xml" />
+  <entry catalogId="aichat" spec="link26_png_aichat.xml" />
+  <entry catalogId="setting" spec="link26_png_setting.xml" />
+  <entry catalogId="pillsearch" spec="link26_png_pillsearch.xml" />
+  <entry catalogId="emergencycall" spec="link26_png_emergencycall.xml" />
+  <entry catalogId="familyadd" spec="link26_png_familyadd.xml" />
+  <entry catalogId="simplelogin1" spec="link26_png_simplelogin1.xml" />
+  <entry catalogId="simplelogin2" spec="link26_png_simplelogin2.xml" />
+</link26-png-index>

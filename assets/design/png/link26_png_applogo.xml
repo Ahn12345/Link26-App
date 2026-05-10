@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<link26-png-spec version="1" catalogId="applogo" file="applogo.png" dartConst="ImageAssets.applogo">
+  <summary usage="런처 아이콘·스플래시·더보기 헤더 소형 브랜드 마크" />
+  <source path="assets/images/applogo.png" />
+  <responsiveImageScreen ref="" note="link26_responsive_images.xml 에 전용 screen 없음" />
+  <responsiveUi hint="splashLogoSize(w), moreLogoSize(w) — link26_responsive_ui.xml" />
+  <flutter>
+    <file path="lib/features/splash/splash_screen.dart" />
+    <file path="lib/features/more/more_screen.dart" />
+  </flutter>
+  <android strings="@string/flutter_image_applogo" />
+</link26-png-spec>
