@@ -27,23 +27,11 @@ class _FamilyProfilesScreenState extends State<FamilyProfilesScreen> {
   }
 
   Future<void> _load() async {
-    var list = await _store.loadProfiles();
-    if (list.length > _maxProfiles) {
-      list = list.take(_maxProfiles).toList();
-      await _store.saveProfiles(list);
-    }
-    var active = await _store.activeProfileId();
-    if (active != null && list.every((p) => p.id != active)) {
-      active = null;
-    }
-    if (active == null && list.isNotEmpty) {
-      active = list.first.id;
-      await _store.setActiveProfileId(active);
-    }
+    final state = await _store.loadProfilesScreenState(maxProfiles: _maxProfiles);
     if (!mounted) return;
     setState(() {
-      _profiles = list;
-      _activeId = active;
+      _profiles = state.profiles;
+      _activeId = state.activeId;
       _loading = false;
     });
   }

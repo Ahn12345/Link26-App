@@ -29,7 +29,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // 홈 첫 프레임·입력 반응 이후에 다이얼로그 (ANR 체감 완화).
-      Future<void>.delayed(const Duration(milliseconds: 450), () {
+      Future<void>.delayed(const Duration(milliseconds: 200), () {
         if (mounted) MonthlyHiraAuthGate.maybeShow(context);
       });
     });
@@ -44,7 +44,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      Future<void>.delayed(const Duration(milliseconds: 300), () {
+      Future<void>.delayed(const Duration(milliseconds: 150), () {
         if (mounted) MonthlyHiraAuthGate.maybeShow(context);
       });
     }

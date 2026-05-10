@@ -19,6 +19,10 @@ class FamilyProfileStore {
 
   Future<List<FamilyProfile>> loadProfiles() async {
     final p = await SharedPreferences.getInstance();
+    return _readProfilesList(p);
+  }
+
+  static List<FamilyProfile> _readProfilesList(SharedPreferences p) {
     final raw = p.getStringList(_key);
     if (raw == null || raw.isEmpty) {
       return const [
@@ -33,6 +37,30 @@ class FamilyProfileStore {
         avatarEmoji: parts.length > 2 ? parts[2] : 'U',
       );
     }).toList();
+  }
+
+  /// 한 번의 [SharedPreferences] 오픈으로 목록·활성 ID를 읽어 초기 로딩을 줄입니다.
+  Future<({List<FamilyProfile> profiles, String? activeId})> loadProfilesScreenState({
+    int maxProfiles = 5,
+  }) async {
+    final p = await SharedPreferences.getInstance();
+    var list = _readProfilesList(p);
+    if (list.length > maxProfiles) {
+      list = list.take(maxProfiles).toList();
+      final lines = list
+          .map((e) => '${e.id}|${e.displayName}|${e.avatarEmoji}')
+          .toList();
+      await p.setStringList(_key, lines);
+    }
+    var active = p.getString(_activeKey);
+    if (active != null && list.every((e) => e.id != active)) {
+      active = null;
+    }
+    if (active == null && list.isNotEmpty) {
+      active = list.first.id;
+      await p.setString(_activeKey, active);
+    }
+    return (profiles: list, activeId: active);
   }
 
   Future<void> saveProfiles(List<FamilyProfile> profiles) async {

@@ -21,7 +21,6 @@ import 'package:link26_app/features/search/search_screen.dart';
 import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/settings_screen.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
-import 'package:link26_app/features/splash/splash_screen.dart';
 
 class Link26App extends StatefulWidget {
   const Link26App({super.key});
@@ -106,7 +105,7 @@ class Link26AppState extends State<Link26App> {
           child: child,
         );
       },
-      home: const SplashScreen(),
+      home: const AuthWelcomeScreen(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, supported) {
@@ -140,7 +139,7 @@ class Link26AppState extends State<Link26App> {
         EmergencyContactScreen.routeName: (_) => const EmergencyContactScreen(),
       },
       onUnknownRoute: (_) =>
-          MaterialPageRoute(builder: (_) => const SplashScreen()),
+          MaterialPageRoute(builder: (_) => const AuthWelcomeScreen()),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:link26_app/domain/domain.dart';
 
 /// 데모용 로컬 카탈로그. 이후 API·로컬 DB로 교체합니다.
@@ -23,8 +24,7 @@ final class LocalMedicineCatalogRepository implements MedicineCatalogRepository 
   ];
 
   @override
-  Future<List<MedicineProduct>> listKnown() async {
-    await Future<void>.delayed(const Duration(milliseconds: 120));
-    return List.unmodifiable(_demo);
+  Future<List<MedicineProduct>> listKnown() {
+    return SynchronousFuture<List<MedicineProduct>>(List.unmodifiable(_demo));
   }
 }

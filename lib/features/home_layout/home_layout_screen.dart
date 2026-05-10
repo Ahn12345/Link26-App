@@ -14,7 +14,6 @@ class HomeLayoutScreen extends StatefulWidget {
 
 class _HomeLayoutScreenState extends State<HomeLayoutScreen> {
   Set<String> _visible = {...HomeLayoutStore.allBlockIds};
-  bool _loading = true;
 
   @override
   void initState() {
@@ -24,12 +23,7 @@ class _HomeLayoutScreenState extends State<HomeLayoutScreen> {
 
   Future<void> _load() async {
     final v = await HomeLayoutStore.loadVisible();
-    if (mounted) {
-      setState(() {
-        _visible = v;
-        _loading = false;
-      });
-    }
+    if (mounted) setState(() => _visible = v);
   }
 
   Future<void> _save() async {
@@ -44,12 +38,6 @@ class _HomeLayoutScreenState extends State<HomeLayoutScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (_loading) {
-      return Scaffold(
-        appBar: AppBar(title: Text(l10n.homeLayoutTitle)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.homeLayoutTitle)),
       body: ListView(
