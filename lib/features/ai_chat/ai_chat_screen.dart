@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -152,11 +153,11 @@ class _AiChatBodyState extends State<_AiChatBody> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final side = Link26Layout.chatListHorizontal(w);
-        final inner = w - 2 * side;
+        final sideScreen = Link26Layout.horizontalPadding(w);
+        final inner = Link26Layout.innerWidth(w);
         final bubbleMax = Link26Layout.chatBubbleMaxWidth(inner);
         final aiArtH = Link26ResponsiveImageHeights.aiChat(w);
-        final aiArtW = Link26ResponsiveImageHeights.aiChatDisplayWidth(w);
+        final aiArtW = (Link26ResponsiveImageHeights.aiChatDisplayWidth(w)).clamp(0.0, inner);
 
         return SafeArea(
           bottom: true,
@@ -165,72 +166,77 @@ class _AiChatBodyState extends State<_AiChatBody> {
             children: [
               Padding(
                 padding: EdgeInsets.only(bottom: shellNavPad),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _ChatHeader(
-                      used: _dailyUsed,
-                      limit: _dailyLimit,
-                      embedded: embedded,
-                      horizontalPad: side,
-                      layoutWidth: w,
-                    ),
-                    Expanded(
-                      child: ColoredBox(
-                        color: Link26Surface.scaffoldBg,
-                        child: ListView(
-                          padding: EdgeInsets.fromLTRB(side, 16, side, 8),
-                          children: [
-                            Center(
-                              child: SizedBox(
-                                width: aiArtW,
-                                child: DecodedAssetImage(
-                                  ImageAssets.aichat,
-                                  height: aiArtH,
-                                  fit: BoxFit.contain,
-                                  borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const SizedBox.shrink(),
-                                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: sideScreen),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _ChatHeader(
+                            used: _dailyUsed,
+                            limit: _dailyLimit,
+                            embedded: embedded,
+                            horizontalPad: 0,
+                            layoutWidth: w,
+                          ),
+                          Expanded(
+                            child: ColoredBox(
+                              color: Link26Surface.scaffoldBg,
+                              child: ListView(
+                                padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+                                children: [
+                                  Center(
+                                    child: SizedBox(
+                                      width: aiArtW,
+                                      child: DecodedAssetImage(
+                                        ImageAssets.aichat,
+                                        height: aiArtH,
+                                        fit: BoxFit.contain,
+                                        borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            const SizedBox.shrink(),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                                  _AiWelcomeBubble(
+                                    timeLabel: _welcomeAccessLabel ?? '…',
+                                    maxBubbleWidth: bubbleMax,
+                                  ),
+                                  ...messages.map(
+                                    (m) => Padding(
+                                      padding: EdgeInsets.only(top: Link26ResponsiveUi.gapMd(w)),
+                                      child: _ChatBubble(
+                                        message: m,
+                                        maxBubbleWidth: bubbleMax,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            _AiWelcomeBubble(
-                              timeLabel: _welcomeAccessLabel ?? '…',
-                              maxBubbleWidth: bubbleMax,
-                            ),
-                            ...messages.map(
-                              (m) => Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: _ChatBubble(
-                                  message: m,
-                                  maxBubbleWidth: bubbleMax,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const _DisclaimerBanner(),
+                          _InputBar(
+                            controller: controller,
+                            onSend: sendMessage,
+                            onCamera: openCamera,
+                          ),
+                        ],
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(side, 0, side, 0),
-                      child: const _DisclaimerBanner(),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(side, 0, side, 0),
-                      child: _InputBar(
-                        controller: controller,
-                        onSend: sendMessage,
-                        onCamera: openCamera,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               if (!embedded)
                 Positioned(
                   top: 4,
-                  left: side,
+                  left: sideScreen.clamp(4.0, double.infinity),
                   child: IconButton(
                     style: IconButton.styleFrom(foregroundColor: Link26Surface.textPrimary),
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
@@ -263,7 +269,7 @@ class _ChatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = limit > 0 ? used / limit : 0.0;
-    final leftPad = horizontalPad + (embedded ? 0 : 36);
+    final leftPad = horizontalPad + (embedded ? 0 : 40);
     final w = layoutWidth;
     final padV = Link26ResponsiveUi.chatHeaderPadV(w);
 
@@ -272,7 +278,7 @@ class _ChatHeader extends StatelessWidget {
       elevation: 2,
       shadowColor: Colors.black.withValues(alpha: 0.06),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(leftPad, padV, horizontalPad, padV),
+        padding: EdgeInsets.fromLTRB(leftPad, padV, horizontalPad + 8, padV),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -95,31 +95,34 @@ class _LoginPageState extends State<LoginPage> {
     );
     final w = MediaQuery.sizeOf(context).width;
     final heroH = Link26ResponsiveImageHeights.login(w);
-    final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.login)),
       body: SafeArea(
         child: Link26ResponsiveScroll(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Link26ElevatedCard(
-                padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: SizedBox(
-                        width: heroW,
-                        child: DecodedAssetImage(
-                          ImageAssets.login,
-                          height: heroH,
-                          fit: BoxFit.contain,
-                          borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final contentW = c.maxWidth;
+              final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w).clamp(0.0, contentW);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Link26ElevatedCard(
+                    padding: EdgeInsets.all(Link26ResponsiveUi.profileCardPadding(w)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: SizedBox(
+                            width: heroW,
+                            child: DecodedAssetImage(
+                              ImageAssets.login,
+                              height: heroH,
+                              fit: BoxFit.contain,
+                              borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
                     SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                     Text(
                       l10n.authWelcomeSubtitle,
@@ -179,14 +182,22 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
-                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Link26Surface.textPrimary,
+                  fontSize: Link26ResponsiveUi.body(w),
+                ),
                 decoration: Link26Surface.inputDecoration(labelText: l10n.loginEmailLabel),
               ),
               SizedBox(height: Link26ResponsiveUi.gapMd(w)),
               TextField(
                 controller: _passwordCtrl,
                 obscureText: true,
-                style: const TextStyle(fontWeight: FontWeight.w600, color: Link26Surface.textPrimary),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Link26Surface.textPrimary,
+                  fontSize: Link26ResponsiveUi.body(w),
+                ),
                 decoration: Link26Surface.inputDecoration(labelText: l10n.loginPasswordLabel),
               ),
               SizedBox(height: Link26ResponsiveUi.authCardPadVertical(w)),
@@ -197,6 +208,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: Link26ResponsiveUi.gapLg(w)),
             ],
+              );
+            },
           ),
         ),
       ),
