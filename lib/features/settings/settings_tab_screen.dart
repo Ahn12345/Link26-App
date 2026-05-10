@@ -12,14 +12,13 @@ import '../push_settings/push_settings_screen.dart';
 import '../search/search_screen.dart';
 import 'emergency_contact_screen.dart';
 import 'settings_screen.dart';
+import '../../core/constants/image_assets.dart';
 import '../../core/services/auth_session.dart';
 
 /// 하단 탭 「설정」— 긴급연락·가족 추가·기타 메뉴.
 class SettingsTabScreen extends StatelessWidget {
   const SettingsTabScreen({super.key});
 
-  static const _familyVoiceAsset = 'assets/images/emergencycall.png';
-  static const _familyProfilesAsset = 'assets/images/familyadd.png';
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -41,7 +40,7 @@ class SettingsTabScreen extends StatelessWidget {
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
-                _familyProfilesAsset,
+                ImageAssets.familyadd,
                 width: 40,
                 height: 40,
                 fit: BoxFit.cover,
@@ -69,7 +68,7 @@ class SettingsTabScreen extends StatelessWidget {
             l10n.familyVoiceTitle,
             l10n.familyVoiceSubtitle,
             FamilyVoiceScreen.routeName,
-            _familyVoiceAsset,
+            ImageAssets.emergencycall,
           ),
           _imgTile(
             context,

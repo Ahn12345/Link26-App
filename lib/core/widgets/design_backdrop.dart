@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:link26_app/core/constants/design_assets.dart';
+enum DesignFit {
+  screenCover,
+  widthScroll,
+  containLetterbox,
+}
 
 /// 목업 이미지 한 장으로 탭을 채우거나, [child] 가 있으면 배경 이미지 + 위에 콘텐츠를 겹칩니다.
 class DesignBackdrop extends StatelessWidget {

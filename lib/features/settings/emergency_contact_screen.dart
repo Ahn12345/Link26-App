@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import '../../core/constants/image_assets.dart';
+
 /// 디자인 에셋 `emergencycall.png` — 긴급 연락 UX (실제 전화는 추후 `tel:` 연동).
 class EmergencyContactScreen extends StatelessWidget {
   const EmergencyContactScreen({super.key});
 
   static const routeName = '/emergency-contact';
-
-  static const _asset = 'assets/images/emergencycall.png';
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,7 @@ class EmergencyContactScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              _asset,
+              ImageAssets.emergencycall,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.phone_in_talk, size: 120),

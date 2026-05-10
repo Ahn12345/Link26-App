@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
@@ -14,7 +15,7 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final bg = showScaffold ? Theme.of(context).scaffoldBackgroundColor : Colors.transparent;
     final body = ColoredBox(color: bg, child: const _MoreBody());
     if (!showScaffold) return body;
     return Scaffold(backgroundColor: bg, body: body);
@@ -31,25 +32,15 @@ class _MoreBody extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomPad),
         children: [
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEAF3FF),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Center(
-              child: Text(
-                'link26\n— LINK FOR HEALTH —',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E4E8C),
-                ),
-              ),
+          Center(
+            child: Image.asset(
+              ImageAssets.logo,
+              height: 72,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           const Text('더보기', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
           const SizedBox(height: 16),
           Container(

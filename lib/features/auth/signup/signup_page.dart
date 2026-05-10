@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
@@ -17,8 +18,6 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  static const _illustrationAsset = 'assets/images/signup.png';
-
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
@@ -85,7 +84,7 @@ class _SignupPageState extends State<SignupPage> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
-                  _illustrationAsset,
+                  ImageAssets.signup,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     debugPrint('signup art: $error');

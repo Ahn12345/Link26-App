@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constants/image_assets.dart';
 import '../constants/storage_keys.dart';
 import 'hira_link_service.dart';
 
 /// 매달 25일 1회 간편인증 안내 (simplelogin1 → simplelogin2).
 abstract final class MonthlyHiraAuthGate {
-  static const _img1 = 'assets/images/simplelogin1.png';
-  static const _img2 = 'assets/images/simplelogin2.png';
-
   static String _monthKey(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}';
 
@@ -38,7 +36,7 @@ abstract final class MonthlyHiraAuthGate {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
-                  _img1,
+                  ImageAssets.simplelogin1,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
                       const SizedBox(height: 8),
@@ -83,7 +81,7 @@ abstract final class MonthlyHiraAuthGate {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
-                  _img2,
+                  ImageAssets.simplelogin2,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
                       const SizedBox.shrink(),

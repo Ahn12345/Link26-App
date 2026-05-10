@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import '../../core/constants/image_assets.dart';
 import '../../core/services/local_medicine_list_store.dart';
 
 /// 약 검색 + 내 약 목록에 추가 (`pillsearch.png`).
@@ -14,7 +15,6 @@ class PillSearchScreen extends StatefulWidget {
 }
 
 class _PillSearchScreenState extends State<PillSearchScreen> {
-  static const _hero = 'assets/images/pillsearch.png';
   final _ctrl = TextEditingController();
 
   @override
@@ -44,7 +44,7 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              _hero,
+              ImageAssets.pillsearch,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) =>
                   const SizedBox.shrink(),

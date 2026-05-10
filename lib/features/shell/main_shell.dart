@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import '../../core/constants/design_assets.dart';
+import '../../core/constants/image_assets.dart';
 import '../../core/services/monthly_hira_auth_gate.dart';
 import '../../core/widgets/full_screen_asset_background.dart';
 import '../ai_chat/ai_chat_screen.dart';
@@ -57,8 +57,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         sizing: StackFit.expand,
         children: [
           FullScreenAssetBackground(
-            assetPath: DesignAssets.homeFullBackground,
-            fallbackAssetPath: DesignAssets.homeBackground,
+            assetPath: ImageAssets.homeTabBackground,
+            fallbackAssetPath: null,
             child: const HomeDashboardContent(),
           ),
           AiChatScreen(
@@ -66,8 +66,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             embeddedInShell: true,
             visitStamp: _aiVisitStamp,
           ),
-          ColoredBox(
-            color: scheme.surface,
+          FullScreenAssetBackground(
+            assetPath: ImageAssets.setting,
+            fallbackAssetPath: null,
             child: const MoreScreen(showScaffold: false),
           ),
         ],
