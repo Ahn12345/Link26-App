@@ -217,86 +217,114 @@ class _AiChatBodyState extends State<_AiChatBody> {
         final aiArtW = (Link26ResponsiveImageHeights.aiChatDisplayWidth(w)).clamp(0.0, inner);
 
         return SafeArea(
-          bottom: true,
+          bottom: !embedded,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: shellNavPad),
+              Positioned.fill(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: sideScreen),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: Link26ResponsiveTokens.contentMaxWidth,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _ChatHeader(
-                            title: l10n.aiChatBrandTitle,
-                            quotaHint: l10n.aiChatQuotaResetHint,
-                            used: AiChatConversationCache.dailyUsed,
-                            limit: _dailyLimit,
-                            embedded: embedded,
-                            horizontalPad: 0,
-                            layoutWidth: w,
+                  padding: EdgeInsets.only(bottom: shellNavPad),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: sideScreen),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                            ),
+                            child: _ChatHeader(
+                              title: l10n.aiChatBrandTitle,
+                              quotaHint: l10n.aiChatQuotaResetHint,
+                              used: AiChatConversationCache.dailyUsed,
+                              limit: _dailyLimit,
+                              embedded: embedded,
+                              horizontalPad: 0,
+                              layoutWidth: w,
+                            ),
                           ),
-                          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                          Expanded(
-                            child: ColoredBox(
-                              color: Link26UnifiedPage.background,
-                              child: ListView(
-                                padding: EdgeInsets.fromLTRB(
-                                  0,
-                                  Link26ResponsiveUi.gapSm(w),
-                                  0,
-                                  Link26ResponsiveUi.gapSm(w),
+                        ),
+                        SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                        Expanded(
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                              ),
+                              child: ColoredBox(
+                                color: Link26UnifiedPage.background,
+                                child: ListView(
+                                  padding: EdgeInsets.fromLTRB(
+                                    0,
+                                    Link26ResponsiveUi.gapSm(w),
+                                    0,
+                                    Link26ResponsiveUi.gapMd(w),
+                                  ),
+                                  children: [
+                                    Center(
+                                      child: SizedBox(
+                                        width: aiArtW,
+                                        child: DecodedAssetImage(
+                                          ImageAssets.aichat,
+                                          height: aiArtH,
+                                          fit: BoxFit.contain,
+                                          borderRadius: BorderRadius.circular(
+                                              Link26Surface.radiusInput),
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                        height: Link26ResponsiveUi
+                                            .heroArtToContent(w)),
+                                    _AiWelcomeBubble(
+                                      timeLabel:
+                                          _welcomeAccessLabel ?? '…',
+                                      maxBubbleWidth: bubbleMax,
+                                    ),
+                                    ...AiChatConversationCache.messages.map(
+                                      (m) => Padding(
+                                        padding: EdgeInsets.only(
+                                            top: Link26ResponsiveUi.gapMd(w)),
+                                        child: _ChatBubble(
+                                          message: m,
+                                          maxBubbleWidth: bubbleMax,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                children: [
-                                  Center(
-                                    child: SizedBox(
-                                      width: aiArtW,
-                                      child: DecodedAssetImage(
-                                        ImageAssets.aichat,
-                                        height: aiArtH,
-                                        fit: BoxFit.contain,
-                                        borderRadius: BorderRadius.circular(Link26Surface.radiusInput),
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            const SizedBox.shrink(),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
-                                  _AiWelcomeBubble(
-                                    timeLabel: _welcomeAccessLabel ?? '…',
-                                    maxBubbleWidth: bubbleMax,
-                                  ),
-                                  ...AiChatConversationCache.messages.map(
-                                    (m) => Padding(
-                                      padding: EdgeInsets.only(top: Link26ResponsiveUi.gapMd(w)),
-                                      child: _ChatBubble(
-                                        message: m,
-                                        maxBubbleWidth: bubbleMax,
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ),
-                          _DisclaimerBanner(text: l10n.aiChatDisclaimerShort),
-                          _InputBar(
-                            controller: controller,
-                            enabled: inputEnabled,
-                            sending: _sending,
-                            hintText: l10n.aiChatInputPlaceholder,
-                            onSend: () => unawaited(sendMessage()),
-                            onCamera: () => unawaited(openCamera()),
+                        ),
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _DisclaimerBanner(
+                                    text: l10n.aiChatDisclaimerShort),
+                                _InputBar(
+                                  controller: controller,
+                                  enabled: inputEnabled,
+                                  sending: _sending,
+                                  hintText: l10n.aiChatInputPlaceholder,
+                                  onSend: () => unawaited(sendMessage()),
+                                  onCamera: () => unawaited(openCamera()),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -306,7 +334,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                   top: 4,
                   left: sideScreen.clamp(4.0, double.infinity),
                   child: IconButton(
-                    style: IconButton.styleFrom(foregroundColor: Link26Surface.textPrimary),
+                    style: IconButton.styleFrom(
+                        foregroundColor: Link26Surface.textPrimary),
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                     onPressed: () => Navigator.maybePop(context),
                   ),
