@@ -15,7 +15,6 @@ dependencies:
     sdk: flutter
   intl: any
   http: ^1.4.0
-  dio: ^5.7.0
   flutter_dotenv: ^5.1.0
   shared_preferences: ^2.5.3
   sqflite: ^2.4.2+1
@@ -43,5 +42,5 @@ flutter:
   assets:
     - .env
     - assets/images/
-    - lib/data/DUR1/
-    - lib/data/DUR2/
+    # DUR CSV 는 현재 Dart 에서 로드하지 않음 — APK/AAB 용량 절감을 위해 번들에서 제외.
+    # 필요 시 네트워크·다운로드 또는 별도 모듈로 제공하세요.

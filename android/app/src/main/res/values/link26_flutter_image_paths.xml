@@ -4,7 +4,6 @@
 -->
 <resources>
     <string name="flutter_image_applogo" translatable="false">assets/images/applogo.png</string>
-    <string name="flutter_image_home" translatable="false">assets/images/Home.png</string>
     <string name="flutter_image_aichat" translatable="false">assets/images/aichat.png</string>
     <string name="flutter_image_setting" translatable="false">assets/images/setting.png</string>
     <string name="flutter_image_login" translatable="false">assets/images/login.png</string>
@@ -18,7 +17,6 @@
 
     <string-array name="link26_flutter_image_paths" translatable="false">
         <item>assets/images/applogo.png</item>
-        <item>assets/images/Home.png</item>
         <item>assets/images/aichat.png</item>
         <item>assets/images/setting.png</item>
         <item>assets/images/login.png</item>

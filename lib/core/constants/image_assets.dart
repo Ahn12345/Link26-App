@@ -9,7 +9,6 @@ abstract final class ImageAssets {
   static const logo = 'assets/images/logo.png';
   static const login = 'assets/images/login.png';
   static const signup = 'assets/images/signup.png';
-  static const home = 'assets/images/Home.png';
   static const aichat = 'assets/images/aichat.png';
   static const setting = 'assets/images/setting.png';
   static const pillsearch = 'assets/images/pillsearch.png';
