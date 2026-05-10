@@ -62,7 +62,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           navigationBarTheme: NavigationBarThemeData(
-            indicatorColor: Colors.transparent,
+            // 홈 시안(참조 #6): 선택 탭 = 연한 파란 pill + 채움 아이콘
+            indicatorColor: Link26Surface.chipTint,
             labelTextStyle: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
                 return TextStyle(
