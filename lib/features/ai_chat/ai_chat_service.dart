@@ -1,11 +1,20 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+
 import 'package:link26_app/core/constants/api_keys.dart';
+import 'package:link26_app/core/network/api_client.dart';
+import 'package:link26_app/core/network/api_endpoints.dart';
 
 import 'ai_chat_models.dart';
 
-/// OCR/?? ??: API ?? ??? Gemini 2.5 Flash 2??, ??? ?? ?? ??.
+/// OCR/채팅: 백엔드 REST가 있으면 우선 사용, 없으면 Gemini·규칙 기반.
 class AiChatService {
+  AiChatService({Dio? dio}) : _dio = dio ?? ApiClient.dio;
+
   static const _modelId = 'gemini-2.5-flash';
+
+  final Dio _dio;
 
   Future<String?> _geminiText(String prompt) async {
     final key = ApiConfig.geminiApiKey.trim();
@@ -15,9 +24,50 @@ class AiChatService {
     return res.text?.trim();
   }
 
+  /// REST `POST /ai/chat` — 실패 시 [triageMessage] 폴백.
+  Future<String> sendChatMessage(String message) async {
+    try {
+      final response = await _dio.post<dynamic>(
+        ApiEndpoints.aiChat,
+        data: {'message': message},
+      );
+      final data = response.data;
+      if (data is Map) {
+        return '${data['answer'] ?? data['message'] ?? data['text'] ?? ''}'.trim();
+      }
+      return '$data';
+    } on DioException {
+      final t = await triageMessage(message);
+      return t.primaryAnswer;
+    }
+  }
+
   Future<MedicineInsight> analyzePrescriptionImage({
     required String recognizedText,
   }) async {
+    try {
+      final endpoint = dotenv.env['AI_API_URL']?.trim().isNotEmpty == true
+          ? dotenv.env['AI_API_URL']!.trim()
+          : ApiEndpoints.aiPrescription;
+      final response = await _dio.post<dynamic>(
+        endpoint,
+        data: {'recognizedText': recognizedText},
+      );
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : <String, dynamic>{};
+      return MedicineInsight(
+        productName:
+            '${data['productName'] ?? data['medicineName'] ?? '분석된 약'}',
+        signal: _parseSignal('${data['signal'] ?? 'green'}'),
+        recommendation:
+            '${data['recommendation'] ?? '처방 안내에 따라 복용하세요.'}',
+        reason: '${data['reason'] ?? '서버 분석 결과입니다.'}',
+      );
+    } on DioException {
+      // REST 없거나 오류 → Gemini / 규칙
+    }
+
     final key = ApiConfig.geminiApiKey.trim();
     if (key.isNotEmpty) {
       final p1 =
@@ -92,9 +142,8 @@ class AiChatService {
         final p2 =
             'Review this triage draft. Confirm or correct urgency. Keep very brief.\n$first';
         final second = await _geminiText(p2);
-        final urgent =
-            first.toUpperCase().contains('URGENT_YES') ||
-                (second?.toUpperCase().contains('URGENT_YES') ?? false);
+        final urgent = first.toUpperCase().contains('URGENT_YES') ||
+            (second?.toUpperCase().contains('URGENT_YES') ?? false);
         final lines = first.split('\n');
         final primary = lines.length > 1 ? lines.sublist(1).join('\n') : first;
         return ChatTriageResult(
@@ -117,6 +166,11 @@ class AiChatService {
       'faint',
       'seizure',
       'severe bleeding',
+      '흉통',
+      '호흡곤란',
+      '실신',
+      '발작',
+      '심한출혈',
     ];
     final urgent = urgentKeywords.any(lower.contains);
     if (urgent) {
@@ -134,5 +188,18 @@ class AiChatService {
       followUpPrompt:
           'Please share current symptoms and latest medication time.',
     );
+  }
+
+  SafetySignal _parseSignal(String value) {
+    switch (value.toLowerCase()) {
+      case 'red':
+      case 'danger':
+        return SafetySignal.red;
+      case 'yellow':
+      case 'warning':
+        return SafetySignal.yellow;
+      default:
+        return SafetySignal.green;
+    }
   }
 }

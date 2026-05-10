@@ -83,4 +83,44 @@ abstract final class UserLocalRepository {
     if (rows.isEmpty) return false;
     return rows.first['password_hash'] == _hash(email, password);
   }
+
+  /// 서버 로그인 성공 후 로컬에도 같은 자격증명을 맞춰 두면 다음부터 오프라인 검증이 됩니다.
+  static Future<void> upsertCredentials({
+    required String email,
+    required String password,
+    String? displayName,
+  }) async {
+    final db = await _open();
+    final e = email.trim().toLowerCase();
+    final hash = _hash(email, password);
+    final existing = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [e],
+      limit: 1,
+    );
+    if (existing.isEmpty) {
+      await db.insert(
+        'users',
+        {
+          'email': e,
+          'password_hash': hash,
+          'display_name': displayName,
+          'created_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.abort,
+      );
+    } else {
+      await db.update(
+        'users',
+        {
+          'password_hash': hash,
+          if (displayName != null && displayName.isNotEmpty)
+            'display_name': displayName,
+        },
+        where: 'email = ?',
+        whereArgs: [e],
+      );
+    }
+  }
 }

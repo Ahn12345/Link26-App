@@ -18,3 +18,22 @@ Uri medicineOverviewUri(String path, {Map<String, String>? query}) =>
 
 Uri simpleAuthUri(String path, {Map<String, String>? query}) =>
     buildUri(path, query: query, base: ApiConfig.simpleAuthBaseUrl);
+
+/// Dio [ApiClient.dio] 의 `baseUrl` + 상대 경로 (`.env` 의 `API_BASE_URL`).
+abstract final class ApiEndpoints {
+  ApiEndpoints._();
+
+  static const login = '/auth/login';
+  static const signup = '/auth/signup';
+  static const me = '/auth/me';
+  static const logout = '/auth/logout';
+
+  static const homeDashboard = '/home/dashboard';
+  static const medicines = '/medicines';
+  static const alarms = '/alarms';
+  static const familyMembers = '/family/members';
+  static const notificationSettings = '/settings/notifications';
+  static const displaySettings = '/settings/display';
+  static const aiChat = '/ai/chat';
+  static const aiPrescription = '/ai/prescription';
+}
