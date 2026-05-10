@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 
@@ -31,6 +32,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final logo = Link26ResponsiveUi.splashLogoSize(w);
     return Scaffold(
       backgroundColor: SplashScreen.splashColor,
       body: SafeArea(
@@ -39,8 +42,8 @@ class _SplashScreenState extends State<SplashScreen> {
             const Spacer(),
             DecodedAssetImage(
               ImageAssets.applogo,
-              width: 120,
-              height: 120,
+              width: logo,
+              height: logo,
               fit: BoxFit.contain,
             ),
             const Spacer(),

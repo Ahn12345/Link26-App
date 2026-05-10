@@ -31,4 +31,18 @@
     <height compact="118" medium="158" expanded="200" />
     <widthFraction cap="1" />
   </screen>
+  <!-- 긴급 연락: emergencycall.png -->
+  <screen id="emergencyIllustration" image="emergencycall.png">
+    <height compact="140" medium="180" expanded="220" />
+    <widthFraction cap="1" />
+  </screen>
+  <!-- 월간 간편인증 안내: simplelogin1/2.png -->
+  <screen id="simpleLogin1" image="simplelogin1.png">
+    <height compact="160" medium="200" expanded="240" />
+    <widthFraction cap="1" />
+  </screen>
+  <screen id="simpleLogin2" image="simplelogin2.png">
+    <height compact="160" medium="200" expanded="240" />
+    <widthFraction cap="1" />
+  </screen>
 </link26-responsive-images>

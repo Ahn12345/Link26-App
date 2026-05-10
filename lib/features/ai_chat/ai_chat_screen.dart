@@ -188,7 +188,12 @@ class _AiChatBodyState extends State<_AiChatBody> {
                             child: ColoredBox(
                               color: Link26Surface.scaffoldBg,
                               child: ListView(
-                                padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+                                padding: EdgeInsets.fromLTRB(
+                                  0,
+                                  Link26ResponsiveUi.gapSm(w),
+                                  0,
+                                  Link26ResponsiveUi.gapSm(w),
+                                ),
                                 children: [
                                   Center(
                                     child: SizedBox(
@@ -203,7 +208,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                                  SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
                                   _AiWelcomeBubble(
                                     timeLabel: _welcomeAccessLabel ?? '…',
                                     maxBubbleWidth: bubbleMax,

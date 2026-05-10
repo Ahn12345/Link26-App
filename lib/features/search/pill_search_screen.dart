@@ -89,7 +89,7 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+                      SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
                       TextField(
                         controller: _ctrl,
                         decoration: Link26Surface.inputDecoration(

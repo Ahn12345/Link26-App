@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                            SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
                             Text(
                               l10n.authWelcomeSubtitle,
                               textAlign: TextAlign.center,

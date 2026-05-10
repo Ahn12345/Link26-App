@@ -615,4 +615,34 @@ abstract final class Link26ResponsiveUi {
     return 22.0;
   }
 
+  static double heroArtToContent(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return 16.0;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 18.0;
+    }
+    return 20.0;
+  }
+
+  static double listTileIllustrationSize(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return 40.0;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 44.0;
+    }
+    return 48.0;
+  }
+
+  static double splashLogoSize(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return 104.0;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 112.0;
+    }
+    return 120.0;
+  }
+
 }

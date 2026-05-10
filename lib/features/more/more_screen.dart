@@ -40,7 +40,7 @@ class _MoreBody extends StatelessWidget {
         bottomInset: bottomPad + 4,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Text(
@@ -54,6 +54,7 @@ class _MoreBody extends StatelessWidget {
                   ),
                 ),
               ),
+              SizedBox(width: Link26ResponsiveUi.gapMd(w)),
               DecodedAssetImage(
                 ImageAssets.applogo,
                 height: logoSz,

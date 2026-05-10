@@ -66,4 +66,40 @@ abstract final class Link26ResponsiveImageHeights {
 
   static double pillSearchDisplayWidth(double width) => (Link26Layout.innerWidth(width) * 1.0).clamp(0.0, double.infinity);
 
+  static double emergencyIllustration(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return 140.0;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 180.0;
+    }
+    return 220.0;
+  }
+
+  static double emergencyIllustrationDisplayWidth(double width) => (Link26Layout.innerWidth(width) * 1.0).clamp(0.0, double.infinity);
+
+  static double simpleLogin1(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return 160.0;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 200.0;
+    }
+    return 240.0;
+  }
+
+  static double simpleLogin1DisplayWidth(double width) => (Link26Layout.innerWidth(width) * 1.0).clamp(0.0, double.infinity);
+
+  static double simpleLogin2(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return 160.0;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 200.0;
+    }
+    return 240.0;
+  }
+
+  static double simpleLogin2DisplayWidth(double width) => (Link26Layout.innerWidth(width) * 1.0).clamp(0.0, double.infinity);
+
 }

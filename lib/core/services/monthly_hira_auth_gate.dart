@@ -4,8 +4,12 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/image_assets.dart';
-import '../widgets/decoded_asset_image.dart';
 import '../constants/storage_keys.dart';
+import '../layout/link26_responsive_image_tokens.g.dart';
+import '../layout/link26_responsive_layout.dart';
+import '../layout/link26_responsive_ui_tokens.g.dart';
+import '../theme/link26_surface_style.dart';
+import '../widgets/decoded_asset_image.dart';
 import 'hira_link_service.dart';
 
 /// 매달 25일 1회 간편인증 안내 (simplelogin1 → simplelogin2).
@@ -29,41 +33,54 @@ abstract final class MonthlyHiraAuthGate {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.monthlyHiraTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(l10n.monthlyHiraBody),
-              const SizedBox(height: 12),
-              DecodedAssetImage(
-                ImageAssets.simplelogin1,
-                height: 220,
-                fit: BoxFit.contain,
-                borderRadius: BorderRadius.circular(8),
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox(height: 8),
-              ),
-            ],
+      builder: (ctx) {
+        final w = MediaQuery.sizeOf(ctx).width;
+        final h1 = Link26ResponsiveImageHeights.simpleLogin1(w);
+        final iw = Link26Layout.innerWidth(w);
+        final w1 = Link26ResponsiveImageHeights.simpleLogin1DisplayWidth(w)
+            .clamp(0.0, iw);
+        return AlertDialog(
+          title: Text(l10n.monthlyHiraTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.monthlyHiraBody),
+                SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
+                Center(
+                  child: SizedBox(
+                    width: w1,
+                    child: DecodedAssetImage(
+                      ImageAssets.simplelogin1,
+                      height: h1,
+                      fit: BoxFit.contain,
+                      borderRadius:
+                          BorderRadius.circular(Link26Surface.radiusInput),
+                      errorBuilder: (context, error, stackTrace) =>
+                          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.later),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              if (!context.mounted) return;
-              await _secondStep(context, l10n, key);
-            },
-            child: Text(l10n.monthlyHiraPrimaryAction),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.later),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                if (!context.mounted) return;
+                await _secondStep(context, l10n, key);
+              },
+              child: Text(l10n.monthlyHiraPrimaryAction),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -75,42 +92,55 @@ abstract final class MonthlyHiraAuthGate {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.monthlyHiraSecondTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DecodedAssetImage(
-                ImageAssets.simplelogin2,
-                height: 220,
-                fit: BoxFit.contain,
-                borderRadius: BorderRadius.circular(8),
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 12),
-              Text(l10n.monthlyHiraSecondHint),
-            ],
+      builder: (ctx) {
+        final w = MediaQuery.sizeOf(ctx).width;
+        final h2 = Link26ResponsiveImageHeights.simpleLogin2(w);
+        final iw = Link26Layout.innerWidth(w);
+        final w2 = Link26ResponsiveImageHeights.simpleLogin2DisplayWidth(w)
+            .clamp(0.0, iw);
+        return AlertDialog(
+          title: Text(l10n.monthlyHiraSecondTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: w2,
+                    child: DecodedAssetImage(
+                      ImageAssets.simplelogin2,
+                      height: h2,
+                      fit: BoxFit.contain,
+                      borderRadius:
+                          BorderRadius.circular(Link26Surface.radiusInput),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+                SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
+                Text(l10n.monthlyHiraSecondHint),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.later),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final p = await SharedPreferences.getInstance();
-              await p.setString(StorageKeys.hiraMonthlyAuthMonth, monthKey);
-              await HiraLinkService.afterMonthlyEasyAuth();
-              if (ctx.mounted) Navigator.of(ctx).pop();
-            },
-            child: Text(l10n.monthlyHiraComplete),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.later),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final p = await SharedPreferences.getInstance();
+                await p.setString(StorageKeys.hiraMonthlyAuthMonth, monthKey);
+                await HiraLinkService.afterMonthlyEasyAuth();
+                if (ctx.mounted) Navigator.of(ctx).pop();
+              },
+              child: Text(l10n.monthlyHiraComplete),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -138,7 +138,7 @@ class _SignupPageState extends State<SignupPage> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+                            SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
                             Text(
                               l10n.signup,
                               textAlign: TextAlign.center,
