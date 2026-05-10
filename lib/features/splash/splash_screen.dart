@@ -19,18 +19,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // 한 프레임 그린 뒤 바로 환영 화면(불필요한 500ms 대기 제거).
     WidgetsBinding.instance.addPostFrameCallback((_) => _goNext());
   }
 
-  Future<void> _goNext() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+  void _goNext() {
     if (!mounted) return;
-    await Navigator.of(context).pushReplacementNamed(AuthWelcomeScreen.routeName);
+    Navigator.of(context).pushReplacementNamed(AuthWelcomeScreen.routeName);
   }
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final logoPx = (120 * dpr).round().clamp(1, 2048);
     return Scaffold(
       backgroundColor: SplashScreen.splashColor,
       body: SafeArea(
@@ -41,13 +42,8 @@ class _SplashScreenState extends State<SplashScreen> {
               ImageAssets.applogo,
               width: 120,
               fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 3, color: primary),
+              filterQuality: FilterQuality.medium,
+              cacheWidth: logoPx,
             ),
             const Spacer(),
           ],

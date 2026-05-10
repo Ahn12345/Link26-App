@@ -1,16 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (_) {
-    // .env 없거나 에셋 미포함 시에도 실행 가능
-  }
+  // runApp 을 막지 않음 — 첫 프레임·스플래시가 바로 뜨고, .env 는 백그라운드 로드.
+  unawaited(
+    dotenv.load(fileName: '.env').catchError((Object? _) {}),
+  );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

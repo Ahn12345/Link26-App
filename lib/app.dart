@@ -36,7 +36,6 @@ class Link26App extends StatefulWidget {
 class Link26AppState extends State<Link26App> {
   Locale? _localeOverride;
   double _textScale = 1.0;
-  bool _ready = false;
 
   double get currentTextScale => _textScale;
 
@@ -60,14 +59,12 @@ class Link26AppState extends State<Link26App> {
         }
         final s = (scale == null || scale <= 0) ? 1.0 : scale;
         _textScale = s.clamp(0.85, 1.35);
-        _ready = true;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _localeOverride = null;
         _textScale = 1.0;
-        _ready = true;
       });
     }
   }
@@ -96,11 +93,6 @@ class Link26AppState extends State<Link26App> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_ready) {
-      return const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      );
-    }
     return MaterialApp(
       locale: _localeOverride,
       title: 'Link App',

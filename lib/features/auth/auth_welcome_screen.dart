@@ -37,7 +37,9 @@ class AuthWelcomeScreen extends StatelessWidget {
                   ImageAssets.logo,
                   height: 120,
                   fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
+                  filterQuality: FilterQuality.medium,
+                  cacheHeight:
+                      (120 * MediaQuery.devicePixelRatioOf(context)).round().clamp(1, 2048),
                 ),
                 const SizedBox(height: 20),
                 Text(
