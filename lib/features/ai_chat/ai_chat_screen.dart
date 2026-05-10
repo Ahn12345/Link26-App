@@ -7,7 +7,7 @@ import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
-import 'package:link26_app/core/services/ai_chat_local_store.dart';
+import 'package:link26_app/core/services/ai_chat_conversation_cache.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
@@ -67,14 +67,10 @@ class _AiChatBody extends StatefulWidget {
 class _AiChatBodyState extends State<_AiChatBody> {
   final controller = TextEditingController();
 
-  /// 사용자 전송 이후 말풍선만 (첫 AI 인사는 [_AiWelcomeBubble] 고정).
-  final List<ChatMessage> messages = [];
-
   /// 첫 말풍선 하단 시각 — [AiChatSessionStore.touchAccess] 로 저장되는 접속 시각과 동일.
   String? _welcomeAccessLabel;
 
   static const int _dailyLimit = 10;
-  int _dailyUsed = 0;
   bool _sending = false;
 
   @override
@@ -84,14 +80,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
   }
 
   Future<void> _bootstrap() async {
-    final used = await AiChatLocalStore.loadDailyUsed();
-    final stored = await AiChatLocalStore.loadMessages();
+    await AiChatConversationCache.ensureReady();
     if (!mounted) return;
-    setState(() {
-      _dailyUsed = used;
-      messages.clear();
-      messages.addAll(stored);
-    });
+    setState(() {});
     await _refreshWelcomeAccess();
   }
 
@@ -113,7 +104,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
     final l10n = AppLocalizations.of(context);
     final text = controller.text.trim();
     if (text.isEmpty || _sending) return;
-    if (_dailyUsed >= _dailyLimit) {
+    if (AiChatConversationCache.dailyUsed >= _dailyLimit) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.aiChatDailyLimitReached)),
       );
@@ -121,11 +112,13 @@ class _AiChatBodyState extends State<_AiChatBody> {
     }
 
     setState(() {
-      messages.add(ChatMessage(isUser: true, time: _nowLabel(), text: text));
+      AiChatConversationCache.messages.add(
+        ChatMessage(isUser: true, time: _nowLabel(), text: text),
+      );
       _sending = true;
     });
     controller.clear();
-    await AiChatLocalStore.saveMessages(messages);
+    await AiChatConversationCache.persist();
 
     try {
       final triage = await AiChatService().triageMessage(text);
@@ -140,22 +133,23 @@ class _AiChatBodyState extends State<_AiChatBody> {
       }
       final body = buf.toString().trim();
       setState(() {
-        messages.add(
+        AiChatConversationCache.messages.add(
           ChatMessage(
             isUser: false,
             time: _nowLabel(),
             text: body.isEmpty ? l10n.aiChatReplyError : body,
           ),
         );
-        if (_dailyUsed < _dailyLimit) _dailyUsed++;
+        if (AiChatConversationCache.dailyUsed < _dailyLimit) {
+          AiChatConversationCache.dailyUsed++;
+        }
         _sending = false;
       });
-      await AiChatLocalStore.saveDailyUsed(_dailyUsed);
-      await AiChatLocalStore.saveMessages(messages);
+      await AiChatConversationCache.persist();
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        messages.add(
+        AiChatConversationCache.messages.add(
           ChatMessage(
             isUser: false,
             time: _nowLabel(),
@@ -164,38 +158,39 @@ class _AiChatBodyState extends State<_AiChatBody> {
         );
         _sending = false;
       });
-      await AiChatLocalStore.saveMessages(messages);
+      await AiChatConversationCache.persist();
     }
   }
 
   Future<void> openCamera() async {
     final l10n = AppLocalizations.of(context);
     if (_sending) return;
-    if (_dailyUsed >= _dailyLimit) {
+    if (AiChatConversationCache.dailyUsed >= _dailyLimit) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.aiChatDailyLimitReached)),
       );
       return;
     }
     setState(() {
-      messages.add(
+      AiChatConversationCache.messages.add(
         ChatMessage(
           isUser: true,
           time: _nowLabel(),
           text: l10n.aiChatCameraUserMessage,
         ),
       );
-      messages.add(
+      AiChatConversationCache.messages.add(
         ChatMessage(
           isUser: false,
           time: _nowLabel(),
           text: l10n.aiChatCameraReplyStub,
         ),
       );
-      if (_dailyUsed < _dailyLimit) _dailyUsed++;
+      if (AiChatConversationCache.dailyUsed < _dailyLimit) {
+        AiChatConversationCache.dailyUsed++;
+      }
     });
-    await AiChatLocalStore.saveDailyUsed(_dailyUsed);
-    await AiChatLocalStore.saveMessages(messages);
+    await AiChatConversationCache.persist();
   }
 
   String _nowLabel() =>
@@ -207,7 +202,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
     final embedded = widget.embeddedInShell;
     final shellNavPad =
         embedded ? MediaQuery.of(context).padding.bottom + 88.0 : 0.0;
-    final inputEnabled = !_sending && _dailyUsed < _dailyLimit;
+    final inputEnabled =
+        !_sending && AiChatConversationCache.dailyUsed < _dailyLimit;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -239,7 +235,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                           _ChatHeader(
                             title: l10n.aiChatBrandTitle,
                             quotaHint: l10n.aiChatQuotaResetHint,
-                            used: _dailyUsed,
+                            used: AiChatConversationCache.dailyUsed,
                             limit: _dailyLimit,
                             embedded: embedded,
                             horizontalPad: 0,
@@ -274,7 +270,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                     timeLabel: _welcomeAccessLabel ?? '…',
                                     maxBubbleWidth: bubbleMax,
                                   ),
-                                  ...messages.map(
+                                  ...AiChatConversationCache.messages.map(
                                     (m) => Padding(
                                       padding: EdgeInsets.only(top: Link26ResponsiveUi.gapMd(w)),
                                       child: _ChatBubble(
