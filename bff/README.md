@@ -28,7 +28,14 @@ npm install
 npm start
 ```
 
-기본 포트: **8787** (`PORT` 환경변수로 변경 가능)
+포트 **8787 우선**, 이미 쓰이면 **8788 … 자동 시도**, 그래도 안 되면 **OS가 빈 포트 자동 할당**.  
+콘솔에 `>>> 실제 포트: 숫자 <<<` 가 나오면 `.env` 의 `NHIS_BASE_URL` 포트를 **그 숫자와 동일**하게 맞추세요.
+
+고정으로 쓰려면 (8788 예시):
+
+```powershell
+$env:PORT="8788"; dart run tool/link26_bff.dart
+```
 
 ## Flutter 앱 `.env`
 

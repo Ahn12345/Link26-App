@@ -1,21 +1,75 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
-// 기본 포트 8787 (환경변수 PORT 로 변경 가능, Windows: set PORT=9999)
+//
+// 포트: 환경변수 PORT 가 있으면 그 포트만 사용.
+// 없으면 8787~8796 시도 후, 전부 실패 시 OS 임의 포트(0) 사용 → errno 10048 에도 실행 가능.
+//
+// Windows PowerShell 고정 포트: $env:PORT="8788"; dart run tool/link26_bff.dart
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 Future<void> main() async {
-  final port = int.tryParse(Platform.environment['PORT'] ?? '8787') ?? 8787;
-  final server = await HttpServer.bind(InternetAddress.anyIPv4, port);
+  final server = await _bindServer();
+  final port = server.port;
+
   // ignore: avoid_print
-  print('link26-bff (Dart) http://0.0.0.0:$port');
+  stdout.writeln('');
   // ignore: avoid_print
-  print('  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health');
+  stdout.writeln('>>> link26-bff (Dart) 실제 포트: $port <<<');
+  // ignore: avoid_print
+  stdout.writeln('    http://127.0.0.1:$port/health');
+  // ignore: avoid_print
+  stdout.writeln('    에뮬용 .env: NHIS_BASE_URL=http://10.0.2.2:$port');
+  // ignore: avoid_print
+  stdout.writeln('');
+  // ignore: avoid_print
+  stdout.writeln('  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health');
 
   await for (final request in server) {
     unawaited(_handle(request));
   }
+}
+
+Future<HttpServer> _bindServer() async {
+  final envRaw = Platform.environment['PORT']?.trim();
+  if (envRaw != null && envRaw.isNotEmpty) {
+    final p = int.tryParse(envRaw);
+    if (p == null || p <= 0 || p > 65535) {
+      stderr.writeln('잘못된 PORT=$envRaw');
+      exit(64);
+    }
+    try {
+      return await HttpServer.bind(InternetAddress.anyIPv4, p);
+    } catch (e) {
+      stderr.writeln('PORT=$p 바인드 실패: $e');
+      stderr.writeln('다른 포트: \$env:PORT=8788 (PowerShell)');
+      exit(1);
+    }
+  }
+
+  // 선호 포트들 시도 (어떤 종류의 바인드 예외든 잡음 — Windows 호환)
+  const preferredStart = 8787;
+  const scanCount = 30;
+  for (var i = 0; i < scanCount; i++) {
+    final p = preferredStart + i;
+    try {
+      return await HttpServer.bind(InternetAddress.anyIPv4, p);
+    } catch (_) {
+      if (i == 0) {
+        stderr.writeln(
+          '$preferredStart 대역 사용 중이면 다음 포트를 시도합니다… '
+          '(모두 안 되면 임의 포트로 뜹니다)',
+        );
+      }
+    }
+  }
+
+  stderr.writeln(
+    '$preferredStart~${preferredStart + scanCount - 1} 모두 실패 → '
+    'OS 임의 포트(0)로 바인드합니다. 아래에 나온 포트로 .env 를 맞추세요.',
+  );
+  return HttpServer.bind(InternetAddress.anyIPv4, 0);
 }
 
 Future<void> _handle(HttpRequest request) async {
@@ -91,4 +145,3 @@ Future<void> _json(HttpRequest request, int status, Object body) async {
   request.response.write(jsonEncode(body));
   await request.response.close();
 }
-
