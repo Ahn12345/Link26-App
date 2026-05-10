@@ -3,7 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/constants/design_assets.dart';
 import '../../core/services/monthly_hira_auth_gate.dart';
-import '../../core/widgets/design_backdrop.dart';
+import '../../core/widgets/full_screen_asset_background.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
 import '../more/more_screen.dart';
@@ -54,10 +54,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         index: _index,
         sizing: StackFit.expand,
         children: [
-          DesignBackdrop(
-            assetPath: DesignAssets.homeBackground,
-            fit: DesignFit.screenCover,
-            backgroundOpacity: 0.42,
+          FullScreenAssetBackground(
+            assetPath: DesignAssets.homeFullBackground,
+            fallbackAssetPath: DesignAssets.homeBackground,
             child: const HomeDashboardContent(),
           ),
           const AiChatScreen(showScaffold: false, embeddedInShell: true),
