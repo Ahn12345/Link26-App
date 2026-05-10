@@ -78,105 +78,113 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
 
   @override
   Widget build(BuildContext context) {
-    final pageBg = Theme.of(context).scaffoldBackgroundColor;
     final completed = alarms.where((e) => e.completed).length;
 
     return ColoredBox(
-      color: pageBg,
+      color: Colors.transparent,
       child: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    '건강한 하루를 시작하세요',
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          '건강한 하루를 시작하세요',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            height: 1.25,
+                            color: _Dash.textPrimary,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                      ),
+                      Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(),
+                        elevation: 1,
+                        shadowColor: Colors.black.withValues(alpha: 0.06),
+                        child: IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.notifications_none_rounded),
+                          color: _Dash.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _SearchPill(
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(PillSearchScreen.routeName),
+                  ),
+                  const SizedBox(height: 20),
+                  _ElevatedCard(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _Stat(
+                            title: '오늘 복용',
+                            value: '$completed/${alarms.length}',
+                          ),
+                        ),
+                        Container(width: 1, height: 54, color: _Dash.outline),
+                        Expanded(
+                          child: _Stat(
+                            title: '등록된 약',
+                            value: '${medicines.length}개',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _SectionHeader(
+                    title: '오늘의 알림',
+                    action: '전체보기',
+                    icon: Icons.calendar_month_outlined,
+                    onAction: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => AllAlarmsScreen(alarms: alarms),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _AlarmPreviewCard(
+                    item: alarms.first,
+                    onDone: () => setState(() => alarms.first.completed = true),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    '복용 완료',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 17,
                       fontWeight: FontWeight.w900,
-                      height: 1.25,
                       color: _Dash.textPrimary,
-                      letterSpacing: -0.4,
                     ),
                   ),
-                ),
-                Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 1,
-                  shadowColor: Colors.black.withValues(alpha: 0.06),
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.notifications_none_rounded),
-                    color: _Dash.textSecondary,
+                  const SizedBox(height: 10),
+                  ...alarms
+                      .where((e) => e.completed)
+                      .map((e) => _CompletedTile(item: e)),
+                  const SizedBox(height: 18),
+                  _SectionHeader(
+                    title: '내 약 목록',
+                    action: '+ 추가',
+                    onAction: _openAddMedicine,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _SearchPill(
-              onTap: () => Navigator.of(context).pushNamed(PillSearchScreen.routeName),
-            ),
-            const SizedBox(height: 20),
-            _ElevatedCard(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _Stat(
-                      title: '오늘 복용',
-                      value: '$completed/${alarms.length}',
-                    ),
-                  ),
-                  Container(width: 1, height: 54, color: _Dash.outline),
-                  Expanded(
-                    child: _Stat(
-                      title: '등록된 약',
-                      value: '${medicines.length}개',
-                    ),
-                  ),
-                ],
+                  const SizedBox(height: 8),
+                  ...medicines.map((m) => _MedicineTile(medicine: m)),
+                  const SizedBox(height: 12),
+                  const _AdBanner(),
+                ]),
               ),
             ),
-            const SizedBox(height: 18),
-            _SectionHeader(
-              title: '오늘의 알림',
-              action: '전체보기',
-              icon: Icons.calendar_month_outlined,
-              onAction: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => AllAlarmsScreen(alarms: alarms),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _AlarmPreviewCard(
-              item: alarms.first,
-              onDone: () => setState(() => alarms.first.completed = true),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              '복용 완료',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
-                color: _Dash.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ...alarms.where((e) => e.completed).map((e) => _CompletedTile(item: e)),
-            const SizedBox(height: 18),
-            _SectionHeader(
-              title: '내 약 목록',
-              action: '+ 추가',
-              onAction: _openAddMedicine,
-            ),
-            const SizedBox(height: 8),
-            ...medicines.map((m) => _MedicineTile(medicine: m)),
-            const SizedBox(height: 12),
-            const _AdBanner(),
           ],
         ),
       ),

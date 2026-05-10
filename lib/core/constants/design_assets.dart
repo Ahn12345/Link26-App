@@ -20,6 +20,9 @@ abstract final class DesignAssets {
   static const aiChat = 'assets/images/ui_ai_chat.png';
   static const more = 'assets/images/ui_more.png';
 
+  /// 홈 탭 실 UI 위에 깔리는 배경(없으면 [DesignBackdrop] 에러 플레이스홀더만 표시).
+  static const homeBackground = 'assets/images/home_background.png';
+
   /// 배경까지 꽉 채우려면 [DesignFit.screenCover],
   /// 디자인 가로폭에 맞추고 세로 스크롤은 [DesignFit.widthScroll].
   static const DesignFit imageFit = DesignFit.screenCover;
