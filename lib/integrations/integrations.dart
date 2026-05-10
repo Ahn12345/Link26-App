@@ -2,6 +2,7 @@
 
 library;
 
+export 'codef/codef_runtime_config.dart';
 export 'dur/dur_api_client.dart';
 export 'dur/dur_endpoints.dart';
 export 'dur/dur_mapper.dart';
