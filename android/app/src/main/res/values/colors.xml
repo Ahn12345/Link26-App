@@ -15,4 +15,6 @@
     <color name="link26_send_button">#5C5C5C</color>
     <color name="link26_user_bubble">#E8F1FE</color>
     <color name="splash_background">@color/link26_scaffold_tint</color>
+    <!-- adaptive icon (flutter_launcher_icons) -->
+    <color name="ic_launcher_background">#EEF4FA</color>
 </resources>

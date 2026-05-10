@@ -6,6 +6,7 @@
   동일 PNG를 res/drawable-nodpi/ 로 복사한 뒤 @drawable/ 래퍼를 쓰세요.
 -->
 <resources>
+    <string name="flutter_image_applogo" translatable="false">assets/images/applogo.png</string>
     <string name="flutter_image_ui_home" translatable="false">assets/images/ui_home.png</string>
     <string name="flutter_image_ui_ai_chat" translatable="false">assets/images/ui_ai_chat.png</string>
     <string name="flutter_image_ui_more" translatable="false">assets/images/ui_more.png</string>
@@ -20,6 +21,7 @@
     <string name="flutter_image_simplelogin2" translatable="false">assets/images/simplelogin2.png</string>
 
     <string-array name="link26_flutter_image_paths" translatable="false">
+        <item>assets/images/applogo.png</item>
         <item>assets/images/ui_home.png</item>
         <item>assets/images/ui_ai_chat.png</item>
         <item>assets/images/ui_more.png</item>
