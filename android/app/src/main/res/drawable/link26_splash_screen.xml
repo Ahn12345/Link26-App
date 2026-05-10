@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  앱 기동 시 LaunchTheme 전용 스플래시 (배경색 + 로고).
+  Flutter 첫 프레임 전까지 표시됩니다.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
     <item android:drawable="@drawable/ic_splash_logo" />

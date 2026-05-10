@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Flutter `assets/images/link26_image_registry.xml` 및 실제 PNG 와 동일 경로.
-  네이티브에서 Flutter 에셋 경로 문자열 참고용.
+  Flutter `assets/images/` 실제 파일과 동일 경로. 네이티브 문자열 참고용.
 -->
 <resources>
     <string name="flutter_image_applogo" translatable="false">assets/images/applogo.png</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Flutter: assets/images/Home.png -->
+<!-- Flutter: assets/images/Home.png — 홈 탭·배경 참조용(단일 리소스) -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
     android:gravity="fill"
     android:src="@drawable/link26_home" />

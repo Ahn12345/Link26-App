@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Flutter: assets/images/setting.png (더보기 참고) -->
+<!-- Flutter: assets/images/setting.png -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
     android:gravity="center"
     android:src="@drawable/link26_setting" />

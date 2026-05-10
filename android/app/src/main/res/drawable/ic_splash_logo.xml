@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 네이티브 스플래시 중앙 로고 (인셋 없이 전체 표시) -->
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:gravity="center"
-    android:src="@drawable/applogo" />
+<!--
+  네이티브 스플래시 중앙 로고 (@drawable/applogo, nodpi).
+  런처 적응형 아이콘과 비슷하게 여백을 둬 과대 표시를 줄임.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="16%"
+    android:insetTop="16%"
+    android:insetRight="16%"
+    android:insetBottom="16%">
+    <bitmap
+        android:gravity="center"
+        android:src="@drawable/applogo" />
+</inset>

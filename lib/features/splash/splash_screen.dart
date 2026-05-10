@@ -1,108 +1,44 @@
 ﻿import 'package:flutter/material.dart';
 
-import 'package:link26_app/core/services/auth_session.dart';
-import 'package:link26_app/core/widgets/app_brand_logo.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
-import 'package:link26_app/features/shell/main_shell.dart';
 
+/// 네이티브 스플래시(`link26_splash_screen.xml`)와 동일 배경색만 유지해 깜빡임을 줄입니다.
+/// 이후 항상 [AuthWelcomeScreen] 으로 이동합니다.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   static const routeName = '/';
 
+  /// `colors.xml` 의 `splash_background` / `link26_scaffold_tint` 와 동일.
+  static const Color splashColor = Color(0xFFEEF4FA);
+
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _intro = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 880),
-  );
-  late final Animation<double> _fade = CurvedAnimation(
-    parent: _intro,
-    curve: const Interval(0, 0.65, curve: Curves.easeOut),
-  );
-  late final Animation<double> _scale = Tween<double>(begin: 0.88, end: 1).animate(
-    CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic),
-  );
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _intro.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) => _goNext());
   }
 
-  @override
-  void dispose() {
-    _intro.dispose();
-    super.dispose();
-  }
-
   Future<void> _goNext() async {
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await Future<void>.delayed(const Duration(milliseconds: 450));
     if (!mounted) return;
-    final signedIn = await AuthSession.isSignedIn();
-    if (!mounted) return;
-    if (signedIn) {
-      await Navigator.of(context).pushReplacementNamed(MainShell.routeName);
-    } else {
-      await Navigator.of(context)
-          .pushReplacementNamed(AuthWelcomeScreen.routeName);
-    }
+    await Navigator.of(context).pushReplacementNamed(AuthWelcomeScreen.routeName);
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              scheme.primaryContainer.withValues(alpha: 0.45),
-              scheme.surface,
-              scheme.secondaryContainer.withValues(alpha: 0.25),
-            ],
-          ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AppBrandLogo(width: 160),
-                  const SizedBox(height: 20),
-                  Text(
-                    '약과 건강을 연결합니다',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.2,
-                      color: scheme.onSurface.withValues(alpha: 0.72),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: scheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      backgroundColor: SplashScreen.splashColor,
+      body: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(strokeWidth: 3, color: primary),
         ),
       ),
     );

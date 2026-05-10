@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/widgets/app_brand_logo.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
@@ -48,14 +47,8 @@ class AuthWelcomeScreen extends StatelessWidget {
               ),
               const Spacer(),
               FilledButton(
-                onPressed: () async {
-                  final has = await UserLocalRepository.hasAnyUser();
-                  if (!context.mounted) return;
-                  if (!has) {
-                    await Navigator.of(context).pushNamed(SignupPage.routeName);
-                  } else {
-                    await Navigator.of(context).pushNamed(LoginPage.routeName);
-                  }
+                onPressed: () {
+                  Navigator.of(context).pushNamed(LoginPage.routeName);
                 },
                 child: Text(l10n.login),
               ),

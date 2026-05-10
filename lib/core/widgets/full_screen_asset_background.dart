@@ -47,23 +47,24 @@ class FullScreenAssetBackground extends StatelessWidget {
             ),
           ),
         ),
-        Positioned.fill(
-          child: Image.asset(
-            assetPath,
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            width: double.infinity,
-            height: double.infinity,
-            filterQuality: FilterQuality.high,
-            errorBuilder: (context, error, stackTrace) {
-              final fb = fallbackAssetPath;
-              if (fb != null && fb.isNotEmpty) {
-                return imageLayer(fb);
-              }
-              return const SizedBox.shrink();
-            },
+        if (assetPath.isNotEmpty)
+          Positioned.fill(
+            child: Image.asset(
+              assetPath,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              width: double.infinity,
+              height: double.infinity,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) {
+                final fb = fallbackAssetPath;
+                if (fb != null && fb.isNotEmpty) {
+                  return imageLayer(fb);
+                }
+                return const SizedBox.shrink();
+              },
+            ),
           ),
-        ),
         child,
       ],
     );
