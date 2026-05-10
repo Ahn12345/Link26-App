@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  회원가입 화면 스펙.
+  히어로 반응형: link26_responsive_images.xml → screen id="signup"
+  PNG: link26_image_assets.xml → id="signup" (signup.png)
+-->
+<link26-screen-spec version="1" id="signup" kind="auth" title="회원가입">
+  <hero
+      catalogId="signup"
+      file="signup.png"
+      responsiveScreenId="signup"
+      flutterConst="ImageAssets.signup" />
+  <flutter path="lib/features/auth/signup/signup_page.dart" />
+  <android-reference layout="reference_signup_screen.xml" />
+</link26-screen-spec>

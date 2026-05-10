@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  참조용 레이아웃 — 약 검색 (pillsearch.png).
+  실제 앱 UI는 Flutter. 에셋: @string/flutter_image_pillsearch
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/link26_scaffold_tint">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/link26_space_md"
+        android:text="@string/reference_pill_search_title"
+        android:textColor="@color/link26_on_surface"
+        android:textSize="@dimen/link26_header_title"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/link26_space_md"
+        android:orientation="vertical"
+        android:padding="@dimen/link26_space_md"
+        android:background="@color/link26_surface"
+        android:elevation="2dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:background="@color/link26_chip_tint"
+            android:contentDescription="@string/flutter_image_pillsearch"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_xs"
+            android:gravity="center"
+            android:text="@string/flutter_image_pillsearch"
+            android:textColor="@color/link26_on_surface_muted"
+            android:textSize="@dimen/link26_caption" />
+    </LinearLayout>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/link26_space_md"
+        android:background="@color/link26_surface"
+        android:hint="@string/reference_pill_search_field_hint"
+        android:minHeight="52dp"
+        android:padding="@dimen/link26_space_sm"
+        android:textColor="@color/link26_on_surface"
+        android:textColorHint="@color/link26_on_surface_muted" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="@dimen/link26_space_md"
+        android:paddingBottom="@dimen/link26_space_md">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/link26_surface"
+            android:padding="@dimen/link26_space_md"
+            android:text="@string/reference_pill_search_stub_result"
+            android:textColor="@color/link26_on_surface"
+            android:textSize="@dimen/link26_body" />
+    </ScrollView>
+</LinearLayout>

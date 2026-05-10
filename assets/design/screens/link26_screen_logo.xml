@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  브랜드 로고(환영) 화면 스펙 — 기획·동기화용.
+  히어로 반응형: assets/design/link26_responsive_images.xml → screen id="authWelcome"
+  PNG: assets/images/link26_image_assets.xml → id="logo" (logo.png)
+-->
+<link26-screen-spec version="1" id="logo" kind="authWelcome" title="환영·로고">
+  <hero
+      catalogId="logo"
+      file="logo.png"
+      responsiveScreenId="authWelcome"
+      flutterConst="ImageAssets.logo" />
+  <flutter path="lib/features/auth/auth_welcome_screen.dart" />
+  <android-reference layout="reference_brand_logo_screen.xml" />
+</link26-screen-spec>

@@ -8,4 +8,21 @@
     <string name="reference_ai_welcome_stub">첫 AI 말풍선 (실제 UI는 Flutter)</string>
     <string name="reference_camera">카메라</string>
     <string name="reference_send">전송</string>
+
+    <!-- 참조 레이아웃(reference_*): Flutter UI 스켈레톤, Design 탭 전용 -->
+    <string name="reference_brand_welcome_title">Link26</string>
+    <string name="reference_brand_welcome_subtitle">건강한 복약을 돕는 앱입니다</string>
+    <string name="reference_brand_cta_login">로그인</string>
+    <string name="reference_brand_cta_signup">회원가입</string>
+    <string name="reference_login_title">로그인</string>
+    <string name="reference_login_email_hint">이메일</string>
+    <string name="reference_login_password_hint">비밀번호</string>
+    <string name="reference_login_social_google">Google로 계속</string>
+    <string name="reference_login_social_apple">Apple로 계속</string>
+    <string name="reference_signup_title">회원가입</string>
+    <string name="reference_signup_email_hint">이메일</string>
+    <string name="reference_signup_password_hint">비밀번호</string>
+    <string name="reference_pill_search_title">약 검색</string>
+    <string name="reference_pill_search_field_hint">약 이름을 입력하세요</string>
+    <string name="reference_pill_search_stub_result">검색 결과 영역 (실제 UI는 Flutter)</string>
 </resources>

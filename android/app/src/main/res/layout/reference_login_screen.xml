@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  참조용 레이아웃 — 로그인 (login.png).
+  실제 앱 UI는 Flutter. 에셋: @string/flutter_image_login
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/link26_scaffold_tint"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/link26_space_md">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/reference_login_title"
+            android:textColor="@color/link26_on_surface"
+            android:textSize="@dimen/link26_header_title"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_sm"
+            android:orientation="vertical"
+            android:padding="@dimen/link26_space_md"
+            android:background="@color/link26_surface"
+            android:elevation="2dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="@color/link26_chip_tint"
+                android:contentDescription="@string/flutter_image_login"
+                android:scaleType="centerInside" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/link26_space_xs"
+                android:gravity="center"
+                android:text="@string/flutter_image_login"
+                android:textColor="@color/link26_on_surface_muted"
+                android:textSize="@dimen/link26_caption" />
+        </LinearLayout>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_md"
+            android:backgroundTint="@color/link26_surface"
+            android:minHeight="48dp"
+            android:text="@string/reference_login_social_google"
+            android:textAllCaps="false"
+            android:textColor="@color/link26_on_surface" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_xs"
+            android:backgroundTint="@color/link26_surface"
+            android:minHeight="48dp"
+            android:text="@string/reference_login_social_apple"
+            android:textAllCaps="false"
+            android:textColor="@color/link26_on_surface" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_md"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/link26_outline" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/link26_space_sm"
+                android:text="이메일"
+                android:textColor="@color/link26_on_surface_muted"
+                android:textSize="@dimen/link26_caption"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/link26_outline" />
+        </LinearLayout>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_md"
+            android:hint="@string/reference_login_email_hint"
+            android:inputType="textEmailAddress"
+            android:minHeight="48dp"
+            android:padding="@dimen/link26_space_sm"
+            android:backgroundTint="@color/link26_input_fill"
+            android:textColor="@color/link26_on_surface"
+            android:textColorHint="@color/link26_on_surface_muted" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_sm"
+            android:hint="@string/reference_login_password_hint"
+            android:inputType="textPassword"
+            android:minHeight="48dp"
+            android:padding="@dimen/link26_space_sm"
+            android:backgroundTint="@color/link26_input_fill"
+            android:textColor="@color/link26_on_surface"
+            android:textColorHint="@color/link26_on_surface_muted" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_md"
+            android:backgroundTint="@color/link26_send_button"
+            android:minHeight="52dp"
+            android:text="@string/reference_brand_cta_login"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</ScrollView>

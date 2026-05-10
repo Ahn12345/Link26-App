@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AI 채팅 화면 스펙.
+  헤더 일러스트 반응형: link26_responsive_images.xml → screen id="aiChat"
+  PNG: link26_image_assets.xml → id="aichat" (aichat.png)
+-->
+<link26-screen-spec version="1" id="aiChat" kind="chat" title="AI 약 정보">
+  <hero
+      catalogId="aichat"
+      file="aichat.png"
+      responsiveScreenId="aiChat"
+      flutterConst="ImageAssets.aichat" />
+  <flutter path="lib/features/ai_chat/ai_chat_screen.dart" />
+  <android-reference layout="reference_ai_chat_screen.xml" />
+</link26-screen-spec>

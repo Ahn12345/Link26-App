@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  로그인 화면 스펙.
+  히어로 반응형: link26_responsive_images.xml → screen id="login"
+  PNG: link26_image_assets.xml → id="login" (login.png)
+-->
+<link26-screen-spec version="1" id="login" kind="auth" title="로그인">
+  <hero
+      catalogId="login"
+      file="login.png"
+      responsiveScreenId="login"
+      flutterConst="ImageAssets.login" />
+  <flutter path="lib/features/auth/login/login_page.dart" />
+  <android-reference layout="reference_login_screen.xml" />
+</link26-screen-spec>

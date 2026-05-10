@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  참조용 레이아웃 — 회원가입 (signup.png).
+  실제 앱 UI는 Flutter. 에셋: @string/flutter_image_signup
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/link26_scaffold_tint"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/link26_space_md">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/reference_signup_title"
+            android:textColor="@color/link26_on_surface"
+            android:textSize="@dimen/link26_header_title"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_sm"
+            android:orientation="vertical"
+            android:padding="@dimen/link26_space_md"
+            android:background="@color/link26_surface"
+            android:elevation="2dp">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="@color/link26_chip_tint"
+                android:contentDescription="@string/flutter_image_signup"
+                android:scaleType="centerInside" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/link26_space_xs"
+                android:gravity="center"
+                android:text="@string/flutter_image_signup"
+                android:textColor="@color/link26_on_surface_muted"
+                android:textSize="@dimen/link26_caption" />
+        </LinearLayout>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_lg"
+            android:hint="@string/reference_signup_email_hint"
+            android:inputType="textEmailAddress"
+            android:minHeight="48dp"
+            android:padding="@dimen/link26_space_sm"
+            android:backgroundTint="@color/link26_input_fill"
+            android:textColor="@color/link26_on_surface"
+            android:textColorHint="@color/link26_on_surface_muted" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_sm"
+            android:hint="@string/reference_signup_password_hint"
+            android:inputType="textPassword"
+            android:minHeight="48dp"
+            android:padding="@dimen/link26_space_sm"
+            android:backgroundTint="@color/link26_input_fill"
+            android:textColor="@color/link26_on_surface"
+            android:textColorHint="@color/link26_on_surface_muted" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/link26_space_md"
+            android:backgroundTint="@color/link26_send_button"
+            android:minHeight="52dp"
+            android:text="@string/reference_signup_title"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  약 검색 화면 스펙.
+  히어로 반응형: link26_responsive_images.xml → screen id="pillSearch"
+  PNG: link26_image_assets.xml → id="pillsearch" (pillsearch.png)
+-->
+<link26-screen-spec version="1" id="pillSearch" kind="search" title="약 검색">
+  <hero
+      catalogId="pillsearch"
+      file="pillsearch.png"
+      responsiveScreenId="pillSearch"
+      flutterConst="ImageAssets.pillsearch" />
+  <flutter path="lib/features/search/pill_search_screen.dart" />
+  <android-reference layout="reference_pill_search_screen.xml" />
+</link26-screen-spec>
