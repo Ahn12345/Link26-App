@@ -94,7 +94,11 @@ class AuthWelcomeScreen extends StatelessWidget {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              SizedBox(height: Link26ResponsiveUi.gapLg(w) + 8),
+                              SizedBox(
+                                height: Link26ResponsiveUi.gapLg(w) +
+                                    Link26ResponsiveUi.gapMd(w) +
+                                    24,
+                              ),
                             ],
                           ),
                         ),

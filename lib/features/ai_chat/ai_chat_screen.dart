@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:link26_app/core/constants/image_assets.dart';
-import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
@@ -11,7 +9,6 @@ import 'package:link26_app/core/services/ai_chat_conversation_cache.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
-import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
@@ -213,8 +210,6 @@ class _AiChatBodyState extends State<_AiChatBody> {
         final sideScreen = Link26Layout.horizontalPadding(w);
         final inner = Link26Layout.innerWidth(w);
         final bubbleMax = Link26Layout.chatBubbleMaxWidth(inner);
-        final aiArtH = Link26ResponsiveImageHeights.aiChat(w);
-        final aiArtW = (Link26ResponsiveImageHeights.aiChatDisplayWidth(w)).clamp(0.0, inner);
 
         return SafeArea(
           bottom: !embedded,
@@ -254,48 +249,48 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               ),
                               child: ColoredBox(
                                 color: Link26UnifiedPage.background,
-                                child: ListView(
-                                  padding: EdgeInsets.fromLTRB(
-                                    0,
-                                    Link26ResponsiveUi.gapSm(w),
-                                    0,
-                                    Link26ResponsiveUi.gapMd(w),
-                                  ),
-                                  children: [
-                                    Center(
-                                      child: SizedBox(
-                                        width: aiArtW,
-                                        child: DecodedAssetImage(
-                                          ImageAssets.aichat,
-                                          height: aiArtH,
-                                          fit: BoxFit.contain,
-                                          borderRadius: BorderRadius.circular(
-                                              Link26Surface.radiusInput),
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  const SizedBox.shrink(),
+                                child: LayoutBuilder(
+                                  builder: (context, vp) {
+                                    return SingleChildScrollView(
+                                      padding: EdgeInsets.fromLTRB(
+                                        0,
+                                        Link26ResponsiveUi.gapSm(w),
+                                        0,
+                                        Link26ResponsiveUi.gapSm(w),
+                                      ),
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minHeight: vp.maxHeight,
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            _AiWelcomeBubble(
+                                              timeLabel: _welcomeAccessLabel ??
+                                                  '…',
+                                              maxBubbleWidth: bubbleMax,
+                                            ),
+                                            ...AiChatConversationCache.messages
+                                                .map(
+                                              (m) => Padding(
+                                                padding: EdgeInsets.only(
+                                                  top: Link26ResponsiveUi.gapMd(
+                                                      w),
+                                                ),
+                                                child: _ChatBubble(
+                                                  message: m,
+                                                  maxBubbleWidth: bubbleMax,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                    SizedBox(
-                                        height: Link26ResponsiveUi
-                                            .heroArtToContent(w)),
-                                    _AiWelcomeBubble(
-                                      timeLabel:
-                                          _welcomeAccessLabel ?? '…',
-                                      maxBubbleWidth: bubbleMax,
-                                    ),
-                                    ...AiChatConversationCache.messages.map(
-                                      (m) => Padding(
-                                        padding: EdgeInsets.only(
-                                            top: Link26ResponsiveUi.gapMd(w)),
-                                        child: _ChatBubble(
-                                          message: m,
-                                          maxBubbleWidth: bubbleMax,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                    );
+                                  },
                                 ),
                               ),
                             ),
