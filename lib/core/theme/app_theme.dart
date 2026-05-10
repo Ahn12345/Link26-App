@@ -11,6 +11,11 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: const Color(0xFFF5F8FC),
+      navigationBarTheme: NavigationBarThemeData(
+        indicatorColor: scheme.primaryContainer.withValues(alpha: 0.65),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
       appBarTheme: AppBarTheme(
         centerTitle: true,
         backgroundColor: scheme.surfaceContainerHighest,

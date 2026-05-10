@@ -14,9 +14,10 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = const _MoreBody();
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final body = ColoredBox(color: bg, child: const _MoreBody());
     if (!showScaffold) return body;
-    return Scaffold(body: body);
+    return Scaffold(backgroundColor: bg, body: body);
   }
 }
 

@@ -12,9 +12,10 @@ class AiChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = const _AiChatBody();
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final body = ColoredBox(color: bg, child: const _AiChatBody());
     if (!showScaffold) return body;
-    return Scaffold(body: body);
+    return Scaffold(backgroundColor: bg, body: body);
   }
 }
 
