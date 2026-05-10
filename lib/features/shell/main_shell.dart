@@ -20,6 +20,8 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _index = 0;
+  /// AI 탭으로 전환할 때마다 증가 → 첫 말풍선 접속 시각 갱신.
+  int _aiVisitStamp = 0;
 
   @override
   void initState() {
@@ -59,7 +61,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             fallbackAssetPath: DesignAssets.homeBackground,
             child: const HomeDashboardContent(),
           ),
-          const AiChatScreen(showScaffold: false, embeddedInShell: true),
+          AiChatScreen(
+            showScaffold: false,
+            embeddedInShell: true,
+            visitStamp: _aiVisitStamp,
+          ),
           ColoredBox(
             color: scheme.surface,
             child: const MoreScreen(showScaffold: false),
@@ -97,7 +103,15 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               elevation: 0,
               surfaceTintColor: Colors.transparent,
               selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
+              onDestinationSelected: (i) {
+                setState(() {
+                  final from = _index;
+                  _index = i;
+                  if (i == 1 && from != 1) {
+                    _aiVisitStamp++;
+                  }
+                });
+              },
               destinations: [
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined, color: scheme.onSurfaceVariant),

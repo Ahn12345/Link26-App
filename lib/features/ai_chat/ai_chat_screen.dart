@@ -1,46 +1,60 @@
 import 'package:flutter/material.dart';
 
-import 'package:link26_app/core/constants/design_assets.dart';
-import 'package:link26_app/core/widgets/full_screen_asset_background.dart';
+import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/models/link_models.dart';
 
-/// 카카오 functional 스타일 AI 채팅 + GitHub용 [showScaffold] / 라우트 호환.
+/// 시안 기준 AI 약 정보 채팅 (`#3B6CF5` 등).
 ///
-/// [embeddedInShell]: 탭 모드에서는 `aichat.png`만 보이고 입력창만 얹음. 라우트 진입 시 헤더·데모 대화 표시.
+/// [embeddedInShell]: 하단 탭일 때 뒤로가기 없음.
 class AiChatScreen extends StatelessWidget {
   const AiChatScreen({
     super.key,
     this.showScaffold = true,
     this.embeddedInShell = false,
+    /// 하단 탭에서 다른 탭 → AI 로 전환될 때마다 증가시키면 첫 말풍선 접속 시각이 갱신됩니다.
+    this.visitStamp = 0,
   });
 
   static const routeName = '/ai-chat';
 
   final bool showScaffold;
-
-  /// 하단 네비 탭 안에서 쓸 때 true.
   final bool embeddedInShell;
+
+  /// [embeddedInShell] 일 때만 사용. 라우트 단독 진입은 0 그대로 두면 됩니다.
+  final int visitStamp;
+
+  static const Color primaryBlue = Color(0xFF3B6CF5);
+  static const Color chatBackground = Color(0xFFF5F6F8);
+  static const Color bubbleBorder = Color(0xFFE5E7EB);
+  static const Color disclaimerBg = Color(0xFFE8F2FE);
+  static const Color disclaimerText = Color(0xFF1E3A5F);
+  static const Color sendButtonBg = Color(0xFF5C5C5C);
+  static const Color inputFill = Color(0xFFF3F4F6);
 
   @override
   Widget build(BuildContext context) {
-    final inner = _AiChatBody(embeddedInShell: embeddedInShell);
-    final layered = FullScreenAssetBackground(
-      assetPath: DesignAssets.aiChatFullBackground,
-      fallbackAssetPath: DesignAssets.aiChat,
-      child: inner,
+    final body = _AiChatBody(
+      embeddedInShell: embeddedInShell,
+      visitStamp: visitStamp,
     );
-    if (!showScaffold) return layered;
+    if (!showScaffold) {
+      return ColoredBox(color: chatBackground, child: body);
+    }
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: layered,
+      backgroundColor: chatBackground,
+      body: body,
     );
   }
 }
 
 class _AiChatBody extends StatefulWidget {
-  const _AiChatBody({required this.embeddedInShell});
+  const _AiChatBody({
+    required this.embeddedInShell,
+    required this.visitStamp,
+  });
 
   final bool embeddedInShell;
+  final int visitStamp;
 
   @override
   State<_AiChatBody> createState() => _AiChatBodyState();
@@ -49,38 +63,40 @@ class _AiChatBody extends StatefulWidget {
 class _AiChatBodyState extends State<_AiChatBody> {
   final controller = TextEditingController();
 
-  /// 하단 탭 + `aichat.png` 배경일 때는 PNG가 화면 전체 UI를 담당하므로 데모 말풍선을 넣지 않음.
-  /// `/ai-chat` 라우트로 단독 진입 시에만 예시 대화를 채움.
-  late final List<ChatMessage> messages = widget.embeddedInShell
-      ? <ChatMessage>[]
-      : <ChatMessage>[
-            const ChatMessage(
-              text:
-                  '안녕하세요! 처방전 약 정보를 확인하는 방법을 안내해드릴게요.\n\n처방전이나 약 사진을 업로드하시면 약 정보를 확인해드릴 수 있어요.\n\n💡 사진 촬영 팁\n• 약 이름과 용량이 선명하게 보이도록 촬영해주세요\n• 처방전의 경우 약 이름 부분이 잘 보이게 촬영해주세요\n• 밝은 곳에서 촬영하시면 더 정확합니다',
-              isUser: false,
-              time: '오전 10:48',
-            ),
-            const ChatMessage(
-              text: '사진을 확인했습니다! 🙂\n다음과 같은 약이 처방되었어요.',
-              isUser: false,
-              time: '오전 10:50',
-              cardTitle: '아세트아미노펜 500mg',
-              cardSubtitle: '1일 3회, 1회 3정, 식후 복용\n5일분 처방',
-            ),
-            const ChatMessage(
-              text: '처방전 사진을 추가로 업로드합니다.',
-              isUser: true,
-              time: '오전 10:51',
-            ),
-            const ChatMessage(
-              text:
-                  '추가로 업로드해주신 처방전도 확인했습니다! 🙂\n아래 약이 추가로 처방되었어요.',
-              isUser: false,
-              time: '오전 10:52',
-              cardTitle: '로라타딘 10mg',
-              cardSubtitle: '1일 1정, 1일 1회, 취침 전 복용\n5일분 처방',
-            ),
-          ];
+  /// 사용자 전송 이후 말풍선만 (첫 AI 인사는 [_AiWelcomeBubble] 고정).
+  final List<ChatMessage> messages = [];
+
+  /// 첫 말풍선 하단 시각 — [AiChatSessionStore.touchAccess] 로 저장되는 접속 시각과 동일.
+  String? _welcomeAccessLabel;
+
+  static const int _dailyLimit = 10;
+  int _dailyUsed = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.embeddedInShell) {
+      _refreshWelcomeAccess();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AiChatBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.embeddedInShell &&
+        widget.visitStamp > 0 &&
+        widget.visitStamp != oldWidget.visitStamp) {
+      _refreshWelcomeAccess();
+    }
+  }
+
+  Future<void> _refreshWelcomeAccess() async {
+    final at = await AiChatSessionStore.touchAccess();
+    if (!mounted) return;
+    setState(() {
+      _welcomeAccessLabel = AiChatSessionStore.formatAccessLabel(at);
+    });
+  }
 
   @override
   void dispose() {
@@ -92,330 +108,444 @@ class _AiChatBodyState extends State<_AiChatBody> {
     final text = controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
-      messages.add(ChatMessage(isUser: true, time: '지금', text: text));
+      messages.add(ChatMessage(isUser: true, time: _nowLabel(), text: text));
       messages.add(
-        const ChatMessage(
-          text:
-              '입력하신 내용을 확인했어요. 실제 REST API가 연결되면 서버 응답으로 교체하면 됩니다.',
+        ChatMessage(
           isUser: false,
-          time: '지금',
+          time: _nowLabel(),
+          text:
+              '말씀해 주신 내용을 반영했습니다. 실제 서비스에서는 약학 DB·API와 연동해 답변합니다.',
         ),
       );
+      if (_dailyUsed < _dailyLimit) _dailyUsed++;
     });
     controller.clear();
   }
 
-  void addImageMessage() {
+  void openCamera() {
     setState(() {
       messages.add(
-        const ChatMessage(
-          text: '처방전 사진을 업로드했습니다.',
+        ChatMessage(
           isUser: true,
-          time: '지금',
+          time: _nowLabel(),
+          text: '사진을 선택했습니다.',
         ),
       );
       messages.add(
-        const ChatMessage(
-          text:
-              '사진 업로드 기능이 실행되었습니다. image_picker와 REST API 업로드를 연결하면 실제 분석이 가능합니다.',
+        ChatMessage(
           isUser: false,
-          time: '지금',
+          time: _nowLabel(),
+          text: '이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다.',
         ),
       );
+      if (_dailyUsed < _dailyLimit) _dailyUsed++;
     });
   }
 
+  String _nowLabel() =>
+      AiChatSessionStore.formatAccessLabel(DateTime.now());
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final embedded = widget.embeddedInShell;
 
-    final inputBar = Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      child: Material(
-        color: Colors.white.withValues(alpha: embedded ? 0.92 : 1),
-        elevation: embedded ? 8 : 0,
-        shadowColor: Colors.black.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
+    return SafeArea(
+      bottom: true,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _ChatHeader(
+                used: _dailyUsed,
+                limit: _dailyLimit,
+                embedded: embedded,
+              ),
               Expanded(
-                child: TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: '궁금한 내용을 입력하세요...',
-                    filled: true,
-                    fillColor: embedded ? Colors.white.withValues(alpha: 0.6) : null,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ColoredBox(
+                  color: AiChatScreen.chatBackground,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    children: [
+                      _AiWelcomeBubble(
+                        timeLabel: _welcomeAccessLabel ?? '…',
+                      ),
+                      ...messages.map(
+                        (m) => Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: _ChatBubble(message: m),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              IconButton(onPressed: addImageMessage, icon: const Icon(Icons.image_outlined)),
-              CircleAvatar(
-                backgroundColor: scheme.primary,
-                child: IconButton(
-                  onPressed: sendMessage,
-                  icon: const Icon(Icons.send, color: Colors.white),
-                ),
+              const _DisclaimerBanner(),
+              _InputBar(
+                controller: controller,
+                onSend: sendMessage,
+                onCamera: openCamera,
               ),
             ],
           ),
-        ),
-      ),
-    );
-
-    return SafeArea(
-      child: Column(
-        children: [
-          if (!embedded) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new),
-                    onPressed: () => Navigator.maybePop(context),
-                  ),
-                  const SizedBox(width: 10),
-                  CircleAvatar(
-                    backgroundColor: scheme.primary,
-                    child: const Icon(Icons.smart_toy, color: Colors.white),
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'AI 처방전 도우미',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                        ),
-                        Text(
-                          '언제든지 궁금한 점을 물어보세요!',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => setState(() => messages.clear()),
-                    icon: const Icon(Icons.add),
-                    label: const Text('새 대화'),
-                  ),
-                ],
+          if (!embedded)
+            Positioned(
+              top: 4,
+              left: 0,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                color: const Color(0xFF111827),
+                onPressed: () => Navigator.maybePop(context),
               ),
             ),
-            const Divider(height: 1),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: _BioLinkSummaryCard(),
-            ),
-          ],
-          Expanded(
-            child: messages.isEmpty
-                ? const SizedBox.shrink()
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: messages.length,
-                    itemBuilder: (_, i) => _MessageBubble(message: messages[i]),
-                  ),
-          ),
-          inputBar,
         ],
       ),
     );
   }
 }
 
-/// 데모용: 복용 안전·상호작용 비중을 막대로 표현 (실데이터 연결 시 교체).
-class _BioLinkSummaryCard extends StatelessWidget {
-  const _BioLinkSummaryCard();
+class _ChatHeader extends StatelessWidget {
+  const _ChatHeader({
+    required this.used,
+    required this.limit,
+    required this.embedded,
+  });
+
+  final int used;
+  final int limit;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
+    final progress = limit > 0 ? used / limit : 0.0;
+
     return Material(
-      elevation: 0,
-      color: const Color(0xFFF0F7FF),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFBFD7FF)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.insights, color: Theme.of(context).colorScheme.primary, size: 22),
-                  const SizedBox(width: 8),
-                  const Text(
-                    '바이오링크 요약 (데모)',
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.06),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(embedded ? 16 : 44, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'AI 약 정보',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827),
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress.clamp(0.0, 1.0),
+                      minHeight: 8,
+                      backgroundColor: const Color(0xFFE5E7EB),
+                      color: AiChatScreen.primaryBlue,
+                    ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '처방 조합 기준 상호작용 비중 · 오늘 복용 안전도',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 96,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: const [
-                    Expanded(
-                      flex: 62,
-                      child: _SummaryBar(
-                        label: '양호',
-                        fraction: 1,
-                        color: Color(0xFF22C55E),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      flex: 24,
-                      child: _SummaryBar(
-                        label: '주의',
-                        fraction: 0.55,
-                        color: Color(0xFFF59E0B),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      flex: 14,
-                      child: _SummaryBar(
-                        label: '확인',
-                        fraction: 0.35,
-                        color: Color(0xFFEF4444),
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 12),
+                Text(
+                  '$used/$limit',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AiChatScreen.primaryBlue,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '오전 4시에 초기화됩니다',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SummaryBar extends StatelessWidget {
-  const _SummaryBar({
-    required this.label,
-    required this.fraction,
-    required this.color,
-  });
+/// 첫 AI 말풍선 — [timeLabel]은 접속 시각([AiChatSessionStore])과 동일 포맷.
+class _AiWelcomeBubble extends StatelessWidget {
+  const _AiWelcomeBubble({required this.timeLabel});
 
-  final String label;
-  final double fraction;
-  final Color color;
+  final String timeLabel;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: FractionallySizedBox(
-              widthFactor: 1,
-              heightFactor: fraction.clamp(0.15, 1.0),
-              alignment: Alignment.bottomCenter,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(8),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width - 32,
+        ),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AiChatScreen.bubbleBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 15,
+                  height: 1.55,
                 ),
+                children: [
+                  const TextSpan(text: '안녕하세요! 약 정보를 도와드리겠습니다.\n\n'),
+                  const TextSpan(
+                    text:
+                        '처방전이나 약 사진을 업로드하시면 약 정보를 확인해드립니다.\n\n',
+                  ),
+                  const TextSpan(text: '💡 '),
+                  TextSpan(
+                    text: '사진 촬영 팁:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.grey.shade900,
+                    ),
+                  ),
+                  const TextSpan(text: '\n'),
+                  const TextSpan(
+                    text:
+                        '- 약 이름과 용량이 선명하게 보이도록 촬영해 주세요\n'
+                        '- 처방전의 경우 약 이름 부분이 잘 보이게 촬영해 주세요\n'
+                        '- 밝은 곳에서 촬영하시면 더 정확합니다',
+                  ),
+                ],
               ),
             ),
-          ),
+            const SizedBox(height: 10),
+            Text(
+              timeLabel,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
+class _DisclaimerBanner extends StatelessWidget {
+  const _DisclaimerBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AiChatScreen.disclaimerBg,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: AiChatScreen.primaryBlue,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.',
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: AiChatScreen.disclaimerText,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InputBar extends StatelessWidget {
+  const _InputBar({
+    required this.controller,
+    required this.onSend,
+    required this.onCamera,
+  });
+
+  final TextEditingController controller;
+  final VoidCallback onSend;
+  final VoidCallback onCamera;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Material(
+            color: AiChatScreen.inputFill,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: onCamera,
+              borderRadius: BorderRadius.circular(12),
+              child: const SizedBox(
+                width: 48,
+                height: 48,
+                child: Icon(
+                  Icons.photo_camera_outlined,
+                  color: Color(0xFF374151),
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              minLines: 1,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: '약에 대해 궁금한 점을 물어보세요...',
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 15,
+                ),
+                filled: true,
+                fillColor: AiChatScreen.inputFill,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Material(
+            color: AiChatScreen.sendButtonBg,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: onSend,
+              borderRadius: BorderRadius.circular(12),
+              child: const SizedBox(
+                width: 48,
+                height: 48,
+                child: Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatBubble extends StatelessWidget {
+  const _ChatBubble({required this.message});
 
   final ChatMessage message;
 
   @override
   Widget build(BuildContext context) {
-    final align = message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final color = message.isUser ? const Color(0xFFEAF3FF) : Colors.white;
-    return Column(
-      crossAxisAlignment: align,
-      children: [
-        Container(
-          constraints: const BoxConstraints(maxWidth: 320),
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFD7E6FF)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(message.text),
-              if (message.cardTitle != null) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F7FF),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBFD7FF)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.medication_outlined, color: Color(0xFF0B6BFF)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(message.cardTitle!, style: const TextStyle(fontWeight: FontWeight.w900)),
-                            const SizedBox(height: 4),
-                            Text(message.cardSubtitle ?? ''),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+    final isUser = message.isUser;
+    final bg = isUser ? const Color(0xFFE8F1FE) : Colors.white;
+    final align = isUser ? Alignment.centerRight : Alignment.centerLeft;
+
+    return Align(
+      alignment: align,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.88,
+        ),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AiChatScreen.bubbleBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.text,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.5,
+                color: Color(0xFF111827),
+              ),
+            ),
+            if (message.cardTitle != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F7FF),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Color(0xFFBFD7FF)),
                 ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                message.time,
-                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.medication_outlined, color: AiChatScreen.primaryBlue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            message.cardTitle!,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(message.cardSubtitle ?? ''),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
+            const SizedBox(height: 8),
+            Text(
+              message.time,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
