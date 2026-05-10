@@ -9,6 +9,7 @@ import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -100,15 +101,20 @@ class _LoginPageState extends State<LoginPage> {
     final topUnderAppBar =
         MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
     return Scaffold(
+      backgroundColor: Link26UnifiedPage.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Link26Surface.textPrimary,
-        title: Text(l10n.login),
+        title: Text(
+          l10n.login,
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       body: Link26BrandBackdrop(
+        solidBackground: Link26UnifiedPage.background,
         child: SafeArea(
           top: false,
           child: Padding(
@@ -119,48 +125,42 @@ class _LoginPageState extends State<LoginPage> {
                   final contentW = c.maxWidth;
                   final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w)
                       .clamp(0.0, contentW);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Link26ElevatedCard(
-                        padding: EdgeInsets.symmetric(
-                          vertical:
-                              Link26ResponsiveUi.authCardPadVertical(w),
-                          horizontal:
-                              Link26ResponsiveUi.authCardPadHorizontal(w),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Center(
-                              child: SizedBox(
-                                width: heroW,
-                                child: DecodedAssetImage(
-                                  ImageAssets.login,
-                                  height: heroH,
-                                  fit: BoxFit.contain,
-                                  borderRadius: BorderRadius.circular(
-                                    Link26Surface.radiusInput,
-                                  ),
-                                ),
+                  return Link26FramedPageCard(
+                    padding: EdgeInsets.symmetric(
+                      vertical: Link26ResponsiveUi.authCardPadVertical(w),
+                      horizontal:
+                          Link26ResponsiveUi.authCardPadHorizontal(w),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: SizedBox(
+                            width: heroW,
+                            child: DecodedAssetImage(
+                              ImageAssets.login,
+                              height: heroH,
+                              fit: BoxFit.contain,
+                              borderRadius: BorderRadius.circular(
+                                Link26Surface.radiusInput,
                               ),
                             ),
-                            SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
-                            Text(
-                              l10n.authWelcomeSubtitle,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Link26Surface.textSecondary,
-                                fontSize: Link26ResponsiveUi.body(w),
-                                height: 1.4,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      SizedBox(height: Link26ResponsiveUi.gapXl(w)),
-                      Semantics(
+                        SizedBox(
+                            height: Link26ResponsiveUi.heroArtToContent(w)),
+                        Text(
+                          l10n.authWelcomeSubtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Link26Surface.textSecondary,
+                            fontSize: Link26ResponsiveUi.body(w),
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: Link26ResponsiveUi.gapXl(w)),
+                        Semantics(
                         button: true,
                         label: l10n.socialLoginGoogle,
                         child: OutlinedButton.icon(
@@ -239,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       FilledButton(
                         onPressed: () => _submit(context),
-                        style: Link26Surface.filledAccentButton(
+                        style: Link26UnifiedPage.filledCtaButton(
                           minimumSize: const Size.fromHeight(52),
                         ),
                         child: Text(
@@ -247,8 +247,8 @@ class _LoginPageState extends State<LoginPage> {
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),
-                      SizedBox(height: Link26ResponsiveUi.gapLg(w)),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),

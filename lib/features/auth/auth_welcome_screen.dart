@@ -7,6 +7,7 @@ import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -24,15 +25,17 @@ class AuthWelcomeScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final outlineBtn = OutlinedButton.styleFrom(
       minimumSize: const Size.fromHeight(52),
-      foregroundColor: Link26Surface.accent,
-      side: const BorderSide(color: Link26Surface.accent, width: 1.5),
+      foregroundColor: Link26UnifiedPage.ctaBlue,
+      side: const BorderSide(color: Link26UnifiedPage.ctaBlue, width: 1.5),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Link26Surface.radiusButton),
       ),
     );
 
     return Scaffold(
+      backgroundColor: Link26UnifiedPage.background,
       body: Link26BrandBackdrop(
+        solidBackground: Link26UnifiedPage.background,
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, c) {
@@ -55,7 +58,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                         constraints: const BoxConstraints(
                           maxWidth: Link26ResponsiveTokens.contentMaxWidth,
                         ),
-                        child: Link26ElevatedCard(
+                        child: Link26FramedPageCard(
                           padding: EdgeInsets.symmetric(vertical: authPadV, horizontal: authPadH),
                           child: Column(
                             children: [
@@ -110,7 +113,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                               onPressed: () {
                                 Navigator.of(context).pushNamed(LoginPage.routeName);
                               },
-                              style: Link26Surface.filledAccentButton(
+                              style: Link26UnifiedPage.filledCtaButton(
                                 minimumSize: const Size.fromHeight(52),
                               ),
                               child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),

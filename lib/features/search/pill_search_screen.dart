@@ -7,6 +7,7 @@ import '../../core/layout/link26_responsive_layout.dart';
 import '../../core/layout/link26_responsive_ui_tokens.g.dart';
 import '../../core/services/local_medicine_list_store.dart';
 import '../../core/theme/link26_surface_style.dart';
+import '../../core/theme/link26_unified_page.dart';
 import '../../core/widgets/decoded_asset_image.dart';
 import '../../core/widgets/link26_brand_backdrop.dart';
 import '../../core/widgets/link26_dashboard_widgets.dart';
@@ -51,25 +52,31 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
     final topUnderAppBar =
         MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
     return Scaffold(
+      backgroundColor: Link26UnifiedPage.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Link26Surface.textPrimary,
-        title: Text(l10n.pillSearchTitle),
+        title: Text(
+          l10n.pillSearchTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       body: Link26BrandBackdrop(
+        solidBackground: Link26UnifiedPage.background,
         child: SafeArea(
           top: false,
           child: Padding(
             padding: EdgeInsets.only(top: topUnderAppBar),
             child: Link26ResponsiveList(
               children: [
-                Link26ElevatedCard(
+                Link26FramedPageCard(
                   padding: EdgeInsets.symmetric(
                     vertical: Link26ResponsiveUi.authCardPadVertical(w),
-                    horizontal: Link26ResponsiveUi.authCardPadHorizontal(w),
+                    horizontal:
+                        Link26ResponsiveUi.authCardPadHorizontal(w),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -89,7 +96,8 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
+                      SizedBox(
+                          height: Link26ResponsiveUi.heroArtToContent(w)),
                       TextField(
                         controller: _ctrl,
                         decoration: Link26Surface.inputDecoration(
@@ -104,17 +112,17 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _add(),
                       ),
+                      SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+                      FilledButton.icon(
+                        onPressed: _add,
+                        style: Link26UnifiedPage.filledCtaButton(
+                          minimumSize: const Size(double.infinity, 52),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.homeAddMedicine),
+                      ),
                     ],
                   ),
-                ),
-                SizedBox(height: Link26ResponsiveUi.gapLg(w)),
-                FilledButton.icon(
-                  onPressed: _add,
-                  style: Link26Surface.filledAccentButton(
-                    minimumSize: const Size(double.infinity, 52),
-                  ),
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.homeAddMedicine),
                 ),
               ],
             ),

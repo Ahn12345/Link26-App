@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 
 /// 홈·AI 채팅 등에서 동일한 카드 룩(테두리·그림자).
 BoxDecoration link26ElevatedCardDecoration({Color? color}) {
@@ -22,6 +23,53 @@ BoxDecoration link26ElevatedCardDecoration({Color? color}) {
       ),
     ],
   );
+}
+
+/// 로그인·회원가입·약 검색 등 — 홈 '오늘의 알림' 카드와 맞춘 흰 프레임(20r · 은은한 그림자).
+BoxDecoration link26FramedPageCardDecoration() {
+  return BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(Link26UnifiedPage.frameRadius),
+    border: Border.all(color: Link26Surface.outline),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.12),
+        blurRadius: 10,
+        offset: const Offset(0, 5),
+      ),
+      BoxShadow(
+        color: Link26Surface.cardShadow,
+        blurRadius: 14,
+        offset: const Offset(0, 6),
+      ),
+      BoxShadow(
+        color: Link26Surface.accent.withValues(alpha: 0.06),
+        blurRadius: 10,
+        offset: const Offset(0, 2),
+      ),
+    ],
+  );
+}
+
+class Link26FramedPageCard extends StatelessWidget {
+  const Link26FramedPageCard({
+    super.key,
+    required this.child,
+    this.padding,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding:
+          padding ?? const EdgeInsets.all(Link26UnifiedPage.framePadding),
+      decoration: link26FramedPageCardDecoration(),
+      child: child,
+    );
+  }
 }
 
 /// 홈 대시보드와 동일한 그림자·테두리 카드.

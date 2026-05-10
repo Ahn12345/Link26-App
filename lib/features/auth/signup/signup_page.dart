@@ -7,6 +7,7 @@ import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -85,15 +86,20 @@ class _SignupPageState extends State<SignupPage> {
     final topUnderAppBar =
         MediaQuery.viewPaddingOf(context).top + kToolbarHeight;
     return Scaffold(
+      backgroundColor: Link26UnifiedPage.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Link26Surface.textPrimary,
-        title: Text(l10n.signup),
+        title: Text(
+          l10n.signup,
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       body: Link26BrandBackdrop(
+        solidBackground: Link26UnifiedPage.background,
         child: SafeArea(
           top: false,
           child: Padding(
@@ -104,69 +110,63 @@ class _SignupPageState extends State<SignupPage> {
                   final contentW = c.maxWidth;
                   final heroW = Link26ResponsiveImageHeights.signupDisplayWidth(w)
                       .clamp(0.0, contentW);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Link26ElevatedCard(
-                        padding: EdgeInsets.symmetric(
-                          vertical:
-                              Link26ResponsiveUi.authCardPadVertical(w),
-                          horizontal:
-                              Link26ResponsiveUi.authCardPadHorizontal(w),
+                  return Link26FramedPageCard(
+                    padding: EdgeInsets.symmetric(
+                      vertical: Link26ResponsiveUi.authCardPadVertical(w),
+                      horizontal:
+                          Link26ResponsiveUi.authCardPadHorizontal(w),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: SizedBox(
+                            width: heroW,
+                            child: DecodedAssetImage(
+                              ImageAssets.signup,
+                              height: heroH,
+                              fit: BoxFit.contain,
+                              borderRadius: BorderRadius.circular(
+                                Link26Surface.radiusInput,
+                              ),
+                              errorBuilder: (context, error, stackTrace) {
+                                debugPrint('signup art: $error');
+                                return const Icon(
+                                  Icons.person_add_alt_1,
+                                  size: 120,
+                                  color: Link26Surface.accent,
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Center(
-                              child: SizedBox(
-                                width: heroW,
-                                child: DecodedAssetImage(
-                                  ImageAssets.signup,
-                                  height: heroH,
-                                  fit: BoxFit.contain,
-                                  borderRadius: BorderRadius.circular(
-                                    Link26Surface.radiusInput,
-                                  ),
-                                  errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('signup art: $error');
-                                    return const Icon(
-                                      Icons.person_add_alt_1,
-                                      size: 120,
-                                      color: Link26Surface.accent,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
-                            Text(
-                              l10n.signup,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize:
-                                    Link26ResponsiveUi.appMarketingTitle(w),
-                                fontWeight: FontWeight.w900,
-                                color: Link26Surface.textPrimary,
-                                letterSpacing: -0.4,
-                              ),
-                            ),
-                            SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                            Text(
-                              l10n.authWelcomeSubtitle,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: Link26ResponsiveUi
-                                    .appMarketingSubtitle(w),
-                                color: Link26Surface.textSecondary,
-                                fontWeight: FontWeight.w600,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
+                        SizedBox(
+                            height: Link26ResponsiveUi.heroArtToContent(w)),
+                        Text(
+                          l10n.signup,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize:
+                                Link26ResponsiveUi.appMarketingTitle(w),
+                            fontWeight: FontWeight.w900,
+                            color: Link26Surface.textPrimary,
+                            letterSpacing: -0.4,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: Link26ResponsiveUi.gapXl(w)),
-                      TextField(
+                        SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                        Text(
+                          l10n.authWelcomeSubtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: Link26ResponsiveUi
+                                .appMarketingSubtitle(w),
+                            color: Link26Surface.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            height: 1.4,
+                          ),
+                        ),
+                        SizedBox(height: Link26ResponsiveUi.gapXl(w)),
+                        TextField(
                         controller: _nameCtrl,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
@@ -207,17 +207,18 @@ class _SignupPageState extends State<SignupPage> {
                       SizedBox(
                         height: Link26ResponsiveUi.authCardPadVertical(w),
                       ),
-                      FilledButton(
-                        onPressed: () => _submit(context),
-                        style: Link26Surface.filledAccentButton(
-                          minimumSize: const Size.fromHeight(52),
+                        FilledButton(
+                          onPressed: () => _submit(context),
+                          style: Link26UnifiedPage.filledCtaButton(
+                            minimumSize: const Size.fromHeight(52),
+                          ),
+                          child: Text(
+                            l10n.continueCta,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
                         ),
-                        child: Text(
-                          l10n.continueCta,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),
