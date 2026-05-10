@@ -189,6 +189,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Image analysis will appear after wiring image_picker and upload API.';
 
   @override
+  String get aiChatWelcomeIntro => 'Hello! I can help with medicine information.\n\n';
+
+  @override
+  String get aiChatWelcomeUploadHint =>
+      'Upload a prescription or medicine photo and we will help you check the details.\n\n';
+
+  @override
+  String get aiChatWelcomeTipEmoji => '💡 ';
+
+  @override
+  String get aiChatWelcomeTipTitle => 'Photo tips:';
+
+  @override
+  String get aiChatWelcomeTipList =>
+      '- Capture the name and dose clearly\n'
+      '- For prescriptions, keep drug names readable\n'
+      '- Good lighting improves accuracy';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

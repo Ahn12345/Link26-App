@@ -182,6 +182,25 @@ class AppLocalizationsKo extends AppLocalizations {
       '이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다.';
 
   @override
+  String get aiChatWelcomeIntro => '안녕하세요! 약 정보를 도와드리겠습니다.\n\n';
+
+  @override
+  String get aiChatWelcomeUploadHint =>
+      '처방전이나 약 사진을 업로드하시면 약 정보를 확인해드립니다.\n\n';
+
+  @override
+  String get aiChatWelcomeTipEmoji => '💡 ';
+
+  @override
+  String get aiChatWelcomeTipTitle => '사진 촬영 팁:';
+
+  @override
+  String get aiChatWelcomeTipList =>
+      '- 약 이름과 용량이 선명하게 보이도록 촬영해 주세요\n'
+      '- 처방전의 경우 약 이름 부분이 잘 보이게 촬영해 주세요\n'
+      '- 밝은 곳에서 촬영하시면 더 정확합니다';
+
+  @override
   String get settingsTitle => '설정';
 
   @override

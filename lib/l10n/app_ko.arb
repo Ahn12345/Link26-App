@@ -54,5 +54,10 @@
   "aiChatReplyError": "일시적으로 응답을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.",
   "aiChatDisclaimerShort": "AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.",
   "aiChatCameraUserMessage": "사진을 선택했습니다.",
-  "aiChatCameraReplyStub": "이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다."
+  "aiChatCameraReplyStub": "이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다.",
+  "aiChatWelcomeIntro": "안녕하세요! 약 정보를 도와드리겠습니다.\n\n",
+  "aiChatWelcomeUploadHint": "처방전이나 약 사진을 업로드하시면 약 정보를 확인해드립니다.\n\n",
+  "aiChatWelcomeTipEmoji": "💡 ",
+  "aiChatWelcomeTipTitle": "사진 촬영 팁:",
+  "aiChatWelcomeTipList": "- 약 이름과 용량이 선명하게 보이도록 촬영해 주세요\n- 처방전의 경우 약 이름 부분이 잘 보이게 촬영해 주세요\n- 밝은 곳에서 촬영하시면 더 정확합니다"
 }

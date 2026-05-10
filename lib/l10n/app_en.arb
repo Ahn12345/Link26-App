@@ -54,5 +54,10 @@
   "aiChatReplyError": "Could not get a response. Please try again shortly.",
   "aiChatDisclaimerShort": "AI answers are for reference only. For dosing, ask your clinician or pharmacist.",
   "aiChatCameraUserMessage": "Photo selected.",
-  "aiChatCameraReplyStub": "Image analysis will appear after wiring image_picker and upload API."
+  "aiChatCameraReplyStub": "Image analysis will appear after wiring image_picker and upload API.",
+  "aiChatWelcomeIntro": "Hello! I can help with medicine information.\n\n",
+  "aiChatWelcomeUploadHint": "Upload a prescription or medicine photo and we will help you check the details.\n\n",
+  "aiChatWelcomeTipEmoji": "💡 ",
+  "aiChatWelcomeTipTitle": "Photo tips:",
+  "aiChatWelcomeTipList": "- Capture the name and dose clearly\n- For prescriptions, keep drug names readable\n- Good lighting improves accuracy"
 }

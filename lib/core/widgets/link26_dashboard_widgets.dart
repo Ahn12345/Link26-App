@@ -3,6 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 
+/// 홈·AI 채팅 등에서 동일한 카드 룩(테두리·그림자).
+BoxDecoration link26ElevatedCardDecoration({Color? color}) {
+  return BoxDecoration(
+    color: color ?? Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: Link26Surface.outline),
+    boxShadow: [
+      BoxShadow(
+        color: Link26Surface.cardShadow,
+        blurRadius: 14,
+        offset: const Offset(0, 6),
+      ),
+      BoxShadow(
+        color: Link26Surface.accent.withValues(alpha: 0.06),
+        blurRadius: 10,
+        offset: const Offset(0, 2),
+      ),
+    ],
+  );
+}
+
 /// 홈 대시보드와 동일한 그림자·테두리 카드.
 class Link26ElevatedCard extends StatelessWidget {
   const Link26ElevatedCard({
@@ -18,23 +39,7 @@ class Link26ElevatedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Link26Surface.outline),
-        boxShadow: [
-          BoxShadow(
-            color: Link26Surface.cardShadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Link26Surface.accent.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: link26ElevatedCardDecoration(),
       child: child,
     );
   }

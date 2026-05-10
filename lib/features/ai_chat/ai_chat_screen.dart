@@ -11,11 +11,12 @@ import 'package:link26_app/core/services/ai_chat_conversation_cache.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/models/link_models.dart';
 
-/// 시안 기준 AI 약 정보 채팅 (`#3B6CF5` 등).
+/// AI 약 정보 채팅 — 색·타이포는 [Link26Surface]·디자인 토큰(`accent` #0047AB) 기준.
 ///
 /// [embeddedInShell]: 하단 탭일 때 뒤로가기 없음.
 class AiChatScreen extends StatelessWidget {
@@ -241,6 +242,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                             horizontalPad: 0,
                             layoutWidth: w,
                           ),
+                          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                           Expanded(
                             child: ColoredBox(
                               color: Link26Surface.scaffoldBg,
@@ -342,10 +344,9 @@ class _ChatHeader extends StatelessWidget {
     final w = layoutWidth;
     final padV = Link26ResponsiveUi.chatHeaderPadV(w);
 
-    return Material(
-      color: Colors.white,
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.06),
+    return Container(
+      decoration: link26ElevatedCardDecoration(),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: EdgeInsets.fromLTRB(leftPad, padV, horizontalPad + 8, padV),
         child: Column(
@@ -412,6 +413,7 @@ class _AiWelcomeBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -419,11 +421,8 @@ class _AiWelcomeBubble extends StatelessWidget {
           maxWidth: maxBubbleWidth,
         ),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Link26Surface.outline),
-        ),
+        decoration: link26ElevatedCardDecoration(),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -436,26 +435,18 @@ class _AiWelcomeBubble extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
                 children: [
-                  const TextSpan(text: '안녕하세요! 약 정보를 도와드리겠습니다.\n\n'),
-                  const TextSpan(
-                    text:
-                        '처방전이나 약 사진을 업로드하시면 약 정보를 확인해드립니다.\n\n',
-                  ),
-                  const TextSpan(text: '💡 '),
-                  const TextSpan(
-                    text: '사진 촬영 팁:',
-                    style: TextStyle(
+                  TextSpan(text: l10n.aiChatWelcomeIntro),
+                  TextSpan(text: l10n.aiChatWelcomeUploadHint),
+                  TextSpan(text: l10n.aiChatWelcomeTipEmoji),
+                  TextSpan(
+                    text: l10n.aiChatWelcomeTipTitle,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       color: Link26Surface.accent,
                     ),
                   ),
                   const TextSpan(text: '\n'),
-                  const TextSpan(
-                    text:
-                        '- 약 이름과 용량이 선명하게 보이도록 촬영해 주세요\n'
-                        '- 처방전의 경우 약 이름 부분이 잘 보이게 촬영해 주세요\n'
-                        '- 밝은 곳에서 촬영하시면 더 정확합니다',
-                  ),
+                  TextSpan(text: l10n.aiChatWelcomeTipList),
                 ],
               ),
             ),
@@ -487,7 +478,8 @@ class _DisclaimerBanner extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Link26Surface.chipTint,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Link26Surface.outline),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,7 +640,7 @@ class _ChatBubble extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Link26Surface.outline),
         ),
         child: Column(
@@ -668,7 +660,7 @@ class _ChatBubble extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Link26Surface.badgeTint,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: Link26Surface.outline),
                 ),
                 child: Row(
