@@ -313,6 +313,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '등록된 회원 정보가 없습니다. 회원가입을 진행해 주세요.';
 
   @override
+  String get loginNameMismatch =>
+      '이름이 가입 시 입력한 정보와 일치하지 않습니다.';
+
+  @override
   String get loginNameLabel => '이름';
 
   @override

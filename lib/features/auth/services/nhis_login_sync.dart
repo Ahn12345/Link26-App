@@ -22,12 +22,8 @@ abstract final class NhisLoginSync {
 
     final hash = user.residentRegistrationHash ?? '';
     if (hash.isEmpty) {
-      await UserLocalRepository.updateNhisSyncStatus(
-        user.phoneDigits,
-        ok: false,
-        errorMessage: 'missing_resident_registration_hash',
-      );
-      return NhisLoginSyncResult.failed;
+      // 가입 경로 외 계정·구버전 DB 등: NHIS POST 없이 로컬 로그인만 허용
+      return NhisLoginSyncResult.skipped;
     }
 
     final client = NhisSignupClient();

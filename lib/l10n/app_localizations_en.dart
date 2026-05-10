@@ -320,6 +320,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No local account found. Please sign up first.';
 
   @override
+  String get loginNameMismatch =>
+      'Name does not match the name saved for this phone number.';
+
+  @override
   String get loginNameLabel => 'Name';
 
   @override

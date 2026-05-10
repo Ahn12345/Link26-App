@@ -30,6 +30,18 @@ class LocalUserRecord {
 abstract final class UserLocalRepository {
   static Database? _db;
 
+  /// 로그인·가입 시 동일 규칙으로 비교·저장 (공백·연속 공백 정리).
+  static String normalizeDisplayName(String s) =>
+      s.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  static int _intFromSql(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? 0;
+    return 0;
+  }
+
   static Future<Database> _open() async {
     if (_db != null) return _db!;
     final dir = await getApplicationDocumentsDirectory();
@@ -157,7 +169,8 @@ abstract final class UserLocalRepository {
   static Future<bool> hasAnyUser() async {
     final db = await _open();
     final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM users');
-    final c = rows.first['c'] as int? ?? 0;
+    if (rows.isEmpty) return false;
+    final c = _intFromSql(rows.first['c']);
     return c > 0;
   }
 
@@ -176,7 +189,7 @@ abstract final class UserLocalRepository {
       {
         'email': email,
         'password_hash': _phoneOnlyPasswordHash(p),
-        'display_name': displayName.trim(),
+        'display_name': normalizeDisplayName(displayName),
         'phone': p,
         'gender': gender,
         'resident_registration_hash':
@@ -190,13 +203,16 @@ abstract final class UserLocalRepository {
 
   static LocalUserRecord? _mapRowToUser(Map<String, Object?> row) {
     try {
-      final id = row['id'] as int;
-      final email = row['email'] as String;
-      final displayName = (row['display_name'] as String?)?.trim() ?? '';
+      final id = _intFromSql(row['id']);
+      if (id <= 0) return null;
+      final email = '${row['email'] ?? ''}';
+      final displayName = normalizeDisplayName(
+        '${row['display_name'] ?? ''}',
+      );
       final phone = row['phone'] as String?;
       final gender = (row['gender'] as String?)?.trim() ?? '';
       final rrn = row['resident_registration_hash'] as String?;
-      final privacy = (row['privacy_consent'] as int? ?? 0) == 1;
+      final privacy = _intFromSql(row['privacy_consent']) == 1;
       if (phone == null || phone.isEmpty) return null;
       return LocalUserRecord(
         id: id,
@@ -219,7 +235,7 @@ abstract final class UserLocalRepository {
   }) async {
     final p = phone.replaceAll(RegExp(r'\D'), '');
     if (p.length < 10) return null;
-    final name = displayName.trim();
+    final name = normalizeDisplayName(displayName);
     if (name.isEmpty) return null;
     final db = await _open();
     final rows = await db.query(

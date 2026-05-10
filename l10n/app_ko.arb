@@ -83,6 +83,7 @@
   "later": "나중에",
   "loginFailed": "이름과 전화번호가 저장된 정보와 일치하지 않습니다.",
   "loginRedirectToSignup": "등록된 회원 정보가 없습니다. 회원가입을 진행해 주세요.",
+  "loginNameMismatch": "이름이 가입 시 입력한 정보와 일치하지 않습니다.",
   "loginNameLabel": "이름",
   "loginNameRequired": "이름을 입력하세요.",
   "loginNhisSyncFailed": "국민건강보험(연동 서버) 로그인 연동에 실패했습니다. 나중에 다시 시도해 주세요.",

@@ -80,18 +80,28 @@ class _LoginPageState extends State<LoginPage> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final user = await UserLocalRepository.findUserByNameAndPhone(
-        displayName: name,
-        phone: phone,
-      );
+      final phoneDigits = SignupValidators.digitsOnly(phone);
+      final byPhone =
+          await UserLocalRepository.findUserByPhone(phoneDigits);
       if (!context.mounted) return;
-      if (user == null) {
+
+      if (byPhone == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.loginRedirectToSignup)),
         );
         await Navigator.of(context).pushReplacementNamed(SignupPage.routeName);
         return;
       }
+
+      final nameNorm = UserLocalRepository.normalizeDisplayName(name);
+      if (byPhone.displayName != nameNorm) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loginNameMismatch)),
+        );
+        return;
+      }
+
+      final user = byPhone;
 
       final nhisResult = await NhisLoginSync.syncAfterLocalLogin(user: user);
       if (!context.mounted) return;
