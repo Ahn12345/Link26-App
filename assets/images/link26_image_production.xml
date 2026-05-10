@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- link26_image_production.xml: assets/images PNG 실측. 수동 편집 금지. dart run tool/sync_image_specs_from_assets.dart -->
-<link26-image-production version="1" generatedAt="2026-05-10T18:39:10.156203Z" catalog="assets/images/link26_image_assets.xml">
+<link26-image-production version="1" generatedAt="2026-05-10T19:38:58.832428Z" catalog="assets/images/link26_image_assets.xml">
   <asset catalogId="applogo" file="applogo.png" dartConst="ImageAssets.applogo" usage="런처·스플래시·브랜드 소형 아이콘" path="assets/images/applogo.png" intrinsicWidth="512" intrinsicHeight="512" bytesOnDisk="3561" spec="assets/design/png/link26_png_applogo.xml"/>
   <asset catalogId="logo" file="logo.png" dartConst="ImageAssets.logo" usage="환영·더보기 등 브랜드 로고" path="assets/images/logo.png" intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3970" spec="assets/design/png/link26_png_logo.xml"/>
   <asset catalogId="login" file="login.png" dartConst="ImageAssets.login" usage="로그인 화면 일러스트" path="assets/images/login.png" intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3969" spec="assets/design/png/link26_png_login.xml"/>

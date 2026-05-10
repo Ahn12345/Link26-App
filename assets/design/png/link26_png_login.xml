@@ -2,7 +2,7 @@
 <link26-png-spec version="1" catalogId="login" file="login.png" dartConst="ImageAssets.login">
   <summary usage="로그인 화면 히어로 일러스트"/>
   <source path="assets/images/login.png"/>
-  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3969" generatedAt="2026-05-10T18:39:10.156203Z" path="assets/images/login.png"/>
+  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3969" generatedAt="2026-05-10T19:38:58.832428Z" path="assets/images/login.png"/>
   <responsiveImageScreen ref="login"/>
   <flutter>
     <file path="lib/features/auth/login/login_page.dart"/>

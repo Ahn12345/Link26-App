@@ -2,7 +2,7 @@
 <link26-png-spec version="1" catalogId="emergencycall" file="emergencycall.png" dartConst="ImageAssets.emergencycall">
   <summary usage="긴급 연락 화면 일러스트·설정 탭 일부 타일 썸네일"/>
   <source path="assets/images/emergencycall.png"/>
-  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T18:39:10.156203Z" path="assets/images/emergencycall.png"/>
+  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T19:38:58.832428Z" path="assets/images/emergencycall.png"/>
   <responsiveImageScreen ref="emergencyIllustration"/>
   <flutter>
     <file path="lib/features/settings/emergency_contact_screen.dart"/>

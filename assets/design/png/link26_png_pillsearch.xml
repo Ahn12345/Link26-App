@@ -2,7 +2,7 @@
 <link26-png-spec version="1" catalogId="pillsearch" file="pillsearch.png" dartConst="ImageAssets.pillsearch">
   <summary usage="약 검색 화면 히어로"/>
   <source path="assets/images/pillsearch.png"/>
-  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T18:39:10.156203Z" path="assets/images/pillsearch.png"/>
+  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T19:38:58.832428Z" path="assets/images/pillsearch.png"/>
   <responsiveImageScreen ref="pillSearch"/>
   <flutter>
     <file path="lib/features/search/pill_search_screen.dart"/>
