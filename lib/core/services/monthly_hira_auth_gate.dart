@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,9 @@ abstract final class MonthlyHiraAuthGate {
       '${d.year}-${d.month.toString().padLeft(2, '0')}';
 
   static Future<void> maybeShow(BuildContext context) async {
+    // 디버그(에뮬): 이미지 포함 다이얼로그가 첫 진입과 겹치면 ANR 체감 — 릴리즈/프로파일에서만 동작.
+    if (kDebugMode) return;
+
     final now = DateTime.now();
     if (now.day != 25) return;
 
