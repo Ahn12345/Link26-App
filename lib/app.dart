@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -106,32 +107,36 @@ class Link26AppState extends State<Link26App> {
           data: mq.copyWith(textScaler: TextScaler.linear(_textScale)),
           child: child,
         );
-        if (kLink26ShowBuildTagBanner) {
+        if (kDebugMode) {
+          final tagLine = kLink26BuildTag.isEmpty
+              ? 'LINK26_TAG 없음 · 터미널: flutter run --dart-define=LINK26_TAG=이름'
+              : 'LINK26_TAG=$kLink26BuildTag';
           wrapped = Stack(
+            fit: StackFit.expand,
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(child: wrapped),
               Positioned(
+                left: 0,
+                right: 0,
                 top: 0,
-                right: 8,
-                child: SafeArea(
-                  child: IgnorePointer(
-                    child: Material(
-                      elevation: 4,
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.deepOrange,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        child: Text(
-                          kLink26BuildTag,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13,
-                          ),
+                child: Material(
+                  color: Colors.red.shade900,
+                  elevation: 6,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'DEBUG  $tagLine',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          height: 1.25,
                         ),
                       ),
                     ),
