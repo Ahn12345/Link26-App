@@ -46,5 +46,13 @@
   "medicineCatalogTitle": "약 목록",
   "medicineCatalogSubtitle": "등록된 항목(데모). 이후 서버·로컬 DB와 연결하세요.",
   "medicineCatalogTooltip": "약 목록 열기",
-  "medicineCatalogEmpty": "표시할 약이 없습니다."
+  "medicineCatalogEmpty": "표시할 약이 없습니다.",
+  "aiChatBrandTitle": "AI 약 정보",
+  "aiChatQuotaResetHint": "오전 4시에 초기화됩니다",
+  "aiChatInputPlaceholder": "약에 대해 궁금한 점을 물어보세요…",
+  "aiChatDailyLimitReached": "오늘 AI 질문 한도에 도달했습니다. 매일 오전 4시(로컬)에 다시 이용할 수 있습니다.",
+  "aiChatReplyError": "일시적으로 응답을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "aiChatDisclaimerShort": "AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.",
+  "aiChatCameraUserMessage": "사진을 선택했습니다.",
+  "aiChatCameraReplyStub": "이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다."
 }

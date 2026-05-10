@@ -161,6 +161,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiAnalyzeImageButton => 'Analyze image text';
 
   @override
+  String get aiChatBrandTitle => 'AI medicine info';
+
+  @override
+  String get aiChatQuotaResetHint => 'Resets at 4:00 a.m.';
+
+  @override
+  String get aiChatInputPlaceholder => 'Ask about your medicine…';
+
+  @override
+  String get aiChatDailyLimitReached =>
+      'Daily AI question limit reached. It resets at 4:00 a.m. local time.';
+
+  @override
+  String get aiChatReplyError =>
+      'Could not get a response. Please try again shortly.';
+
+  @override
+  String get aiChatDisclaimerShort =>
+      'AI answers are for reference only. For dosing, ask your clinician or pharmacist.';
+
+  @override
+  String get aiChatCameraUserMessage => 'Photo selected.';
+
+  @override
+  String get aiChatCameraReplyStub =>
+      'Image analysis will appear after wiring image_picker and upload API.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

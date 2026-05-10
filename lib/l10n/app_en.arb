@@ -46,5 +46,13 @@
   "medicineCatalogTitle": "Medicine list",
   "medicineCatalogSubtitle": "Known items (demo). Replace with your backend or local DB.",
   "medicineCatalogTooltip": "Open medicine list",
-  "medicineCatalogEmpty": "No medicines to show."
+  "medicineCatalogEmpty": "No medicines to show.",
+  "aiChatBrandTitle": "AI medicine info",
+  "aiChatQuotaResetHint": "Resets at 4:00 a.m.",
+  "aiChatInputPlaceholder": "Ask about your medicine…",
+  "aiChatDailyLimitReached": "Daily AI question limit reached. It resets at 4:00 a.m. local time.",
+  "aiChatReplyError": "Could not get a response. Please try again shortly.",
+  "aiChatDisclaimerShort": "AI answers are for reference only. For dosing, ask your clinician or pharmacist.",
+  "aiChatCameraUserMessage": "Photo selected.",
+  "aiChatCameraReplyStub": "Image analysis will appear after wiring image_picker and upload API."
 }

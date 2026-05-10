@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
@@ -5,9 +7,12 @@ import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
+import 'package:link26_app/core/services/ai_chat_local_store.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
+import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/models/link_models.dart';
 
 /// 시안 기준 AI 약 정보 채팅 (`#3B6CF5` 등).
@@ -69,24 +74,25 @@ class _AiChatBodyState extends State<_AiChatBody> {
   String? _welcomeAccessLabel;
 
   static const int _dailyLimit = 10;
-  int _dailyUsed = 3;
+  int _dailyUsed = 0;
+  bool _sending = false;
 
   @override
   void initState() {
     super.initState();
-    if (!widget.embeddedInShell) {
-      _refreshWelcomeAccess();
-    }
+    _bootstrap();
   }
 
-  @override
-  void didUpdateWidget(covariant _AiChatBody oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.embeddedInShell &&
-        widget.visitStamp > 0 &&
-        widget.visitStamp != oldWidget.visitStamp) {
-      _refreshWelcomeAccess();
-    }
+  Future<void> _bootstrap() async {
+    final used = await AiChatLocalStore.loadDailyUsed();
+    final stored = await AiChatLocalStore.loadMessages();
+    if (!mounted) return;
+    setState(() {
+      _dailyUsed = used;
+      messages.clear();
+      messages.addAll(stored);
+    });
+    await _refreshWelcomeAccess();
   }
 
   Future<void> _refreshWelcomeAccess() async {
@@ -103,42 +109,93 @@ class _AiChatBodyState extends State<_AiChatBody> {
     super.dispose();
   }
 
-  void sendMessage() {
+  Future<void> sendMessage() async {
+    final l10n = AppLocalizations.of(context);
     final text = controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _sending) return;
+    if (_dailyUsed >= _dailyLimit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.aiChatDailyLimitReached)),
+      );
+      return;
+    }
+
     setState(() {
       messages.add(ChatMessage(isUser: true, time: _nowLabel(), text: text));
-      messages.add(
-        ChatMessage(
-          isUser: false,
-          time: _nowLabel(),
-          text:
-              '말씀해 주신 내용을 반영했습니다. 실제 서비스에서는 약학 DB·API와 연동해 답변합니다.',
-        ),
-      );
-      if (_dailyUsed < _dailyLimit) _dailyUsed++;
+      _sending = true;
     });
     controller.clear();
+    await AiChatLocalStore.saveMessages(messages);
+
+    try {
+      final triage = await AiChatService().triageMessage(text);
+      if (!mounted) return;
+      final primary = triage.primaryAnswer.trim();
+      final follow = triage.followUpPrompt.trim();
+      final buf = StringBuffer();
+      if (primary.isNotEmpty) buf.writeln(primary);
+      if (follow.isNotEmpty) {
+        if (buf.isNotEmpty) buf.writeln();
+        buf.writeln(follow);
+      }
+      final body = buf.toString().trim();
+      setState(() {
+        messages.add(
+          ChatMessage(
+            isUser: false,
+            time: _nowLabel(),
+            text: body.isEmpty ? l10n.aiChatReplyError : body,
+          ),
+        );
+        if (_dailyUsed < _dailyLimit) _dailyUsed++;
+        _sending = false;
+      });
+      await AiChatLocalStore.saveDailyUsed(_dailyUsed);
+      await AiChatLocalStore.saveMessages(messages);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        messages.add(
+          ChatMessage(
+            isUser: false,
+            time: _nowLabel(),
+            text: l10n.aiChatReplyError,
+          ),
+        );
+        _sending = false;
+      });
+      await AiChatLocalStore.saveMessages(messages);
+    }
   }
 
-  void openCamera() {
+  Future<void> openCamera() async {
+    final l10n = AppLocalizations.of(context);
+    if (_sending) return;
+    if (_dailyUsed >= _dailyLimit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.aiChatDailyLimitReached)),
+      );
+      return;
+    }
     setState(() {
       messages.add(
         ChatMessage(
           isUser: true,
           time: _nowLabel(),
-          text: '사진을 선택했습니다.',
+          text: l10n.aiChatCameraUserMessage,
         ),
       );
       messages.add(
         ChatMessage(
           isUser: false,
           time: _nowLabel(),
-          text: '이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다.',
+          text: l10n.aiChatCameraReplyStub,
         ),
       );
       if (_dailyUsed < _dailyLimit) _dailyUsed++;
     });
+    await AiChatLocalStore.saveDailyUsed(_dailyUsed);
+    await AiChatLocalStore.saveMessages(messages);
   }
 
   String _nowLabel() =>
@@ -146,9 +203,11 @@ class _AiChatBodyState extends State<_AiChatBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final embedded = widget.embeddedInShell;
     final shellNavPad =
         embedded ? MediaQuery.of(context).padding.bottom + 88.0 : 0.0;
+    final inputEnabled = !_sending && _dailyUsed < _dailyLimit;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -178,6 +237,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _ChatHeader(
+                            title: l10n.aiChatBrandTitle,
+                            quotaHint: l10n.aiChatQuotaResetHint,
                             used: _dailyUsed,
                             limit: _dailyLimit,
                             embedded: embedded,
@@ -226,11 +287,14 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               ),
                             ),
                           ),
-                          const _DisclaimerBanner(),
+                          _DisclaimerBanner(text: l10n.aiChatDisclaimerShort),
                           _InputBar(
                             controller: controller,
-                            onSend: sendMessage,
-                            onCamera: openCamera,
+                            enabled: inputEnabled,
+                            sending: _sending,
+                            hintText: l10n.aiChatInputPlaceholder,
+                            onSend: () => unawaited(sendMessage()),
+                            onCamera: () => unawaited(openCamera()),
                           ),
                         ],
                       ),
@@ -258,6 +322,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
 
 class _ChatHeader extends StatelessWidget {
   const _ChatHeader({
+    required this.title,
+    required this.quotaHint,
     required this.used,
     required this.limit,
     required this.embedded,
@@ -265,6 +331,8 @@ class _ChatHeader extends StatelessWidget {
     required this.layoutWidth,
   });
 
+  final String title;
+  final String quotaHint;
   final int used;
   final int limit;
   final bool embedded;
@@ -288,7 +356,7 @@ class _ChatHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'AI 약 정보',
+              title,
               style: TextStyle(
                 fontSize: Link26ResponsiveUi.chatTitle(w),
                 fontWeight: FontWeight.w900,
@@ -323,7 +391,7 @@ class _ChatHeader extends StatelessWidget {
             ),
             SizedBox(height: Link26ResponsiveUi.gapSm(w)),
             Text(
-              '오전 4시에 초기화됩니다',
+              quotaHint,
               style: TextStyle(
                 fontSize: Link26ResponsiveUi.chatHint(w),
                 color: Colors.grey.shade500,
@@ -411,7 +479,9 @@ class _AiWelcomeBubble extends StatelessWidget {
 }
 
 class _DisclaimerBanner extends StatelessWidget {
-  const _DisclaimerBanner();
+  const _DisclaimerBanner({required this.text});
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -432,10 +502,10 @@ class _DisclaimerBanner extends StatelessWidget {
               size: 22,
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Text(
-                'AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.',
-                style: TextStyle(
+                text,
+                style: const TextStyle(
                   fontSize: 13,
                   height: 1.45,
                   color: Link26Surface.textPrimary,
@@ -452,16 +522,23 @@ class _DisclaimerBanner extends StatelessWidget {
 class _InputBar extends StatelessWidget {
   const _InputBar({
     required this.controller,
+    required this.enabled,
+    required this.sending,
+    required this.hintText,
     required this.onSend,
     required this.onCamera,
   });
 
   final TextEditingController controller;
+  final bool enabled;
+  final bool sending;
+  final String hintText;
   final VoidCallback onSend;
   final VoidCallback onCamera;
 
   @override
   Widget build(BuildContext context) {
+    final canAct = enabled && !sending;
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
       child: Row(
@@ -476,14 +553,16 @@ class _InputBar extends StatelessWidget {
               side: const BorderSide(color: Link26Surface.outline),
             ),
             child: InkWell(
-              onTap: onCamera,
+              onTap: canAct ? onCamera : null,
               borderRadius: BorderRadius.circular(12),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 48,
                 height: 48,
                 child: Icon(
                   Icons.photo_camera_outlined,
-                  color: Link26Surface.textSecondary,
+                  color: canAct
+                      ? Link26Surface.textSecondary
+                      : Link26Surface.textSecondary.withValues(alpha: 0.35),
                   size: 24,
                 ),
               ),
@@ -493,10 +572,11 @@ class _InputBar extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              enabled: canAct,
               minLines: 1,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: '약에 대해 궁금한 점을 물어보세요...',
+                hintText: hintText,
                 hintStyle: TextStyle(
                   color: Colors.grey.shade500,
                   fontSize: 15,
@@ -516,19 +596,29 @@ class _InputBar extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Material(
-            color: Link26Surface.accent,
+            color: canAct
+                ? Link26Surface.accent
+                : Link26Surface.accent.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
-              onTap: onSend,
+              onTap: canAct ? onSend : null,
               borderRadius: BorderRadius.circular(12),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 48,
                 height: 48,
-                child: Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
+                child: sending
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
               ),
             ),
           ),

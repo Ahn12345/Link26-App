@@ -90,6 +90,14 @@ abstract class AppLocalizations {
   String get aiOcrInputLabel;
   String get aiOcrInputHint;
   String get aiAnalyzeImageButton;
+  String get aiChatBrandTitle;
+  String get aiChatQuotaResetHint;
+  String get aiChatInputPlaceholder;
+  String get aiChatDailyLimitReached;
+  String get aiChatReplyError;
+  String get aiChatDisclaimerShort;
+  String get aiChatCameraUserMessage;
+  String get aiChatCameraReplyStub;
   String get settingsTitle;
   String get settingsSubtitle;
   String get settingsTextSize;

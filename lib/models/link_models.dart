@@ -76,4 +76,20 @@ class ChatMessage {
     this.cardTitle,
     this.cardSubtitle,
   });
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'isUser': isUser,
+        'time': time,
+        if (cardTitle != null) 'cardTitle': cardTitle,
+        if (cardSubtitle != null) 'cardSubtitle': cardSubtitle,
+      };
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
+        text: json['text'] as String? ?? '',
+        isUser: json['isUser'] as bool? ?? false,
+        time: json['time'] as String? ?? '',
+        cardTitle: json['cardTitle'] as String?,
+        cardSubtitle: json['cardSubtitle'] as String?,
+      );
 }

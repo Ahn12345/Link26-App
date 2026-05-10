@@ -154,6 +154,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiAnalyzeImageButton => '이미지 텍스트 분석';
 
   @override
+  String get aiChatBrandTitle => 'AI 약 정보';
+
+  @override
+  String get aiChatQuotaResetHint => '오전 4시에 초기화됩니다';
+
+  @override
+  String get aiChatInputPlaceholder => '약에 대해 궁금한 점을 물어보세요…';
+
+  @override
+  String get aiChatDailyLimitReached =>
+      '오늘 AI 질문 한도에 도달했습니다. 매일 오전 4시(로컬)에 다시 이용할 수 있습니다.';
+
+  @override
+  String get aiChatReplyError =>
+      '일시적으로 응답을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+  @override
+  String get aiChatDisclaimerShort =>
+      'AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.';
+
+  @override
+  String get aiChatCameraUserMessage => '사진을 선택했습니다.';
+
+  @override
+  String get aiChatCameraReplyStub =>
+      '이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다.';
+
+  @override
   String get settingsTitle => '설정';
 
   @override

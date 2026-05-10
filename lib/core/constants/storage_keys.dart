@@ -9,4 +9,11 @@ abstract final class StorageKeys {
 
   /// AI 채팅 탭 마지막 접속 시각(epoch ms). 서버/DB 연동 시 동일 시점을 동기화하면 됨.
   static const aiChatLastAccessMs = 'ai_chat_last_access_ms_v1';
+
+  /// 일일 질문 한도(04:00 로컬 기준일) — [aiChatQuotaDayV1] 과 쌍.
+  static const aiChatQuotaDayV1 = 'ai_chat_quota_day_v1';
+  static const aiChatQuotaUsedV1 = 'ai_chat_quota_used_v1';
+
+  /// 직렬화된 말풍선 목록 JSON (탭 전환·앱 재시작 후 복원).
+  static const aiChatMessagesJsonV1 = 'ai_chat_messages_json_v1';
 }
