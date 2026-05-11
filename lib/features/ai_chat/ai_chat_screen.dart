@@ -422,7 +422,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   sending: _sending,
                                   hintText: l10n.aiChatInputPlaceholder,
                                   onSend: () => unawaited(sendMessage()),
-                                  onCamera: () =>
+                                  onAttachImage: () =>
                                       unawaited(openMedicineImagePicker()),
                                 ),
                               ],
@@ -684,7 +684,7 @@ class _InputBar extends StatelessWidget {
     required this.sending,
     required this.hintText,
     required this.onSend,
-    required this.onCamera,
+    required this.onAttachImage,
   });
 
   final TextEditingController controller;
@@ -692,7 +692,7 @@ class _InputBar extends StatelessWidget {
   final bool sending;
   final String hintText;
   final VoidCallback onSend;
-  final VoidCallback onCamera;
+  final VoidCallback onAttachImage;
 
   @override
   Widget build(BuildContext context) {
@@ -704,7 +704,8 @@ class _InputBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           IconButton(
-            onPressed: canAct ? onCamera : null,
+            onPressed: canAct ? onAttachImage : null,
+            tooltip: '이미지 첨부',
             style: IconButton.styleFrom(
               backgroundColor: Colors.transparent,
               foregroundColor: canAct
@@ -713,7 +714,7 @@ class _InputBar extends StatelessWidget {
               minimumSize: const Size(48, 48),
               padding: EdgeInsets.zero,
             ),
-            icon: const Icon(Icons.photo_camera_outlined, size: 26),
+            icon: const Icon(Icons.attach_file, size: 26),
           ),
           const SizedBox(width: 4),
           Expanded(

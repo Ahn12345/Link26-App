@@ -103,18 +103,30 @@ class _LoginPageState extends State<LoginPage> {
 
       final user = byPhone;
 
-      final nhisResult = await NhisLoginSync.syncAfterLocalLogin(user: user);
+      final nhisOutcome =
+          await NhisLoginSync.syncAfterLocalLogin(user: user);
       if (!context.mounted) return;
 
-      if (nhisResult == NhisLoginSyncResult.failed) {
+      if (nhisOutcome.result == NhisLoginSyncResult.failed) {
         if (NhisRuntimeConfig.loginRequired) {
+          final detail = nhisOutcome.detailKo;
+          final body = detail != null && detail.isNotEmpty
+              ? '${l10n.loginNhisRequiredFailed}\n\n$detail'
+              : l10n.loginNhisRequiredFailed;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.loginNhisRequiredFailed)),
+            SnackBar(content: Text(body)),
           );
           return;
         }
+        final detail = nhisOutcome.detailKo;
+        final body = detail != null && detail.isNotEmpty
+            ? '${l10n.loginNhisSyncFailed}\n\n$detail'
+            : l10n.loginNhisSyncFailed;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loginNhisSyncFailed)),
+          SnackBar(
+            content: Text(body),
+            duration: const Duration(seconds: 8),
+          ),
         );
       }
 

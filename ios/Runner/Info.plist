@@ -70,5 +70,24 @@
 	<string>처방전·약 봉투 사진을 촬영해 약 정보 안내에 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>저장된 처방전·약 사진을 선택해 약 정보 안내에 사용합니다.</string>
+	<!-- 로컬 BFF(http://127.0.0.1, LAN IP 등) 연결 시 ATS 가 http 를 막지 않도록 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>
