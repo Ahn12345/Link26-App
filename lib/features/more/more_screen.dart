@@ -45,6 +45,8 @@ class _MoreBody extends StatelessWidget {
               Expanded(
                 child: Text(
                   '더보기',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: Link26ResponsiveUi.screenHeadline(w),
                     fontWeight: FontWeight.w900,
@@ -55,11 +57,15 @@ class _MoreBody extends StatelessWidget {
                 ),
               ),
               SizedBox(width: Link26ResponsiveUi.gapMd(w)),
-              DecodedAssetImage(
-                ImageAssets.applogo,
-                height: logoSz,
+              SizedBox(
                 width: logoSz,
-                fit: BoxFit.contain,
+                height: logoSz,
+                child: DecodedAssetImage(
+                  ImageAssets.applogo,
+                  height: logoSz,
+                  width: logoSz,
+                  fit: BoxFit.contain,
+                ),
               ),
             ],
           ),
