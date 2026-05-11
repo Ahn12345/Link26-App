@@ -178,6 +178,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not get a response. Please try again shortly.';
 
   @override
+  String get aiChatGeminiKeyMissing =>
+      'No Gemini API key. Create one in Google AI Studio (https://aistudio.google.com/apikey), add GEMINI_API_KEY=... to the project root `.env`, and rebuild. Ensure `.env` is listed under flutter assets in pubspec.yaml.';
+
+  @override
   String get aiChatDisclaimerShort =>
       'AI answers are for reference only. For dosing, ask your clinician or pharmacist.';
 

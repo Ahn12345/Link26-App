@@ -512,6 +512,41 @@ class _AiWelcomeBubble extends StatelessWidget {
   }
 }
 
+class _GeminiSetupBanner extends StatelessWidget {
+  const _GeminiSetupBanner({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFFC107)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.key_off_outlined, color: Colors.amber.shade900, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: Colors.brown.shade900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DisclaimerBanner extends StatelessWidget {
   const _DisclaimerBanner({required this.text});
 

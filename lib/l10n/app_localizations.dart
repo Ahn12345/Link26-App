@@ -95,6 +95,7 @@ abstract class AppLocalizations {
   String get aiChatInputPlaceholder;
   String get aiChatDailyLimitReached;
   String get aiChatReplyError;
+  String get aiChatGeminiKeyMissing;
   String get aiChatDisclaimerShort;
   String get aiChatCameraUserMessage;
   String get aiChatCameraReplyStub;

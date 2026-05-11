@@ -171,6 +171,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '일시적으로 응답을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.';
 
   @override
+  String get aiChatGeminiKeyMissing =>
+      'Gemini API 키가 없습니다. Google AI Studio(https://aistudio.google.com/apikey)에서 키를 발급해 프로젝트 루트 `.env`에 GEMINI_API_KEY=... 로 넣고 앱을 다시 빌드하세요. pubspec.yaml에 .env가 assets에 포함돼 있어야 합니다.';
+
+  @override
   String get aiChatDisclaimerShort =>
       'AI가 제공하는 정보는 참고용입니다. 정확한 복용 방법은 의사나 약사와 상담하세요.';
 
