@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
-import 'package:link26_app/core/constants/api_keys.dart';
+import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/network/api_client.dart';
 import 'package:link26_app/core/network/api_endpoints.dart';
 
@@ -12,12 +12,12 @@ import 'ai_chat_models.dart';
 class AiChatService {
   AiChatService({Dio? dio}) : _dio = dio ?? ApiClient.dio;
 
-  static const _modelId = 'gemini-2.5-flash';
+  static String get _modelId => GeminiRuntimeConfig.modelId;
 
   final Dio _dio;
 
   Future<String?> _geminiText(String prompt) async {
-    final key = ApiConfig.geminiApiKey.trim();
+    final key = GeminiRuntimeConfig.apiKey;
     if (key.isEmpty) return null;
     final model = GenerativeModel(model: _modelId, apiKey: key);
     final res = await model.generateContent([Content.text(prompt)]);
@@ -68,7 +68,7 @@ class AiChatService {
       // REST 없거나 오류 → Gemini / 규칙
     }
 
-    final key = ApiConfig.geminiApiKey.trim();
+    final key = GeminiRuntimeConfig.apiKey;
     if (key.isNotEmpty) {
       final p1 =
           'You are a cautious pharmacy assistant. Given OCR text from a label or prescription, '
@@ -81,7 +81,7 @@ class AiChatService {
             'Otherwise say VERIFY_OK. Then add one short sentence. Draft:\n$first';
         final second = await _geminiText(p2);
         return MedicineInsight(
-          productName: 'Gemini 2.5 Flash',
+          productName: GeminiRuntimeConfig.modelId,
           signal: _signalFromText('$first $second'),
           recommendation: first,
           reason: 'Primary model output (not medical advice).',
@@ -132,7 +132,7 @@ class AiChatService {
   }
 
   Future<ChatTriageResult> triageMessage(String message) async {
-    final key = ApiConfig.geminiApiKey.trim();
+    final key = GeminiRuntimeConfig.apiKey;
     if (key.isNotEmpty) {
       final p1 =
           'Triage user message for urgency (not a diagnosis). Reply: URGENT_YES or URGENT_NO, '

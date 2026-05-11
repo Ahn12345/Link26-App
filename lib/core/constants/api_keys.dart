@@ -6,7 +6,7 @@ abstract final class ApiConfig {
       String.fromEnvironment('MEDICINE_OVERVIEW_BASE_URL', defaultValue: '');
   static const simpleAuthBaseUrl =
       String.fromEnvironment('SIMPLE_AUTH_BASE_URL', defaultValue: '');
-  /// Google AI Studio / Gemini API. 빌드 시 `--dart-define=GEMINI_API_KEY=...`
+  /// Google AI Studio / Gemini. 빌드 시 `--dart-define=GEMINI_API_KEY=...` 또는 `.env` 의 GEMINI_API_KEY ([GeminiRuntimeConfig]).
   static const geminiApiKey =
       String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
 }
