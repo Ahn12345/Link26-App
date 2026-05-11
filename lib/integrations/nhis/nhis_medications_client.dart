@@ -22,6 +22,11 @@ class NhisMedicationsClient {
 
   Future<Result<String>> fetchMedicationsRaw({
     required String phoneDigits,
+    /// 로컬 DB 사용자 — BFF·CODEF가 상품 스펙에 따라 본인 매칭에 쓸 수 있음
+    String? displayName,
+    String? gender,
+    /// CODEF 기관 연동 식별자 — BFF가 상품 POST에 넣습니다.
+    String? connectedId,
   }) async {
     final base = NhisRuntimeConfig.baseUrl;
     if (base.isEmpty) {
@@ -31,6 +36,12 @@ class NhisMedicationsClient {
     var uri = buildUri(NhisRuntimeConfig.medicinesPath, base: base);
     final q = Map<String, String>.from(uri.queryParameters);
     q['phone'] = phoneDigits;
+    final dn = displayName?.trim();
+    if (dn != null && dn.isNotEmpty) q['displayName'] = dn;
+    final g = gender?.trim();
+    if (g != null && g.isNotEmpty) q['gender'] = g;
+    final cid = connectedId?.trim();
+    if (cid != null && cid.isNotEmpty) q['connectedId'] = cid;
     final key = NhisRuntimeConfig.serviceKey;
     if (key != null) {
       q['serviceKey'] = key;

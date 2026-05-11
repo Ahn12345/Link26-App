@@ -272,6 +272,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFamilyAddEntry => '가족 구성원 추가';
 
   @override
+  String get settingsCodefConnectionTitle => '건강·복약 연동 (CODEF)';
+
+  @override
+  String get settingsCodefConnectionSubtitle =>
+      '기관 연동 후 받은 connectedId를 저장하면 BFF가 본인 진료·투약 조회에 사용합니다.';
+
+  @override
+  String get settingsCodefConnectedIdLabel => 'connectedId';
+
+  @override
+  String get settingsCodefConnectionHint =>
+      'CODEF 콘솔·연동 API에서 발급된 값';
+
+  @override
+  String get settingsCodefConnectionSaved =>
+      '저장했습니다. 홈에서 복약 동기화를 다시 실행해 보세요.';
+
+  @override
+  String get settingsCodefConnectionPhoneRequired =>
+      '로그인된 전화번호가 없습니다. 먼저 로그인해 주세요.';
+
+  @override
+  String get settingsCodefConnectionClear => '지우기';
+
+  @override
   String get emergencyContactStub =>
       '긴급 연락처와 통화 바로가기를 등록합니다. (데모 — 이후 tel: 및 권한 연동)';
 

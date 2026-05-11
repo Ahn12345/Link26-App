@@ -65,4 +65,13 @@ abstract final class NhisRuntimeConfig {
     final s = _stripQuotes(dotenv.env['NHIS_LOGIN_REQUIRED']).toLowerCase();
     return s == 'true' || s == '1' || s == 'yes';
   }
+
+  /// BFF `/v1/medications?connectedId=` 용. `NHIS_CODEF_CONNECTED_ID` 우선, 없으면 `CODEF_CONNECTED_ID`.
+  static String? get codefConnectedIdForMedications {
+    final a = _stripQuotes(dotenv.env['NHIS_CODEF_CONNECTED_ID']);
+    if (a.isNotEmpty) return a;
+    final b = _stripQuotes(dotenv.env['CODEF_CONNECTED_ID']);
+    if (b.isNotEmpty) return b;
+    return null;
+  }
 }

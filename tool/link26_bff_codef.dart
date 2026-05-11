@@ -74,6 +74,31 @@ bool _truthy(String? s) {
 /// link26_bff.dart 헬스 응답용.
 bool bffEnvTruthy(String? s) => _truthy(s);
 
+/// `/v1/medications` 에서 CODEF 상품 호출에 필요한 클라이언트 설정이 모두 있는지.
+bool bffMedicationsCodefConfigured(Map<String, String> env) {
+  final pathSet = (env['CODEF_MEDICATION_PATH'] ?? '').trim().isNotEmpty;
+  final idSet = (env['CODEF_CLIENT_ID'] ?? '').trim().isNotEmpty;
+  final secretSet = (env['CODEF_CLIENT_SECRET'] ?? '').trim().isNotEmpty;
+  return bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']) &&
+      pathSet &&
+      idSet &&
+      secretSet;
+}
+
+/// 쿼리 `connectedId` 우선, 없으면 `.env` 의 `CODEF_CONNECTED_ID`.
+String bffResolvedConnectedId(
+  Map<String, String> query,
+  Map<String, String> env,
+) {
+  final fromQ = (query['connectedId'] ?? '').trim();
+  if (fromQ.isNotEmpty) return fromQ;
+  return (env['CODEF_CONNECTED_ID'] ?? '').trim();
+}
+
+/// `true`이면 connectedId 없이도 CODEF 호출 시도 (상품 스펙상 필요 없을 때만).
+bool bffAllowCodefWithoutConnectedId(Map<String, String> env) =>
+    bffEnvTruthy(env['BFF_ALLOW_CODEF_WITHOUT_CONNECTED_ID']);
+
 class CodefTokenCache {
   String? _token;
   DateTime? _expiresAt;
@@ -160,6 +185,8 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
   required Map<String, String> env,
   required String phoneDigits,
   String? connectedIdOverride,
+  String displayName = '',
+  String gender = '',
 }) async {
   if (!_truthy(env['BFF_USE_CODEF_FOR_MEDICATIONS'])) return null;
 
@@ -182,6 +209,15 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
     body['phoneNo'] = phoneDigits;
     body['id'] = phoneDigits;
   }
+  final dn = displayName.trim();
+  if (dn.isNotEmpty) {
+    body['displayName'] = dn;
+    body['userName'] = dn;
+    body['name'] = dn;
+  }
+  final gen = gender.trim();
+  if (gen.isNotEmpty) body['gender'] = gen;
+
   final extraJson = (env['CODEF_REQUEST_JSON'] ?? '').trim();
   if (extraJson.isNotEmpty) {
     try {
@@ -251,6 +287,9 @@ List<Map<String, dynamic>> _mapCodefToMedicationItems(Map<String, dynamic> root)
       'resDrugName',
       'resDrugNm',
       'drugNm',
+      'mediNm',
+      'mediName',
+      'drugNameKr',
       '약품명',
       '품명',
     ]);
@@ -275,6 +314,15 @@ Map<String, dynamic> _stringKeyMap(Map raw) {
 
 List<Map<String, dynamic>> _extractDataRows(dynamic data) {
   if (data == null) return [];
+  if (data is String) {
+    final s = data.trim();
+    if (s.isEmpty) return [];
+    try {
+      return _extractDataRows(jsonDecode(s));
+    } catch (_) {
+      return [];
+    }
+  }
   if (data is List) {
     return data
         .whereType<Map>()
@@ -290,6 +338,11 @@ List<Map<String, dynamic>> _extractDataRows(dynamic data) {
       'medicationList',
       'medicineList',
       'items',
+      'resTreatmentList',
+      'treatmentList',
+      'prescriptionList',
+      'medicationTakingList',
+      'takingList',
     ]) {
       final v = m[key];
       if (v is List) {

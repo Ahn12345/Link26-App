@@ -105,8 +105,16 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         'NHIS: 전화번호 없음 — 빈 phone으로 GET 시도 (base=${NhisRuntimeConfig.baseUrl})',
       );
     }
-    await NhisMedicinesSync.syncNow(phoneDigits: phone);
+    final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
     if (mounted) await _reloadMedicinesFromStores();
+    if (mounted && syncOut.showBannerOnBootstrap) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(syncOut.userMessageKo),
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    }
   }
 
   Future<void> _reloadMedicinesFromStores() async {
@@ -139,9 +147,19 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
     if (shouldSync) {
       final phone = await _phoneForNhisSync();
-      await NhisMedicinesSync.syncNow(phoneDigits: phone);
+      final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
+      if (mounted) await _reloadMedicinesFromStores();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(syncOut.userMessageKo),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } else {
+      if (mounted) await _reloadMedicinesFromStores();
     }
-    if (mounted) await _reloadMedicinesFromStores();
   }
 
   Future<void> _openAddMedicine() async {

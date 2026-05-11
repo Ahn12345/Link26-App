@@ -15,6 +15,7 @@ class LocalUserRecord {
     required this.gender,
     required this.residentRegistrationHash,
     required this.privacyConsent,
+    this.codefConnectedId,
   });
 
   final int id;
@@ -24,6 +25,9 @@ class LocalUserRecord {
   final String gender;
   final String? residentRegistrationHash;
   final bool privacyConsent;
+
+  /// CODEF 기관 연동 후 발급되는 connectedId — BFF 복약 실연동 시 쿼리로 전달.
+  final String? codefConnectedId;
 }
 
 /// 로컬 SQLite — 첫 실행 시 회원 없으면 회원가입 유도. 실서비스는 서버 DB와 동기화 가정.
@@ -48,7 +52,7 @@ abstract final class UserLocalRepository {
     final dbPath = p.join(dir.path, 'link26_users.db');
     _db = await openDatabase(
       dbPath,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE users (
@@ -63,6 +67,7 @@ abstract final class UserLocalRepository {
             nhis_sync_ok INTEGER,
             nhis_sync_error TEXT,
             nhis_synced_at INTEGER,
+            codef_connected_id TEXT,
             created_at INTEGER NOT NULL
           )
         ''');
@@ -83,6 +88,11 @@ abstract final class UserLocalRepository {
               'ALTER TABLE users ADD COLUMN nhis_sync_error TEXT');
           await db.execute(
               'ALTER TABLE users ADD COLUMN nhis_synced_at INTEGER');
+        }
+        if (oldVersion < 4) {
+          await db.execute(
+            'ALTER TABLE users ADD COLUMN codef_connected_id TEXT',
+          );
         }
       },
     );
@@ -113,6 +123,26 @@ abstract final class UserLocalRepository {
   /// NHIS·BFF 전송용 (DB [resident_registration_hash] 와 동일 알고리즘).
   static String residentRegistrationSha256(String thirteenDigitDigitsOnly) =>
       _hashResidentRegistration(thirteenDigitDigitsOnly);
+
+  /// CODEF 건강·공단 API용 `connectedId` — 비우면 NULL 로 저장합니다.
+  static Future<void> updateCodefConnectedId(
+    String phoneDigits, {
+    required String? connectedId,
+  }) async {
+    final p = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    if (p.length < 10) return;
+    final db = await _open();
+    final v = connectedId?.trim();
+    await db.update(
+      'users',
+      {
+        'codef_connected_id':
+            (v == null || v.isEmpty) ? null : v,
+      },
+      where: 'phone = ?',
+      whereArgs: [p],
+    );
+  }
 
   static Future<void> updateNhisSyncStatus(
     String phoneDigits, {
@@ -229,6 +259,7 @@ abstract final class UserLocalRepository {
       final gender = (row['gender'] as String?)?.trim() ?? '';
       final rrn = row['resident_registration_hash'] as String?;
       final privacy = _intFromSql(row['privacy_consent']) == 1;
+      final codefId = (row['codef_connected_id'] as String?)?.trim();
       if (phone == null || phone.isEmpty) return null;
       return LocalUserRecord(
         id: id,
@@ -238,6 +269,8 @@ abstract final class UserLocalRepository {
         gender: gender,
         residentRegistrationHash: rrn,
         privacyConsent: privacy,
+        codefConnectedId:
+            (codefId == null || codefId.isEmpty) ? null : codefId,
       );
     } catch (_) {
       return null;

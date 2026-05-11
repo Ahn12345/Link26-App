@@ -82,14 +82,7 @@ Future<void> _handle(HttpRequest request) async {
     if (method == 'GET' && path == '/health') {
       final env = loadBffDotEnv();
       final probe = await codefHealthProbe(env);
-      final pathSet = (env['CODEF_MEDICATION_PATH'] ?? '').trim().isNotEmpty;
-      final idSet = (env['CODEF_CLIENT_ID'] ?? '').trim().isNotEmpty;
-      final secretSet = (env['CODEF_CLIENT_SECRET'] ?? '').trim().isNotEmpty;
-      final codefMedicationsReady =
-          bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']) &&
-              pathSet &&
-              idSet &&
-              secretSet;
+      final codefMedicationsReady = bffMedicationsCodefConfigured(env);
       await _json(request, 200, {
         'ok': true,
         'service': 'link26-bff-dart',
@@ -121,12 +114,33 @@ Future<void> _handle(HttpRequest request) async {
     }
 
     if (method == 'GET' && path == '/v1/medications') {
-      final phone = request.uri.queryParameters['phone'] ?? '';
+      final q = request.uri.queryParameters;
+      final phone = q['phone'] ?? '';
       final env = loadBffDotEnv();
+      final codefOn = bffMedicationsCodefConfigured(env);
+      final cid = bffResolvedConnectedId(q, env);
+      if (codefOn &&
+          cid.isEmpty &&
+          !bffAllowCodefWithoutConnectedId(env)) {
+        await _json(request, 200, {
+          'items': <Map<String, dynamic>>[],
+          'meta': {
+            'source': 'codef_missing_connected_id',
+            'phone': phone,
+            'note':
+                'CODEF 상품(건강·공단)은 기관 연동 후 발급되는 connectedId가 필요합니다. '
+                '앱 설정에서 저장했는지, 또는 BFF .env 의 CODEF_CONNECTED_ID 를 확인하세요. '
+                '(테스트용으로만 BFF_ALLOW_CODEF_WITHOUT_CONNECTED_ID=true 가능)',
+          },
+        });
+        return;
+      }
       final codefRes = await fetchMedicationsFromCodef(
         env: env,
         phoneDigits: phone,
-        connectedIdOverride: request.uri.queryParameters['connectedId'],
+        connectedIdOverride: cid.isNotEmpty ? cid : null,
+        displayName: q['displayName'] ?? '',
+        gender: q['gender'] ?? '',
       );
       if (codefRes != null) {
         await _json(request, 200, codefRes);
@@ -147,7 +161,12 @@ Future<void> _handle(HttpRequest request) async {
             'time': '12:00',
           },
         ],
-        'meta': {'phone': phone, 'source': 'link26-bff-dart-stub'},
+        'meta': {
+          'phone': phone,
+          'source': 'link26-bff-dart-stub',
+          'note':
+              '데모 JSON입니다. 본인 처방·투약은 CODEF 계정·상품 경로·connectedId 등 BFF 실연동이 필요합니다.',
+        },
       });
       return;
     }

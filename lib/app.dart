@@ -18,6 +18,7 @@ import 'package:link26_app/features/more/more_screen.dart';
 import 'package:link26_app/features/push_settings/push_settings_screen.dart';
 import 'package:link26_app/features/search/pill_search_screen.dart';
 import 'package:link26_app/features/search/search_screen.dart';
+import 'package:link26_app/features/settings/codef_connection_screen.dart';
 import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/settings_screen.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
@@ -138,6 +139,7 @@ class Link26AppState extends State<Link26App> {
         PillSearchScreen.routeName: (_) => const PillSearchScreen(),
         AlertsListScreen.routeName: (_) => const AlertsListScreen(),
         EmergencyContactScreen.routeName: (_) => const EmergencyContactScreen(),
+        CodefConnectionScreen.routeName: (_) => const CodefConnectionScreen(),
       },
       onUnknownRoute: (_) =>
           MaterialPageRoute(builder: (_) => const AuthWelcomeScreen()),

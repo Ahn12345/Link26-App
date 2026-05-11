@@ -125,6 +125,13 @@ abstract class AppLocalizations {
   String get pillSearchAdded;
   String get settingsEmergencyContact;
   String get settingsEmergencyContactSubtitle;
+  String get settingsCodefConnectionTitle;
+  String get settingsCodefConnectionSubtitle;
+  String get settingsCodefConnectedIdLabel;
+  String get settingsCodefConnectionHint;
+  String get settingsCodefConnectionSaved;
+  String get settingsCodefConnectionPhoneRequired;
+  String get settingsCodefConnectionClear;
   String get settingsFamilyAddEntry;
   String get emergencyContactStub;
   String get emergencyCallPlaceholder;

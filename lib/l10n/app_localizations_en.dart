@@ -280,6 +280,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFamilyAddEntry => 'Add family member';
 
   @override
+  String get settingsCodefConnectionTitle => 'Health data link (CODEF)';
+
+  @override
+  String get settingsCodefConnectionSubtitle =>
+      'Save the connectedId from CODEF institutional linking so the BFF can query your treatment data.';
+
+  @override
+  String get settingsCodefConnectedIdLabel => 'connectedId';
+
+  @override
+  String get settingsCodefConnectionHint =>
+      'Value from CODEF console or account-link API';
+
+  @override
+  String get settingsCodefConnectionSaved =>
+      'Saved. Run medication sync again from Home.';
+
+  @override
+  String get settingsCodefConnectionPhoneRequired =>
+      'No logged-in phone. Please sign in first.';
+
+  @override
+  String get settingsCodefConnectionClear => 'Clear';
+
+  @override
   String get emergencyContactStub =>
       'Register an emergency contact and call shortcuts. (Demo — wire tel: and permissions later.)';
 

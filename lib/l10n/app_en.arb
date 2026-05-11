@@ -59,5 +59,12 @@
   "aiChatWelcomeUploadHint": "Upload a prescription or medicine photo and we will help you check the details.\n\n",
   "aiChatWelcomeTipEmoji": "💡 ",
   "aiChatWelcomeTipTitle": "Photo tips:",
-  "aiChatWelcomeTipList": "- Capture the name and dose clearly\n- For prescriptions, keep drug names readable\n- Good lighting improves accuracy"
+  "aiChatWelcomeTipList": "- Capture the name and dose clearly\n- For prescriptions, keep drug names readable\n- Good lighting improves accuracy",
+  "settingsCodefConnectionTitle": "Health data link (CODEF)",
+  "settingsCodefConnectionSubtitle": "Save the connectedId from CODEF institutional linking so the BFF can query your treatment data.",
+  "settingsCodefConnectedIdLabel": "connectedId",
+  "settingsCodefConnectionHint": "Value from CODEF console or account-link API",
+  "settingsCodefConnectionSaved": "Saved. Run medication sync again from Home.",
+  "settingsCodefConnectionPhoneRequired": "No logged-in phone. Please sign in first.",
+  "settingsCodefConnectionClear": "Clear"
 }
