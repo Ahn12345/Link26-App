@@ -46,6 +46,20 @@ if ($LASTEXITCODE -ne 0) {
   exit 1
 }
 
+# Gradle daemon / Java가 mergeDebugAssets 등을 잡고 있으면 cleanMergeDebugAssets에서 삭제 실패할 수 있음.
+$gradleBat = Join-Path $projectRoot "android\gradlew.bat"
+if (Test-Path -LiteralPath $gradleBat) {
+  Write-Host "[Link26] Stopping Gradle daemons (releases locks under build\)..."
+  Push-Location (Join-Path $projectRoot "android")
+  try {
+    & .\gradlew.bat --stop
+  } catch {
+    # gradlew 없거나 JDK 문제 시 무시하고 flutter 진행
+  } finally {
+    Pop-Location
+  }
+}
+
 $code = 1
 try {
   Set-Location "${drive}:\"

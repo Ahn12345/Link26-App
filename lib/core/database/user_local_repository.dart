@@ -46,6 +46,21 @@ abstract final class UserLocalRepository {
     return 0;
   }
 
+  /// `user_version`과 실제 테이블 스키마가 어긋난 경우 중복 ADD COLUMN 오류를 막습니다.
+  static Future<void> _addUsersColumnIfMissing(
+    Database db,
+    String columnName,
+    String columnDefinition,
+  ) async {
+    final cols = await db.rawQuery('PRAGMA table_info(users)');
+    final exists = cols.any((row) => row['name'] == columnName);
+    if (!exists) {
+      await db.execute(
+        'ALTER TABLE users ADD COLUMN $columnDefinition',
+      );
+    }
+  }
+
   static Future<Database> _open() async {
     if (_db != null) return _db!;
     final dir = await getApplicationDocumentsDirectory();
@@ -74,24 +89,37 @@ abstract final class UserLocalRepository {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await db.execute('ALTER TABLE users ADD COLUMN phone TEXT');
-          await db.execute('ALTER TABLE users ADD COLUMN gender TEXT');
-          await db.execute(
-              'ALTER TABLE users ADD COLUMN resident_registration_hash TEXT');
-          await db.execute(
-            'ALTER TABLE users ADD COLUMN privacy_consent INTEGER NOT NULL DEFAULT 0',
+          await _addUsersColumnIfMissing(db, 'phone', 'phone TEXT');
+          await _addUsersColumnIfMissing(db, 'gender', 'gender TEXT');
+          await _addUsersColumnIfMissing(
+            db,
+            'resident_registration_hash',
+            'resident_registration_hash TEXT',
+          );
+          await _addUsersColumnIfMissing(
+            db,
+            'privacy_consent',
+            'privacy_consent INTEGER NOT NULL DEFAULT 0',
           );
         }
         if (oldVersion < 3) {
-          await db.execute('ALTER TABLE users ADD COLUMN nhis_sync_ok INTEGER');
-          await db.execute(
-              'ALTER TABLE users ADD COLUMN nhis_sync_error TEXT');
-          await db.execute(
-              'ALTER TABLE users ADD COLUMN nhis_synced_at INTEGER');
+          await _addUsersColumnIfMissing(db, 'nhis_sync_ok', 'nhis_sync_ok INTEGER');
+          await _addUsersColumnIfMissing(
+            db,
+            'nhis_sync_error',
+            'nhis_sync_error TEXT',
+          );
+          await _addUsersColumnIfMissing(
+            db,
+            'nhis_synced_at',
+            'nhis_synced_at INTEGER',
+          );
         }
         if (oldVersion < 4) {
-          await db.execute(
-            'ALTER TABLE users ADD COLUMN codef_connected_id TEXT',
+          await _addUsersColumnIfMissing(
+            db,
+            'codef_connected_id',
+            'codef_connected_id TEXT',
           );
         }
       },
