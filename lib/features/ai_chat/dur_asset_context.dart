@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 
 /// `lib/data/DUR1`, `DUR2` CSV 에서 사용자 입력과 겹치는 행만 뽑아 프롬프트용으로 넣습니다.
 /// (전체 CSV를 Gemini에 넣지 않음)
+///
+/// 대용량 CSV의 UTF-8 디코드·줄 분리는 [Isolate.run]으로 메인 isolate의 장시간 점유(ANR·심한 jank)를 피합니다.
 abstract final class DurAssetContext {
   static const _dur1Asset =
       'lib/data/DUR1/DUR품목 누적데이터(병용금기)(2025년).csv';
@@ -12,21 +15,33 @@ abstract final class DurAssetContext {
 
   static List<String>? _dur1Lines;
   static List<String>? _dur2Lines;
+  static Future<void>? _loadFuture;
+
+  static List<String> _linesFromUtf8Bytes(Uint8List bytes) {
+    return const LineSplitter().convert(utf8.decode(bytes));
+  }
+
+  static Future<List<String>> _loadDurLines(String assetKey) async {
+    try {
+      final bd = await rootBundle.load(assetKey);
+      final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
+      return Isolate.run(() => _linesFromUtf8Bytes(bytes));
+    } catch (_) {
+      return const [];
+    }
+  }
 
   static Future<void> _ensureLoaded() async {
     if (_dur1Lines != null && _dur2Lines != null) return;
-    try {
-      final raw1 = await rootBundle.loadString(_dur1Asset);
-      _dur1Lines = const LineSplitter().convert(raw1);
-    } catch (_) {
-      _dur1Lines = const [];
-    }
-    try {
-      final raw2 = await rootBundle.loadString(_dur2Asset);
-      _dur2Lines = const LineSplitter().convert(raw2);
-    } catch (_) {
-      _dur2Lines = const [];
-    }
+    _loadFuture ??= () async {
+      final results = await Future.wait([
+        _loadDurLines(_dur1Asset),
+        _loadDurLines(_dur2Asset),
+      ]);
+      _dur1Lines = results[0];
+      _dur2Lines = results[1];
+    }();
+    await _loadFuture;
   }
 
   /// DUR2(UTF-8) 우선 검색 후 DUR1. [maxLines] 줄까지 잘라서 반환.

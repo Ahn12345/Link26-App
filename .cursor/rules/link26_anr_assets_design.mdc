@@ -1,0 +1,34 @@
+---
+description: Link26 ANR 방지, 에셋 경로, 디자인 토큰 일관성
+alwaysApply: true
+---
+
+# Link26 — 성능·에셋·UI 규칙
+
+## 회귀 방지
+
+- **프로젝트 표준**: `DecodedAssetImage` + `ImageAssets`, DUR/대용량 텍스트는 **`Isolate.run`**(또는 `compute`). 사용자가 명시적으로 단순화를 요청하기 전에는 **`Image.asset`**, 메인 isolate에서의 **대량 `jsonDecode`/CSV 처리**로 바꾸지 않는다.
+- “과하게 복잡하다”는 이유만으로 위 최적화를 제거하지 않는다.
+
+## ANR / 메인 스레드
+
+- Android ANR은 보통 **위젯 깊이**가 아니라 **메인 isolate에서의 장시간 작업**(대용량 문자열 처리, 동기 I/O, 무거한 루프) 때문에 난다.
+- **번들 CSV·대용량 텍스트**: `rootBundle.load` 후 **UTF-8 디코드·줄 단위 파싱**은 `Isolate.run`(또는 `compute`)로 옮긴다. `loadString` 결과를 메인에서 한 번에 `LineSplitter` 돌리는 패턴은 피한다.
+- **이미지**: 새 화면에서 `Image.asset`을 직접 추가하지 말고, 프로젝트의 **`DecodedAssetImage`** 와 **`ImageAssets`** (`lib/core/constants/image_assets.dart`) 경로만 사용한다. 고해상도 PNG는 여러 장을 한 화면에 동시에 풀 해상도로 올리지 않는다.
+
+## API / 네트워크 응답
+
+- 응답이 크거나 파싱 비용이 클 때: **HTTP 수신은 기존대로 `await`**, **무거운 파싱·매핑**은 `Isolate.run`으로 분리한다. isolate에 넘기는 콜백은 **최상위 함수 또는 static**이고, 인자는 **직렬화 가능한 데이터**만: Dio **`Response` 본문은 넘기지 말고** `response.data`(문자열인 경우) 또는 **`response.data`를 `String`으로 확정**한 값, 또는 **`Uint8List`(bodyBytes)** 만 넘긴다.
+- 일부 기능만 수정할 때 **기존 Isolate/비동기 구조를 유지**하고, 범위 밖 파일·패턴을 되돌리지 않는다.
+- **참고 구현(번들 CSV + Isolate)**: `lib/features/ai_chat/dur_asset_context.dart` — DUR 원본 파일은 에셋 `lib/data/DUR1/`, `lib/data/DUR2/` (코드 경로와 혼동하지 말 것).
+
+## 에셋 / pubspec
+
+- PNG·카탈로그 경로는 **`assets/images/...`** 와 `ImageAssets` / `link26_image_assets.xml` 과 맞출 것.
+- DUR 데이터는 **`lib/data/DUR1/`**, **`lib/data/DUR2/`** (pubspec에 디렉터리 등록됨). 경로 문자열을 임의로 바꾸지 않는다.
+- `.env`는 루트 `.env` (pubspec 등록)만 사용한다.
+
+## 디자인 토큰
+
+- 색·간격·라운드·반응형 숫자는 **`assets/design/link26_design_tokens.xml`** 및 연계 XML을 기준으로 하고, 변경 후에는 **`dart run tool/generate_link26_surface.dart`** 로 생성 코드와 맞출 것.
+- Android `res/values/colors.xml`·`dimens.xml` 은 디자인 토큰과 **동기화**한다는 주석을 유지한다.
