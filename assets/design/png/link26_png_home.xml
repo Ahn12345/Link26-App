@@ -5,4 +5,5 @@
   <responsiveImageScreen ref="" note="필요 시 ../link26_responsive_images.xml 에 screen 추가 후 codegen" />
   <flutter note="현재 lib 미참조 가능 — 연동 시 file 요소로 경로 기재" />
   <android strings="@string/flutter_image_home" />
+  <screenSpec ref="../screens/link26_screen_home.xml" />
 </link26-png-spec>

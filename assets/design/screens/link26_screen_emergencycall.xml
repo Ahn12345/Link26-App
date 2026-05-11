@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  긴급 연락 화면·설정 탭 일부 타일.
+  히어로 반응형: link26_responsive_images.xml → screen id="emergencyIllustration"
+  PNG: link26_image_assets.xml → id="emergencycall" (emergencycall.png)
+-->
+<link26-screen-spec version="1" id="emergencyIllustration" kind="settings" title="긴급 연락">
+  <hero
+      catalogId="emergencycall"
+      file="emergencycall.png"
+      responsiveScreenId="emergencyIllustration"
+      flutterConst="ImageAssets.emergencycall" />
+  <flutter path="lib/features/settings/emergency_contact_screen.dart" />
+</link26-screen-spec>

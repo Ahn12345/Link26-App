@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  월간 HIRA 간편인증 안내 1단계.
+  히어로 반응형: link26_responsive_images.xml → screen id="simpleLogin1"
+  PNG: link26_image_assets.xml → id="simplelogin1" (simplelogin1.png)
+-->
+<link26-screen-spec version="1" id="simpleLogin1" kind="dialog" title="간편인증 1단계">
+  <hero
+      catalogId="simplelogin1"
+      file="simplelogin1.png"
+      responsiveScreenId="simpleLogin1"
+      flutterConst="ImageAssets.simplelogin1" />
+  <flutter path="lib/core/services/monthly_hira_auth_gate.dart" />
+</link26-screen-spec>

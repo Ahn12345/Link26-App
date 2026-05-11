@@ -7,4 +7,5 @@
     <file path="lib/core/services/monthly_hira_auth_gate.dart" />
   </flutter>
   <android strings="@string/flutter_image_simplelogin2" />
+  <screenSpec ref="../screens/link26_screen_simplelogin2.xml" />
 </link26-png-spec>

@@ -9,4 +9,5 @@
     <file path="lib/features/more/more_screen.dart" />
   </flutter>
   <android strings="@string/flutter_image_applogo" />
+  <screenSpec ref="../screens/link26_screen_applogo.xml" />
 </link26-png-spec>

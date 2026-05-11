@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  런처·스플래시·더보기 소형 브랜드 마크.
+  반응형: link26_responsive_images.xml 에 전용 screen 없음 — 크기는 link26_responsive_ui.xml (splashLogoSize, moreLogoSize 등).
+  PNG: link26_image_assets.xml → id="applogo" (applogo.png) — assets/images 파일은 변경하지 않음.
+-->
+<link26-screen-spec version="1" id="applogo" kind="brand" title="앱 로고">
+  <hero
+      catalogId="applogo"
+      file="applogo.png"
+      responsiveScreenId=""
+      flutterConst="ImageAssets.applogo" />
+  <!-- primary: 스플래시; 더보기 헤더는 lib/features/more/more_screen.dart -->
+  <flutter path="lib/features/splash/splash_screen.dart" />
+</link26-screen-spec>

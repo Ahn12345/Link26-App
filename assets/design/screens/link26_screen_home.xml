@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  기획·목업 참고용 home.png — 현재 코드 미연동 가능.
+  반응형: link26_responsive_images.xml 미등록(필요 시 screen 추가 후 codegen).
+  PNG: link26_image_assets.xml → id="home" (home.png)
+-->
+<link26-screen-spec version="1" id="home" kind="reference" title="홈(기획 참고)">
+  <hero
+      catalogId="home"
+      file="home.png"
+      responsiveScreenId=""
+      flutterConst="ImageAssets.home" />
+</link26-screen-spec>

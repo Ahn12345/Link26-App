@@ -8,4 +8,5 @@
     <file path="lib/features/settings/settings_tab_screen.dart" note="familyVoice 타일 leading 등" />
   </flutter>
   <android strings="@string/flutter_image_emergencycall" />
+  <screenSpec ref="../screens/link26_screen_emergencycall.xml" />
 </link26-png-spec>

@@ -8,4 +8,5 @@
     <file path="lib/features/settings/settings_tab_screen.dart" />
   </flutter>
   <android strings="@string/flutter_image_familyadd" />
+  <screenSpec ref="../screens/link26_screen_familyadd.xml" />
 </link26-png-spec>

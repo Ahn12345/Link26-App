@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  가족 추가 등 ListTile 소형 일러스트.
+  반응형: link26_responsive_images.xml 전용 screen 없음 — listTileIllustrationSize 등은 link26_responsive_ui.xml.
+  PNG: link26_image_assets.xml → id="familyadd" (familyadd.png)
+-->
+<link26-screen-spec version="1" id="familyadd" kind="settings" title="가족 추가 일러스트">
+  <hero
+      catalogId="familyadd"
+      file="familyadd.png"
+      responsiveScreenId=""
+      flutterConst="ImageAssets.familyadd" />
+  <flutter path="lib/features/settings/settings_tab_screen.dart" />
+</link26-screen-spec>

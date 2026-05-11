@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  더보기 탭 전체 배경(setting.png) — 연동·로드 정책은 구현 시 확인.
+  반응형: link26_responsive_images.xml 전용 screen 없음.
+  PNG: link26_image_assets.xml → id="setting" (setting.png)
+-->
+<link26-screen-spec version="1" id="setting" kind="tab" title="더보기 배경">
+  <hero
+      catalogId="setting"
+      file="setting.png"
+      responsiveScreenId=""
+      flutterConst="ImageAssets.setting" />
+</link26-screen-spec>
