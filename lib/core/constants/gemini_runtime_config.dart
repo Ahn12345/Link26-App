@@ -6,6 +6,9 @@ import 'api_keys.dart';
 abstract final class GeminiRuntimeConfig {
   static String _stripQuotes(String v) {
     var s = v.trim();
+    if (s.isNotEmpty && s.runes.first == 0xFEFF) {
+      s = String.fromCharCodes(s.runes.skip(1)).trim();
+    }
     if (s.length >= 2 &&
         ((s.startsWith('"') && s.endsWith('"')) ||
             (s.startsWith("'") && s.endsWith("'")))) {
@@ -14,10 +17,13 @@ abstract final class GeminiRuntimeConfig {
     return s;
   }
 
+  /// `.env` → `--dart-define=GEMINI_API_KEY` 순. 둘 다 있으면 보통 `.env`가 우선(비어 있지 않을 때만).
   static String get apiKey {
-    final fromEnv = _stripQuotes(dotenv.env['GEMINI_API_KEY'] ?? '');
-    if (fromEnv.isNotEmpty) return fromEnv;
-    return _stripQuotes(ApiConfig.geminiApiKey);
+    final fromDotenv = _stripQuotes(dotenv.env['GEMINI_API_KEY'] ?? '');
+    final fromDefine = _stripQuotes(ApiConfig.geminiApiKey);
+    if (fromDotenv.isNotEmpty) return fromDotenv;
+    if (fromDefine.isNotEmpty) return fromDefine;
+    return '';
   }
 
   /// `GEMINI_API_KEY` 가 비어 있지 않으면 true.
