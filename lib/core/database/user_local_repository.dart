@@ -174,6 +174,22 @@ abstract final class UserLocalRepository {
     return c > 0;
   }
 
+  /// 로컬 `users`가 정확히 한 명일 때만 전화번호(숫자만)를 반환합니다.
+  /// [AuthSession.activePhoneDigits]가 비어 있을 때 BFF 복약 동기화 폴백용.
+  static Future<String?> singleUserPhoneDigits() async {
+    final db = await _open();
+    final rows = await db.rawQuery(
+      'SELECT phone FROM users WHERE phone IS NOT NULL AND TRIM(phone) != ? '
+      'LIMIT 2',
+      [''],
+    );
+    if (rows.length != 1) return null;
+    final raw = rows.first['phone'];
+    if (raw == null) return null;
+    final p = '$raw'.replaceAll(RegExp(r'\D'), '');
+    return p.isEmpty ? null : p;
+  }
+
   static Future<void> register({
     required String displayName,
     required String phone,

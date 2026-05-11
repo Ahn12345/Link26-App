@@ -36,6 +36,9 @@ abstract final class NhisMedicinesSync {
     }
 
     if (NhisRuntimeConfig.baseUrl.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('NHIS medications: NHIS_BASE_URL 비어 있음 — skipped');
+      }
       return NhisMedicinesSyncResult.skipped;
     }
 

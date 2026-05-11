@@ -1,10 +1,14 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
+import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/alarms/all_alarms_screen.dart';
@@ -68,14 +72,41 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrapMedicines());
   }
 
+  /// 세션 전화가 없어도, 로그인 상태이고 로컬 사용자가 한 명이면 DB 전화로 BFF 동기화.
+  Future<String> _phoneForNhisSync() async {
+    final session = await AuthSession.activePhoneDigits();
+    if (session != null && session.isNotEmpty) return session;
+    if (!await AuthSession.isSignedIn()) return '';
+    final single = await UserLocalRepository.singleUserPhoneDigits();
+    return single ?? '';
+  }
+
   Future<void> _bootstrapMedicines() async {
     await _reloadMedicinesFromStores();
-    final phone = await AuthSession.activePhoneDigits();
     if (!mounted) return;
-    if (phone != null && phone.isNotEmpty) {
-      await NhisMedicinesSync.syncNow(phoneDigits: phone);
-      if (mounted) await _reloadMedicinesFromStores();
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (_) {}
+
+    final shouldSync =
+        NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
+    if (!shouldSync) {
+      if (kDebugMode) {
+        debugPrint(
+          'NHIS: mock 꺼짐 + NHIS_BASE_URL 비어 있음 — 복약 동기화 생략',
+        );
+      }
+      return;
     }
+
+    final phone = await _phoneForNhisSync();
+    if (kDebugMode && phone.isEmpty && !NhisRuntimeConfig.useMock) {
+      debugPrint(
+        'NHIS: 전화번호 없음 — 빈 phone으로 GET 시도 (base=${NhisRuntimeConfig.baseUrl})',
+      );
+    }
+    await NhisMedicinesSync.syncNow(phoneDigits: phone);
+    if (mounted) await _reloadMedicinesFromStores();
   }
 
   Future<void> _reloadMedicinesFromStores() async {
@@ -101,8 +132,13 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   }
 
   Future<void> _refreshMedicinesFromServer() async {
-    final phone = await AuthSession.activePhoneDigits();
-    if (phone != null && phone.isNotEmpty) {
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (_) {}
+    final shouldSync =
+        NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
+    if (shouldSync) {
+      final phone = await _phoneForNhisSync();
       await NhisMedicinesSync.syncNow(phoneDigits: phone);
     }
     if (mounted) await _reloadMedicinesFromStores();
