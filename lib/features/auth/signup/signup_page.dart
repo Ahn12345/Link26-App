@@ -4,6 +4,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/design/link26_design_catalog.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -218,7 +219,8 @@ class _SignupPageState extends State<SignupPage> {
                             width: heroW,
                             height: heroH,
                             child: DecodedAssetImage(
-                              ImageAssets.signup,
+                              Link26DesignCatalog.heroAssetPath(
+                                  'signup', ImageAssets.signup),
                               width: heroW,
                               height: heroH,
                               fit: BoxFit.contain,

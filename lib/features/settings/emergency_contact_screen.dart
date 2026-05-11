@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/constants/image_assets.dart';
+import '../../core/design/link26_design_catalog.dart';
 import '../../core/layout/link26_responsive_image_tokens.g.dart';
 import '../../core/layout/link26_responsive_layout.dart';
 import '../../core/layout/link26_responsive_ui_tokens.g.dart';
@@ -32,8 +33,11 @@ class EmergencyContactScreen extends StatelessWidget {
               Center(
                 child: SizedBox(
                   width: heroW,
+                  height: heroH,
                   child: DecodedAssetImage(
-                    ImageAssets.emergencycall,
+                    Link26DesignCatalog.heroAssetPath(
+                        'emergencycall', ImageAssets.emergencycall),
+                    width: heroW,
                     height: heroH,
                     fit: BoxFit.contain,
                     borderRadius:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/design/link26_design_catalog.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
@@ -66,7 +67,8 @@ class AuthWelcomeScreen extends StatelessWidget {
                                     width: logoW,
                                     height: logoH,
                                     child: DecodedAssetImage(
-                                      ImageAssets.logo,
+                                      Link26DesignCatalog.heroAssetPath(
+                                          'logo', ImageAssets.logo),
                                       width: logoW,
                                       height: logoH,
                                       fit: BoxFit.contain,

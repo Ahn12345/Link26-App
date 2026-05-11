@@ -4,6 +4,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/image_assets.dart';
+import '../design/link26_design_catalog.dart';
 import '../constants/storage_keys.dart';
 import '../layout/link26_responsive_image_tokens.g.dart';
 import '../layout/link26_responsive_layout.dart';
@@ -51,8 +52,11 @@ abstract final class MonthlyHiraAuthGate {
                 Center(
                   child: SizedBox(
                     width: w1,
+                    height: h1,
                     child: DecodedAssetImage(
-                      ImageAssets.simplelogin1,
+                      Link26DesignCatalog.heroAssetPath(
+                          'simplelogin1', ImageAssets.simplelogin1),
+                      width: w1,
                       height: h1,
                       fit: BoxFit.contain,
                       borderRadius:
@@ -108,8 +112,11 @@ abstract final class MonthlyHiraAuthGate {
                 Center(
                   child: SizedBox(
                     width: w2,
+                    height: h2,
                     child: DecodedAssetImage(
-                      ImageAssets.simplelogin2,
+                      Link26DesignCatalog.heroAssetPath(
+                          'simplelogin2', ImageAssets.simplelogin2),
+                      width: w2,
                       height: h2,
                       fit: BoxFit.contain,
                       borderRadius:

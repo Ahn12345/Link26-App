@@ -26,6 +26,7 @@ dependencies:
   google_generative_ai: ^0.4.7
   image_picker: ^1.1.2
   path: ^1.9.1
+  xml: ^6.6.1
 
 dev_dependencies:
   flutter_test:
@@ -33,7 +34,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   image: ^4.5.4
-  xml: ^6.6.1
 
 flutter_launcher_icons:
   android: true
@@ -49,6 +49,7 @@ flutter:
     - .env
     - assets/design/
     - assets/design/png/
+    - assets/design/screens/
     - assets/images/
     # AI 채팅 DUR 로컬 검색 (용량 큼 — 릴리즈 시 모듈/다운로드로 옮길 수 있음)
     - lib/data/DUR1/

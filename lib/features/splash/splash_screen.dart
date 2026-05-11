@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
+import 'package:link26_app/core/design/link26_design_catalog.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
@@ -41,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             const Spacer(),
             DecodedAssetImage(
-              ImageAssets.applogo,
+              Link26DesignCatalog.heroAssetPath('applogo', ImageAssets.applogo),
               width: logo,
               height: logo,
               fit: BoxFit.contain,

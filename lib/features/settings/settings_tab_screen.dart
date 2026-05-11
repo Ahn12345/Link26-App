@@ -14,6 +14,7 @@ import 'codef_connection_screen.dart';
 import 'emergency_contact_screen.dart';
 import 'settings_screen.dart';
 import '../../core/constants/image_assets.dart';
+import '../../core/design/link26_design_catalog.dart';
 import '../../core/layout/link26_responsive_layout.dart';
 import '../../core/layout/link26_responsive_ui_tokens.g.dart';
 import '../../core/services/auth_session.dart';
@@ -54,7 +55,8 @@ class SettingsTabScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: DecodedAssetImage(
-                  ImageAssets.familyadd,
+                  Link26DesignCatalog.heroAssetPath(
+                      'familyadd', ImageAssets.familyadd),
                   width: thumb,
                   height: thumb,
                   fit: BoxFit.cover,
@@ -85,7 +87,8 @@ class SettingsTabScreen extends StatelessWidget {
                 l10n.familyVoiceTitle,
                 l10n.familyVoiceSubtitle,
                 FamilyVoiceScreen.routeName,
-                ImageAssets.emergencycall,
+                Link26DesignCatalog.heroAssetPath(
+                    'emergencycall', ImageAssets.emergencycall),
               ),
               _imgTile(
                 context,
