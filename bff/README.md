@@ -52,9 +52,22 @@ NHIS_BASE_URL=http://10.0.2.2:8787
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| GET | `/health` | 헬스체크 |
+| GET | `/health` | 헬스체크 + CODEF 토큰 프로브(`codef`), 복약 소스(`medicationsSource`: `codef` \| `stub`) |
 | POST | `/v1/signup` | 앱 회원가입 연동 |
 | POST | `/v1/login` | 앱 로그인 연동 |
-| GET | `/v1/medications?phone=` | 복약 목록(JSON `items`) |
+| GET | `/v1/medications?phone=` | 복약 목록(JSON `items`). 선택 `connectedId=` 로 CODEF 커넥티드 ID 임시 지정 |
 
 쿼리 `serviceKey`는 앱이 붙여도 이 스텁은 무시합니다.
+
+## CODEF(코드에프)로 복약 실연동
+
+프로젝트 루트 `.env` 에 다음을 설정한 뒤 BFF를 재시작합니다.
+
+- `BFF_USE_CODEF_FOR_MEDICATIONS=true`
+- `CODEF_CLIENT_ID`, `CODEF_CLIENT_SECRET` (기존 CODEF 키)
+- `CODEF_MEDICATION_PATH` — [개발가이드](https://developer.codef.io)에서 선택한 **건강·복약 상품의 요청 URL 경로** (`/v1/kr/...`)
+- 선택: `CODEF_BASE_URL` (기본 `https://development.codef.io`), `CODEF_CONNECTED_ID`, `CODEF_HW_ORGANIZATION`
+
+상품마다 요청 JSON 필드가 다릅니다. BFF는 `connectedId`, `organization`, `phoneNo`, `id` 정도만 기본 넣습니다. 부족하면 CODEF 문서에 맞게 `tool/link26_bff_codef.dart` 의 `body` 를 확장하세요.
+
+**주의:** 건강보험·투약 일부 상품은 **추가 인증(2-way)** 이 필요합니다. 샌드박스는 고정 응답으로 연습용입니다.

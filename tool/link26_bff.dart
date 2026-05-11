@@ -9,6 +9,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'link26_bff_codef.dart';
+
 Future<void> main() async {
   final server = await _bindServer();
   final port = server.port;
@@ -78,7 +80,23 @@ Future<void> _handle(HttpRequest request) async {
     final method = request.method;
 
     if (method == 'GET' && path == '/health') {
-      await _json(request, 200, {'ok': true, 'service': 'link26-bff-dart'});
+      final env = loadBffDotEnv();
+      final probe = await codefHealthProbe(env);
+      final pathSet = (env['CODEF_MEDICATION_PATH'] ?? '').trim().isNotEmpty;
+      final idSet = (env['CODEF_CLIENT_ID'] ?? '').trim().isNotEmpty;
+      final secretSet = (env['CODEF_CLIENT_SECRET'] ?? '').trim().isNotEmpty;
+      final codefMedicationsReady =
+          bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']) &&
+              pathSet &&
+              idSet &&
+              secretSet;
+      await _json(request, 200, {
+        'ok': true,
+        'service': 'link26-bff-dart',
+        'codef': probe,
+        'medicationsSource':
+            codefMedicationsReady ? 'codef' : 'stub',
+      });
       return;
     }
 
@@ -104,6 +122,16 @@ Future<void> _handle(HttpRequest request) async {
 
     if (method == 'GET' && path == '/v1/medications') {
       final phone = request.uri.queryParameters['phone'] ?? '';
+      final env = loadBffDotEnv();
+      final codefRes = await fetchMedicationsFromCodef(
+        env: env,
+        phoneDigits: phone,
+        connectedIdOverride: request.uri.queryParameters['connectedId'],
+      );
+      if (codefRes != null) {
+        await _json(request, 200, codefRes);
+        return;
+      }
       await _json(request, 200, {
         'items': [
           {
@@ -119,7 +147,7 @@ Future<void> _handle(HttpRequest request) async {
             'time': '12:00',
           },
         ],
-        'meta': {'phone': phone, 'source': 'link26-bff-dart'},
+        'meta': {'phone': phone, 'source': 'link26-bff-dart-stub'},
       });
       return;
     }
