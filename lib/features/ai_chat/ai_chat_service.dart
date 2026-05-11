@@ -6,6 +6,8 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/network/api_client.dart';
 import 'package:link26_app/core/network/api_endpoints.dart';
+import 'package:link26_app/features/ai_chat/dur_asset_context.dart';
+import 'package:link26_app/features/ai_chat/nhis_chat_context.dart';
 
 import 'ai_chat_models.dart';
 
@@ -29,12 +31,16 @@ class AiChatService {
     return true;
   }
 
+  GenerativeModel _geminiModel() => GenerativeModel(
+        model: _modelId,
+        apiKey: GeminiRuntimeConfig.apiKey,
+      );
+
   Future<String?> _geminiText(String prompt) async {
     final key = GeminiRuntimeConfig.apiKey;
     if (key.isEmpty) return null;
     try {
-      final model = GenerativeModel(model: _modelId, apiKey: key);
-      final res = await model.generateContent([Content.text(prompt)]);
+      final res = await _geminiModel().generateContent([Content.text(prompt)]);
       return res.text?.trim();
     } catch (e, st) {
       if (kDebugMode) {
@@ -44,18 +50,240 @@ class AiChatService {
     }
   }
 
+  Future<String?> _geminiFromContents(List<Content> contents) async {
+    if (GeminiRuntimeConfig.apiKey.isEmpty) return null;
+    try {
+      final res = await _geminiModel().generateContent(contents);
+      return res.text?.trim();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('Gemini multimodal failed: $e\n$st');
+      }
+      return null;
+    }
+  }
+
+  /// 약·처방·이미지 문의는 DUR+NHIS+2단계 Gemini. 그 외는 일상 대화.
+  static bool shouldRunMedicinePipeline(String text, {required bool hasImage}) {
+    if (hasImage) return true;
+    final t = text.trim();
+    if (t.length < 2) return false;
+    const hints = [
+      '약', '처방', '영양제', '먹어', '복용', '금기', '상호작용', 'dur',
+      '건보', '공단', '처방전', '병용', '부작용', '투약', 'tablet', 'capsule',
+      'mg', 'ml', '정', '캡슐', '물약', '항생', '진통', '감기',
+    ];
+    final low = t.toLowerCase();
+    for (final h in hints) {
+      if (t.contains(h) || low.contains(h.toLowerCase())) return true;
+    }
+    // 일상 영어 인사 등은 약 파이프라인 제외 (단, 긴 영문은 성분명 가능성)
+    if (RegExp(r'^(hi|hello|hey|thanks|thank you|ok|bye|good morning)\b',
+            caseSensitive: false)
+        .hasMatch(low)) {
+      return false;
+    }
+    if (RegExp(r'[A-Za-z]{7,}').hasMatch(t)) return true;
+    if (t.length >= 26) return true;
+    return false;
+  }
+
+  /// 텍스트 ± 이미지. 약 관련이면 1차(텍스트+이미지+DUR+NHIS) → 2차(신호등 고정 문구 + NHIS 재조회).
+  Future<String> respondChat(
+    String userText, {
+    Uint8List? imageBytes,
+    String? imageMime,
+  }) async {
+    final text = userText.trim();
+    final hasImg = imageBytes != null && imageBytes.isNotEmpty;
+    if (!shouldRunMedicinePipeline(text, hasImage: hasImg)) {
+      return _respondCasual(text.isEmpty ? '…' : text);
+    }
+    return _respondMedicineTwoPass(text, imageBytes, imageMime);
+  }
+
+  Future<String> _respondCasual(String userText) async {
+    final key = GeminiRuntimeConfig.apiKey;
+    if (key.isEmpty) {
+      return '일상 대화도 Gemini를 쓰려면 `.env`에 GEMINI_API_KEY를 넣어 주세요.';
+    }
+    final p =
+        '(역할) 건강·복약 앱의 AI. 한국어로 짧고 자연스럽게.\n'
+        '(금지) 의학적 진단·처방·특정 약 용량 지시. 필요하면 의사·약사 상담을 권하세요.\n'
+        '(사용자) $userText';
+    return (await _geminiText(p)) ?? '응답을 만들지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  }
+
+  Future<String> _respondMedicineTwoPass(
+    String userText,
+    Uint8List? imageBytes,
+    String? imageMime,
+  ) async {
+    final key = GeminiRuntimeConfig.apiKey;
+    final durQuery = userText.isEmpty ? '의약품' : userText;
+    final durCtx = await DurAssetContext.buildSnippetForQuery(durQuery);
+    final nhisA = await NhisChatContext.fetchMedicationsSnapshot();
+    final cacheNames = await NhisChatContext.cachedMedicineNamesSummary();
+
+    if (key.isEmpty) {
+      return '🟡 권고 —\n'
+          'Gemini 분석을 쓰려면 GEMINI_API_KEY가 필요합니다.\n\n'
+          '[DUR 발췌]\n$durCtx\n\n'
+          '[건강보험 복약 스냅샷]\n$nhisA\n\n'
+          '[로컬 복약 이름]\n$cacheNames';
+    }
+
+    final primaryIntro = '''
+[1차 분석 — 출력은 JSON 한 덩어리만, 코드펜스·마크다운 금지]
+역할: 약국 보조 AI. 의학적 진단·처방 금지.
+사용자_텍스트: ${userText.isEmpty ? "(없음, 이미지만 가능)" : userText}
+
+[CONTEXT: DUR CSV 일부 — 병용금기·노인주의]
+$durCtx
+
+[CONTEXT: 국민건강보험 복약 API·캐시 스냅샷 JSON 또는 메시지]
+$nhisA
+
+[CONTEXT: 로컬에 저장된 복약 이름 요약]
+$cacheNames
+
+JSON 형식만 출력:
+{"draft_signal":"green|yellow|red","draft_reason":"한글 2문장 이내","dur_note":"한글","nhis_note":"한글","names_guessed":[]}
+
+의미: green=현재 자료 기준 특별한 병용·금기 징후가 약함, yellow=주의·확인·전문가 상담 필요, red=병용금기·중대 위험 가능성이 높음.
+''';
+
+    final List<Content> primaryCall;
+    if (imageBytes != null &&
+        imageMime != null &&
+        imageMime.isNotEmpty &&
+        imageBytes.isNotEmpty) {
+      primaryCall = [
+        Content.multi([
+          TextPart(primaryIntro),
+          DataPart(imageMime, imageBytes),
+        ]),
+      ];
+    } else {
+      primaryCall = [Content.text(primaryIntro)];
+    }
+
+    var primaryRaw = await _geminiFromContents(primaryCall);
+    primaryRaw ??= await _geminiText(primaryIntro);
+    if (primaryRaw == null || primaryRaw.trim().isEmpty) {
+      return '🟡 권고 —\n1차 분석을 생성하지 못했습니다. 네트워크·API 키·모델명을 확인해 주세요.';
+    }
+
+    final nhisB = await NhisChatContext.fetchMedicationsSnapshot();
+
+    final secondPrompt = '''
+[2차 최종 검토 — 출력 형식 엄수]
+첫 줄은 반드시 아래 중 하나로 **시작** (공백·이모지 동일):
+🟢 먹어도 괜찮아 —
+🟡 권고 —
+🔴 절대 먹으면 안 돼 —
+
+같은 줄에 한 문장을 이어 쓰고, 다음 줄부터 한글 2~4문장만 추가하세요.
+의학적 진단·처방·특정 용량 지시 금지. 반드시 의사·약사 상담을 안내하세요.
+
+[1차 결과]
+$primaryRaw
+
+[DUR 발췌 재참조]
+$durCtx
+
+[NHIS 복약 API 1차 스냅샷]
+$nhisA
+
+[NHIS 복약 API 2차 재조회 스냅샷 — 1차와 다르면 더 최신·보수적으로 판단]
+$nhisB
+
+불확실하면 🟡, 위험 징후가 있으면 🔴를 선택하세요.
+''';
+
+    var finalText = await _geminiText(secondPrompt);
+    finalText = _ensureTrafficLightFormat(finalText, primaryRaw);
+    return finalText;
+  }
+
+  String _ensureTrafficLightFormat(String? second, String primaryFallback) {
+    var t = (second ?? '').trim();
+    if (t.startsWith('🟢') || t.startsWith('🟡') || t.startsWith('🔴')) {
+      return t;
+    }
+    final sig = _signalFromDraftJson(primaryFallback);
+    final prefix = switch (sig) {
+      SafetySignal.green => '🟢 먹어도 괜찮아 —',
+      SafetySignal.yellow => '🟡 권고 —',
+      SafetySignal.red => '🔴 절대 먹으면 안 돼 —',
+    };
+    if (t.isEmpty) t = '(2차 검토 문구 생성 실패. 1차 요약을 참고하세요.)';
+    return '$prefix\n$t\n\n[1차 요약]\n$primaryFallback';
+  }
+
+  SafetySignal _signalFromDraftJson(String raw) {
+    final u = raw.toLowerCase();
+    if (u.contains('"draft_signal":"red') ||
+        u.contains('"draft_signal": "red') ||
+        u.contains('draft_signal":"red')) {
+      return SafetySignal.red;
+    }
+    if (u.contains('"draft_signal":"yellow') ||
+        u.contains('"draft_signal": "yellow')) {
+      return SafetySignal.yellow;
+    }
+    if (u.contains('"draft_signal":"green') ||
+        u.contains('"draft_signal": "green')) {
+      return SafetySignal.green;
+    }
+    return _signalFromText(raw);
+  }
+
+  /// 처방전·약 라벨 **이미지** — [respondChat]과 동일 파이프라인.
+  Future<MedicineInsight> analyzeMedicineImage({
+    required Uint8List bytes,
+    required String mimeType,
+  }) async {
+    final body = await respondChat('', imageBytes: bytes, imageMime: mimeType);
+    return MedicineInsight(
+      productName: '분석 결과',
+      signal: _signalFromText(body),
+      recommendation: body,
+      reason: '',
+    );
+  }
+
+  /// [MedicineInsight] 를 채팅 말풍선용 단일 문자열로.
+  static String insightToChatBody(MedicineInsight i) {
+    final emoji = switch (i.signal) {
+      SafetySignal.green => '🟢',
+      SafetySignal.yellow => '🟡',
+      SafetySignal.red => '🔴',
+    };
+    final buf = StringBuffer()
+      ..writeln('$emoji ${i.productName}')
+      ..writeln()
+      ..writeln(i.recommendation)
+      ..writeln()
+      ..write(i.reason);
+    if (i.secondaryReview != null && i.secondaryReview!.trim().isNotEmpty) {
+      buf
+        ..writeln()
+        ..writeln()
+        ..write(i.secondaryReview);
+    }
+    return buf.toString().trim();
+  }
+
   static const String _geminiFailureHintKo =
       'Gemini 응답을 받지 못했습니다. Google AI Studio에서 발급한 키를 프로젝트 루트 `.env`의 '
       'GEMINI_API_KEY에 넣고, `pubspec.yaml`에 `.env`가 assets로 포함돼 있는지 확인한 뒤 앱을 '
       '완전히 다시 실행(재빌드)하세요. 모델 ID(GEMINI_MODEL_ID)도 AI Studio에서 쓰는 이름과 맞추세요.';
 
-  /// REST `POST /ai/chat` — 백엔드가 없거나 실패 시 [triageMessage](Gemini·규칙).
+  /// REST `POST /ai/chat` — 백엔드가 없거나 실패 시 [respondChat](일상/약 2단계·DUR·NHIS).
   Future<String> sendChatMessage(String message) async {
     if (!_restBackendConfigured()) {
-      final t = await triageMessage(message);
-      final a = t.primaryAnswer.trim();
-      final f = t.followUpPrompt.trim();
-      return f.isEmpty ? a : '$a\n\n$f';
+      return respondChat(message);
     }
     try {
       final response = await _dio.post<dynamic>(
@@ -68,8 +296,7 @@ class AiChatService {
       }
       return '$data';
     } on DioException {
-      final t = await triageMessage(message);
-      return t.primaryAnswer;
+      return respondChat(message);
     }
   }
 

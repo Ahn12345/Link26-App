@@ -186,6 +186,25 @@ class AppLocalizationsKo extends AppLocalizations {
       '이미지 분석은 image_picker·업로드 API 연결 후 표시됩니다.';
 
   @override
+  String get aiChatPickCamera => '카메라로 촬영';
+
+  @override
+  String get aiChatPickGallery => '갤러리에서 선택';
+
+  @override
+  String get aiChatImageUserCaption => '[처방전·약 사진 보냄]';
+
+  @override
+  String get aiChatImageAnalyzing => '이미지를 분석하는 중…';
+
+  @override
+  String get aiChatImageOpenFailed =>
+      '카메라·사진 앱을 열 수 없습니다. 권한을 허용했는지 확인하세요.';
+
+  @override
+  String get aiChatImageReadFailed => '이미지 파일을 읽지 못했습니다.';
+
+  @override
   String get aiChatWelcomeIntro => '안녕하세요! 약 정보를 도와드리겠습니다.\n\n';
 
   @override

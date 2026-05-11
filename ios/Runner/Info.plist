@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>처방전·약 봉투 사진을 촬영해 약 정보 안내에 사용합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>저장된 처방전·약 사진을 선택해 약 정보 안내에 사용합니다.</string>
 </dict>
 </plist>

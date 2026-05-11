@@ -99,6 +99,12 @@ abstract class AppLocalizations {
   String get aiChatDisclaimerShort;
   String get aiChatCameraUserMessage;
   String get aiChatCameraReplyStub;
+  String get aiChatPickCamera;
+  String get aiChatPickGallery;
+  String get aiChatImageUserCaption;
+  String get aiChatImageAnalyzing;
+  String get aiChatImageOpenFailed;
+  String get aiChatImageReadFailed;
   String get aiChatWelcomeIntro;
   String get aiChatWelcomeUploadHint;
   String get aiChatWelcomeTipEmoji;

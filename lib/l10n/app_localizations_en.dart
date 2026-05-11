@@ -193,6 +193,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Image analysis will appear after wiring image_picker and upload API.';
 
   @override
+  String get aiChatPickCamera => 'Take photo';
+
+  @override
+  String get aiChatPickGallery => 'Choose from gallery';
+
+  @override
+  String get aiChatImageUserCaption => '[Prescription or medicine photo]';
+
+  @override
+  String get aiChatImageAnalyzing => 'Analyzing image…';
+
+  @override
+  String get aiChatImageOpenFailed =>
+      'Could not open camera or photos. Check permissions.';
+
+  @override
+  String get aiChatImageReadFailed => 'Could not read the image file.';
+
+  @override
   String get aiChatWelcomeIntro => 'Hello! I can help with medicine information.\n\n';
 
   @override

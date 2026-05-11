@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
@@ -121,17 +123,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
     await AiChatConversationCache.persist();
 
     try {
-      final triage = await AiChatService().triageMessage(text);
+      final body = (await AiChatService().respondChat(text)).trim();
       if (!mounted) return;
-      final primary = triage.primaryAnswer.trim();
-      final follow = triage.followUpPrompt.trim();
-      final buf = StringBuffer();
-      if (primary.isNotEmpty) buf.writeln(primary);
-      if (follow.isNotEmpty) {
-        if (buf.isNotEmpty) buf.writeln();
-        buf.writeln(follow);
-      }
-      final body = buf.toString().trim();
       setState(() {
         AiChatConversationCache.messages.add(
           ChatMessage(
@@ -162,7 +155,16 @@ class _AiChatBodyState extends State<_AiChatBody> {
     }
   }
 
-  Future<void> openCamera() async {
+  String _mimeFromImagePath(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
+  }
+
+  /// 카메라 또는 갤러리에서 이미지를 고른 뒤 Gemini(또는 키 없을 때 안내)로 분석합니다.
+  Future<void> openMedicineImagePicker() async {
     final l10n = AppLocalizations.of(context);
     if (_sending) return;
     if (AiChatConversationCache.dailyUsed >= _dailyLimit) {
@@ -171,24 +173,109 @@ class _AiChatBodyState extends State<_AiChatBody> {
       );
       return;
     }
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l10n.aiChatPickCamera),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.aiChatPickGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || source == null) return;
+
+    final picker = ImagePicker();
+    XFile? file;
+    try {
+      file = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 88,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.aiChatImageOpenFailed)),
+      );
+      return;
+    }
+    if (!mounted || file == null) return;
+
     setState(() {
       AiChatConversationCache.messages.add(
         ChatMessage(
           isUser: true,
           time: _nowLabel(),
-          text: l10n.aiChatCameraUserMessage,
+          text: l10n.aiChatImageUserCaption,
         ),
       );
       AiChatConversationCache.messages.add(
         ChatMessage(
           isUser: false,
           time: _nowLabel(),
-          text: l10n.aiChatCameraReplyStub,
+          text: l10n.aiChatImageAnalyzing,
+        ),
+      );
+      _sending = true;
+    });
+    await AiChatConversationCache.persist();
+
+    late Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        AiChatConversationCache.messages.removeLast();
+        AiChatConversationCache.messages.add(
+          ChatMessage(
+            isUser: false,
+            time: _nowLabel(),
+            text: l10n.aiChatImageReadFailed,
+          ),
+        );
+        _sending = false;
+      });
+      await AiChatConversationCache.persist();
+      return;
+    }
+
+    final mime = _mimeFromImagePath(file.path);
+    final reply = (await AiChatService().respondChat(
+      '',
+      imageBytes: bytes,
+      imageMime: mime,
+    ))
+        .trim();
+
+    if (!mounted) return;
+    setState(() {
+      AiChatConversationCache.messages.removeLast();
+      AiChatConversationCache.messages.add(
+        ChatMessage(
+          isUser: false,
+          time: _nowLabel(),
+          text: reply.isEmpty ? l10n.aiChatReplyError : reply,
         ),
       );
       if (AiChatConversationCache.dailyUsed < _dailyLimit) {
         AiChatConversationCache.dailyUsed++;
       }
+      _sending = false;
     });
     await AiChatConversationCache.persist();
   }
@@ -335,7 +422,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   sending: _sending,
                                   hintText: l10n.aiChatInputPlaceholder,
                                   onSend: () => unawaited(sendMessage()),
-                                  onCamera: () => unawaited(openCamera()),
+                                  onCamera: () =>
+                                      unawaited(openMedicineImagePicker()),
                                 ),
                               ],
                             ),

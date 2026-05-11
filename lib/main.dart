@@ -7,19 +7,32 @@ import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 
 import 'app.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+/// [dotenv.load] 는 파일 없음·빈 파일 등에서 예외를 던질 수 있고, 그러면 [dotenv] 가
+/// 미초기화 상태로 남아 이후 `dotenv.env` 접근마다 [NotInitializedError] 가 납니다.
+/// asset 문자열을 읽은 뒤 [dotenv.testLoad] 로 항상 초기화까지 마칩니다.
+Future<void> _loadDotenvFromAssets() async {
   try {
-    await dotenv.load(fileName: '.env');
+    var raw = await rootBundle.loadString('.env', cache: false);
+    if (raw.isNotEmpty && raw.codeUnitAt(0) == 0xFEFF) {
+      raw = raw.substring(1);
+    }
+    dotenv.testLoad(fileInput: raw);
   } catch (e, st) {
     if (kDebugMode) {
       debugPrint(
-        'Link26: .env 로드 실패 — 파일이 없거나 assets에 없을 수 있습니다. '
-        'pubspec.yaml에 `.env`가 있고 프로젝트 루트에 파일이 있는지 확인 후 flutter clean / 재빌드 하세요. $e',
+        'Link26: .env 로드 실패 — pubspec assets에 `.env`가 있는지, '
+        '프로젝트 루트에 파일이 있는지 확인 후 flutter clean / 재빌드 하세요.',
       );
+      debugPrint('Link26: detail: $e');
       debugPrint('$st');
     }
+    dotenv.testLoad(fileInput: '');
   }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _loadDotenvFromAssets();
   if (kDebugMode) {
     final n = GeminiRuntimeConfig.apiKey.length;
     debugPrint(
