@@ -347,6 +347,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeNotificationMarkDoseDone => 'Taken';
 
   @override
+  String get homeNotificationSectionSystem => 'System';
+
+  @override
+  String get homeNotificationSectionOther => 'Notices';
+
+  @override
+  String get homeNotificationEmptySystem => 'No system or sync alerts.';
+
+  @override
+  String get homeNotificationMarkSystemRead => 'Mark system read';
+
+  @override
+  String get homeNotificationSystemSyncTitle => 'Medication sync';
+
+  @override
+  String get homeNoticeOtherTitle => 'Service notices';
+
+  @override
+  String get homeNoticeOtherBody =>
+      'Supplement tips, events, and announcements appear here instead of a banner on the home screen.';
+
+  @override
+  String get authErrorTitle => 'Connection error';
+
+  @override
+  String get authErrorBody =>
+      'We could not complete this action. Check your network and try again.';
+
+  @override
+  String get authErrorBack => 'Go back';
+
+  @override
   String get homeTodayAlertsViewAll => 'View all reminders';
 
   @override

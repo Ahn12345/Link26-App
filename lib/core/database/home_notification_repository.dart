@@ -10,6 +10,7 @@ abstract final class HomeNotificationRepository {
   static Database? _db;
 
   static const _kindAiChatImage = 'ai_chat_image';
+  static const _kindSystemSync = 'system_sync';
 
   /// insert / markRead 후 증가 — 배지·목록 갱신용.
   static final ValueNotifier<int> revision = ValueNotifier<int>(0);
@@ -58,6 +59,58 @@ abstract final class HomeNotificationRepository {
     });
     _bump();
     return id;
+  }
+
+  static Future<int> insertSystemSyncNotice({
+    required String title,
+    required String preview,
+  }) async {
+    final db = await _open();
+    var ptext = preview.trim();
+    if (ptext.length > 800) ptext = '${ptext.substring(0, 800)}…';
+    final id = await db.insert('home_notifications', {
+      'kind': _kindSystemSync,
+      'title': title.trim(),
+      'preview': ptext,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+      'read': 0,
+    });
+    _bump();
+    return id;
+  }
+
+  static Future<List<HomeNotificationRow>> listSystemSync({
+    int limit = 80,
+  }) async {
+    final db = await _open();
+    final rows = await db.query(
+      'home_notifications',
+      where: 'kind = ?',
+      whereArgs: [_kindSystemSync],
+      orderBy: 'created_at DESC',
+      limit: limit,
+    );
+    return rows.map(HomeNotificationRow.fromMap).toList();
+  }
+
+  static Future<int> unreadCountSystemSync() async {
+    final db = await _open();
+    final rows = await db.rawQuery(
+      'SELECT COUNT(*) as c FROM home_notifications WHERE kind = ? AND read = 0',
+      [_kindSystemSync],
+    );
+    return ((rows.first['c'] as num?)?.toInt()) ?? 0;
+  }
+
+  static Future<void> markAllSystemSyncRead() async {
+    final db = await _open();
+    await db.update(
+      'home_notifications',
+      {'read': 1},
+      where: 'kind = ? AND read = 0',
+      whereArgs: [_kindSystemSync],
+    );
+    _bump();
   }
 
   static Future<int> unreadCountAiChat() async {

@@ -31,16 +31,17 @@ class _HomeNotificationCenterScreenState
     extends State<HomeNotificationCenterScreen> {
   _NotifTab _tab = _NotifTab.all;
   List<HomeNotificationRow> _aiRows = [];
+  List<HomeNotificationRow> _systemRows = [];
 
   @override
   void initState() {
     super.initState();
     HomeNotificationRepository.revision.addListener(_onRepo);
-    _loadAi();
+    _loadAll();
   }
 
   void _onRepo() {
-    if (mounted) _loadAi();
+    if (mounted) _loadAll();
   }
 
   @override
@@ -49,9 +50,15 @@ class _HomeNotificationCenterScreenState
     super.dispose();
   }
 
-  Future<void> _loadAi() async {
-    final list = await HomeNotificationRepository.listAiChat();
-    if (mounted) setState(() => _aiRows = list);
+  Future<void> _loadAll() async {
+    final ai = await HomeNotificationRepository.listAiChat();
+    final sys = await HomeNotificationRepository.listSystemSync();
+    if (mounted) {
+      setState(() {
+        _aiRows = ai;
+        _systemRows = sys;
+      });
+    }
   }
 
   String _timeLabel(int ms) {
@@ -90,6 +97,7 @@ class _HomeNotificationCenterScreenState
                   Expanded(
                     child: Text(
                       l10n.homeNotificationCenterTitle,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -98,18 +106,31 @@ class _HomeNotificationCenterScreenState
                       ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      await HomeNotificationRepository.markAllAiChatRead();
-                      await AiChatHomeAlertNotifier.instance
-                          .refreshBannerFromDb();
-                      await _loadAi();
+                  PopupMenuButton<String>(
+                    tooltip: l10n.homeNotificationMarkAiRead,
+                    icon: const Icon(Icons.done_all_outlined),
+                    onSelected: (v) async {
+                      if (v == 'ai') {
+                        await HomeNotificationRepository.markAllAiChatRead();
+                        await AiChatHomeAlertNotifier.instance
+                            .refreshBannerFromDb();
+                      } else if (v == 'sys') {
+                        await HomeNotificationRepository
+                            .markAllSystemSyncRead();
+                      }
+                      await _loadAll();
                       widget.onListsChanged();
                     },
-                    child: Text(
-                      l10n.homeNotificationMarkAiRead,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'ai',
+                        child: Text(l10n.homeNotificationMarkAiRead),
+                      ),
+                      PopupMenuItem(
+                        value: 'sys',
+                        child: Text(l10n.homeNotificationMarkSystemRead),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -174,6 +195,10 @@ class _HomeNotificationCenterScreenState
         return [
           _sectionTitle(l10n.homeNotificationSectionAi),
           ..._aiTiles(l10n),
+          _sectionTitle(l10n.homeNotificationSectionSystem),
+          ..._systemTiles(l10n),
+          _sectionTitle(l10n.homeNotificationSectionOther),
+          _otherNoticeCard(l10n),
           _sectionTitle(l10n.homeNotificationSectionDose),
           ..._alarmTiles(l10n, appAlarms, isCall: false),
           _sectionTitle(l10n.homeNotificationSectionCall),
@@ -230,7 +255,7 @@ class _HomeNotificationCenterScreenState
               onTap: () async {
                 await HomeNotificationRepository.markRead(r.id);
                 await AiChatHomeAlertNotifier.instance.refreshBannerFromDb();
-                await _loadAi();
+                await _loadAll();
                 widget.onListsChanged();
                 if (!mounted) return;
                 MainShellTabBus.goTo(1);
@@ -327,6 +352,149 @@ class _HomeNotificationCenterScreenState
         ),
       );
     }).toList();
+  }
+
+  List<Widget> _systemTiles(AppLocalizations l10n) {
+    if (_systemRows.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            l10n.homeNotificationEmptySystem,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Link26Surface.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ];
+    }
+    return _systemRows.map((r) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Link26ElevatedCard(
+          padding: EdgeInsets.zero,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () async {
+                await HomeNotificationRepository.markRead(r.id);
+                await _loadAll();
+                widget.onListsChanged();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Link26Surface.badgeTint,
+                      child: Icon(
+                        Icons.sync_alt_rounded,
+                        color: Link26Surface.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  r.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _timeLabel(r.createdAtMs),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Link26Surface.textMuted,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (!r.read) ...[
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Link26Surface.chipTint,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                l10n.homeNotificationNewBadge,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  color: Link26Surface.accent,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Text(
+                            r.preview,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                              color: Link26Surface.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _otherNoticeCard(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Link26ElevatedCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.homeNoticeOtherTitle,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                color: Link26Surface.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.homeNoticeOtherBody,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                height: 1.45,
+                fontSize: 14,
+                color: Link26Surface.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> _alarmTiles(

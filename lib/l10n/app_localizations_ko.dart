@@ -339,6 +339,38 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeNotificationMarkDoseDone => '복용 완료';
 
   @override
+  String get homeNotificationSectionSystem => '시스템 알림';
+
+  @override
+  String get homeNotificationSectionOther => '기타 · 공지';
+
+  @override
+  String get homeNotificationEmptySystem => '시스템 연동 알림이 없습니다.';
+
+  @override
+  String get homeNotificationMarkSystemRead => '시스템 읽음';
+
+  @override
+  String get homeNotificationSystemSyncTitle => '복약·연동';
+
+  @override
+  String get homeNoticeOtherTitle => '서비스 공지';
+
+  @override
+  String get homeNoticeOtherBody =>
+      '건강 보조 식품 추천·이벤트 등 안내는 이 섹션에 모읍니다. 홈 하단 배너 대신 여기서 확인하세요.';
+
+  @override
+  String get authErrorTitle => '연결 오류';
+
+  @override
+  String get authErrorBody =>
+      '일시적으로 처리할 수 없습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.';
+
+  @override
+  String get authErrorBack => '돌아가기';
+
+  @override
   String get homeTodayAlertsViewAll => '전체 보기';
 
   @override

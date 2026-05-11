@@ -7,13 +7,13 @@ import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
-import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/core/widgets/link26_standard_frame.dart';
 import 'package:link26_app/features/auth/services/nhis_login_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 import 'package:sqflite/sqflite.dart';
@@ -208,9 +208,10 @@ class _LoginPageState extends State<LoginPage> {
           top: false,
           child: Padding(
             padding: EdgeInsets.only(top: topUnderAppBar),
-            child: Link26ResponsiveScroll(
-              child: LayoutBuilder(
-                builder: (context, c) {
+            child: Link26StandardFrame(
+              child: SingleChildScrollView(
+                child: LayoutBuilder(
+                  builder: (context, c) {
                   final contentW = c.maxWidth;
                   final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w)
                       .clamp(0.0, contentW);
@@ -369,6 +370,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   );
                 },
+                ),
               ),
             ),
           ),

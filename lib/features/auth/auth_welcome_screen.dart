@@ -10,6 +10,7 @@ import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/core/widgets/link26_standard_frame.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 
@@ -39,105 +40,105 @@ class AuthWelcomeScreen extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, c) {
               final w = c.maxWidth;
-              final pad = Link26Layout.pageInsets(w);
               final logoH = Link26ResponsiveImageHeights.authWelcome(w);
               final logoW = Link26ResponsiveImageHeights.authWelcomeDisplayWidth(w);
               final authPadV = Link26ResponsiveUi.authCardPadVertical(w);
               final authPadH = Link26ResponsiveUi.authCardPadHorizontal(w);
               final welcomeTop = Link26ResponsiveUi.welcomeTopInset(w);
-              return Padding(
-                padding: pad,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(height: welcomeTop),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: Link26Layout.innerWidth(w),
-                        ),
-                        child: Link26FramedPageCard(
-                          padding: EdgeInsets.symmetric(vertical: authPadV, horizontal: authPadH),
-                          child: Column(
-                            children: [
-                              Center(
-                                child: SizedBox(
-                                  width: logoW,
-                                  child: DecodedAssetImage(
-                                    ImageAssets.logo,
-                                    height: logoH,
-                                    fit: BoxFit.contain,
+              return Link26StandardFrame(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: welcomeTop),
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: Link26Layout.innerWidth(w),
+                          ),
+                          child: Link26FramedPageCard(
+                            padding: EdgeInsets.symmetric(vertical: authPadV, horizontal: authPadH),
+                            child: Column(
+                              children: [
+                                Center(
+                                  child: SizedBox(
+                                    width: logoW,
+                                    child: DecodedAssetImage(
+                                      ImageAssets.logo,
+                                      height: logoH,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
-                              Text(
-                                l10n.appTitle,
-                                style: TextStyle(
-                                  fontSize: Link26ResponsiveUi.appMarketingTitle(w),
-                                  fontWeight: FontWeight.w900,
-                                  color: Link26Surface.textPrimary,
-                                  letterSpacing: -0.4,
+                                SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
+                                Text(
+                                  l10n.appTitle,
+                                  style: TextStyle(
+                                    fontSize: Link26ResponsiveUi.appMarketingTitle(w),
+                                    fontWeight: FontWeight.w900,
+                                    color: Link26Surface.textPrimary,
+                                    letterSpacing: -0.4,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                              Text(
-                                l10n.authWelcomeSubtitle,
-                                style: TextStyle(
-                                  fontSize: Link26ResponsiveUi.appMarketingSubtitle(w),
-                                  color: Link26Surface.textSecondary,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.4,
+                                SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                                Text(
+                                  l10n.authWelcomeSubtitle,
+                                  style: TextStyle(
+                                    fontSize: Link26ResponsiveUi.appMarketingSubtitle(w),
+                                    color: Link26Surface.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.4,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
+                                SizedBox(
+                                  height: Link26ResponsiveUi.gapLg(w) +
+                                      Link26ResponsiveUi.gapMd(w) +
+                                      Link26ResponsiveUi.gapMd(w) +
+                                      32,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: (c.maxHeight * 0.03).clamp(12.0, 40.0),
+                      ),
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: Link26Layout.innerWidth(w),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              FilledButton(
+                                onPressed: () {
+                                  Navigator.of(context).pushNamed(LoginPage.routeName);
+                                },
+                                style: Link26UnifiedPage.filledCtaButton(
+                                  minimumSize: const Size.fromHeight(56),
+                                ),
+                                child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),
                               ),
-                              SizedBox(
-                                height: Link26ResponsiveUi.gapLg(w) +
-                                    Link26ResponsiveUi.gapMd(w) +
-                                    Link26ResponsiveUi.gapMd(w) +
-                                    32,
+                              SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                              OutlinedButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pushNamed(SignupPage.routeName),
+                                style: outlineBtn,
+                                child: Text(l10n.signup, style: const TextStyle(fontWeight: FontWeight.w800)),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      height: (c.maxHeight * 0.03).clamp(12.0, 40.0),
-                    ),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: Link26Layout.innerWidth(w),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            FilledButton(
-                              onPressed: () {
-                                Navigator.of(context).pushNamed(LoginPage.routeName);
-                              },
-                              style: Link26UnifiedPage.filledCtaButton(
-                                minimumSize: const Size.fromHeight(56),
-                              ),
-                              child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),
-                            ),
-                            SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                            OutlinedButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pushNamed(SignupPage.routeName),
-                              style: outlineBtn,
-                              child: Text(l10n.signup, style: const TextStyle(fontWeight: FontWeight.w800)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                  ],
+                      SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                    ],
+                  ),
                 ),
               );
             },

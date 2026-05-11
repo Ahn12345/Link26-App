@@ -504,35 +504,73 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   text: l10n.aiChatDisclaimerShort,
                                   layoutWidth: w,
                                 ),
-                                if (AiChatPendingAttachmentStore
-                                    .instance.hasPending)
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: Link26ResponsiveUi.gapSm(w),
+                                SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(
+                                      Link26UnifiedPage.frameRadius,
                                     ),
-                                    child: _PendingAttachmentChip(
-                                      label: l10n.aiChatImagePendingHint,
-                                      previewBytes:
-                                          AiChatPendingAttachmentStore
-                                              .instance.bytes,
-                                      onRemove: AiChatOutgoingBusy
-                                              .instance.value
-                                          ? null
-                                          : () => AiChatPendingAttachmentStore
-                                              .instance.clear(),
+                                    border: Border.all(
+                                      color: Link26Surface.outline,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Link26Surface.cardShadow,
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(
+                                      Link26ResponsiveUi.gapSm(w)
+                                          .clamp(8.0, 14.0),
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (AiChatPendingAttachmentStore
+                                            .instance.hasPending)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom:
+                                                  Link26ResponsiveUi.gapSm(w),
+                                            ),
+                                            child: _PendingAttachmentChip(
+                                              label: l10n
+                                                  .aiChatImagePendingHint,
+                                              previewBytes:
+                                                  AiChatPendingAttachmentStore
+                                                      .instance.bytes,
+                                              onRemove: AiChatOutgoingBusy
+                                                      .instance.value
+                                                  ? null
+                                                  : () =>
+                                                      AiChatPendingAttachmentStore
+                                                          .instance.clear(),
+                                            ),
+                                          ),
+                                        _InputBar(
+                                          controller: controller,
+                                          layoutWidth: w,
+                                          attachTooltip: l10n
+                                              .aiChatAttachGalleryTooltip,
+                                          enabled: inputEnabled,
+                                          sending: AiChatOutgoingBusy
+                                              .instance.value,
+                                          hintText:
+                                              l10n.aiChatInputPlaceholder,
+                                          onSend: () =>
+                                              unawaited(sendMessage()),
+                                          onAttachImage: () => unawaited(
+                                              openMedicineImagePicker()),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                _InputBar(
-                                  controller: controller,
-                                  layoutWidth: w,
-                                  attachTooltip: l10n.aiChatAttachGalleryTooltip,
-                                  enabled: inputEnabled,
-                                  sending:
-                                      AiChatOutgoingBusy.instance.value,
-                                  hintText: l10n.aiChatInputPlaceholder,
-                                  onSend: () => unawaited(sendMessage()),
-                                  onAttachImage: () =>
-                                      unawaited(openMedicineImagePicker()),
                                 ),
                               ],
                             ),
@@ -959,7 +997,7 @@ class _InputBar extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
             icon: Icon(
-              Icons.attach_file_outlined,
+              Icons.photo_library_outlined,
               size: iconPx,
               semanticLabel: attachTooltip,
             ),

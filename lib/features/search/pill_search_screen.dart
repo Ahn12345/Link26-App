@@ -11,6 +11,7 @@ import '../../core/theme/link26_unified_page.dart';
 import '../../core/widgets/decoded_asset_image.dart';
 import '../../core/widgets/link26_brand_backdrop.dart';
 import '../../core/widgets/link26_dashboard_widgets.dart';
+import '../../core/widgets/link26_standard_frame.dart';
 
 /// 약 검색 + 내 약 목록에 추가 (`pillsearch.png`).
 class PillSearchScreen extends StatefulWidget {
@@ -70,17 +71,21 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
           top: false,
           child: Padding(
             padding: EdgeInsets.only(top: topUnderAppBar),
-            child: Link26ResponsiveList(
-              children: [
-                Link26FramedPageCard(
-                  padding: EdgeInsets.symmetric(
-                    vertical: Link26ResponsiveUi.authCardPadVertical(w),
-                    horizontal:
-                        Link26ResponsiveUi.authCardPadHorizontal(w),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+            child: Link26StandardFrame(
+              child: ListView(
+                padding: EdgeInsets.only(
+                  bottom: Link26Layout.pageInsets(w).bottom,
+                ),
+                children: [
+                  Link26FramedPageCard(
+                    padding: EdgeInsets.symmetric(
+                      vertical: Link26ResponsiveUi.authCardPadVertical(w),
+                      horizontal:
+                          Link26ResponsiveUi.authCardPadHorizontal(w),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                       Center(
                         child: SizedBox(
                           width: heroW,
@@ -124,7 +129,8 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                     ],
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

@@ -147,6 +147,16 @@ abstract class AppLocalizations {
   String get homeNotificationKindCall;
   String get homeNotificationDoseConfirmed;
   String get homeNotificationMarkDoseDone;
+  String get homeNotificationSectionSystem;
+  String get homeNotificationSectionOther;
+  String get homeNotificationEmptySystem;
+  String get homeNotificationMarkSystemRead;
+  String get homeNotificationSystemSyncTitle;
+  String get homeNoticeOtherTitle;
+  String get homeNoticeOtherBody;
+  String get authErrorTitle;
+  String get authErrorBody;
+  String get authErrorBack;
   String get homeTodayAlertsViewAll;
   String get homeMyMedicinesTitle;
   String get homeAddMedicine;

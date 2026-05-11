@@ -102,8 +102,12 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
 
   Future<void> _refreshBellBadge() async {
     final aiUnread = await HomeNotificationRepository.unreadCountAiChat();
+    final systemUnread =
+        await HomeNotificationRepository.unreadCountSystemSync();
     final pendingDose = alarms.where((a) => !a.completed).length;
-    if (mounted) setState(() => _bellBadgeCount = aiUnread + pendingDose);
+    if (mounted) {
+      setState(() => _bellBadgeCount = aiUnread + systemUnread + pendingDose);
+    }
   }
 
   Future<void> _dismissAiChatBannerAndRefresh() async {
@@ -169,15 +173,15 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
     final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
     if (mounted) await _reloadMedicinesFromStores();
-    if (mounted &&
-        syncOut.showBannerOnBootstrap &&
-        NhisRuntimeConfig.showMedicationSyncSnackbars) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(syncOut.userMessageKo),
-          duration: const Duration(seconds: 6),
-        ),
-      );
+    if (mounted && syncOut.showBannerOnBootstrap) {
+      final msg = syncOut.userMessageKo.trim();
+      if (msg.isNotEmpty) {
+        await HomeNotificationRepository.insertSystemSyncNotice(
+          title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
+          preview: msg,
+        );
+        await _refreshBellBadge();
+      }
     }
   }
 
@@ -213,15 +217,15 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       final phone = await _phoneForNhisSync();
       final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
       if (mounted) await _reloadMedicinesFromStores();
-      if (mounted &&
-          syncOut.showBannerOnBootstrap &&
-          NhisRuntimeConfig.showMedicationSyncSnackbars) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(syncOut.userMessageKo),
-            duration: const Duration(seconds: 5),
-          ),
-        );
+      if (mounted && syncOut.showBannerOnBootstrap) {
+        final msg = syncOut.userMessageKo.trim();
+        if (msg.isNotEmpty) {
+          await HomeNotificationRepository.insertSystemSyncNotice(
+            title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
+            preview: msg,
+          );
+          await _refreshBellBadge();
+        }
       }
     } else {
       if (mounted) await _reloadMedicinesFromStores();
@@ -453,7 +457,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   else
                     ...medicines.map((m) => _MedicineTile(medicine: m)),
                   SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                  const _AdBanner(),
                 ]),
               ),
             ),
@@ -855,52 +858,6 @@ class _MedicineTile extends StatelessWidget {
               icon: const Icon(Icons.edit_outlined, color: Link26Surface.accent),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AdBanner extends StatelessWidget {
-  const _AdBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: Link26ResponsiveUi.adBannerPadH(w),
-        vertical: Link26ResponsiveUi.adBannerPadV(w),
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFE8F1FF),
-            Link26Surface.accent.withValues(alpha: 0.12),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD7E4FF)),
-        boxShadow: [
-          BoxShadow(
-            color: Link26Surface.accent.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          '광고 배너 영역\n간단 보조 식품 추천',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: Link26ResponsiveUi.adBannerText(w),
-            height: 1.45,
-            color: const Color(0xFF1E3A8A),
-          ),
         ),
       ),
     );
