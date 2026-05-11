@@ -61,6 +61,22 @@ if (Test-Path -LiteralPath $gradleBat) {
   }
 }
 
+# 데몬 종료 직후에도 핸들이 남는 경우가 있어 잠시 대기한 뒤, 문제가 잦은 mergeDebugAssets만 실제 경로에서 비움(SUBST M:\ 와 동일 물리 폴더).
+Start-Sleep -Milliseconds 900
+function Remove-DirIfExists([string]$LiteralPath) {
+  if (-not (Test-Path -LiteralPath $LiteralPath)) { return }
+  Write-Host "[Link26] Removing locked-prone dir: $LiteralPath" -ForegroundColor DarkGray
+  try { cmd.exe /c "attrib -r -s -h `"$LiteralPath\*`" /s /d" 2>$null | Out-Null } catch {}
+  Remove-Item -LiteralPath $LiteralPath -Recurse -Force -ErrorAction SilentlyContinue
+  if (Test-Path -LiteralPath $LiteralPath) {
+    cmd.exe /c "rmdir /s /q `"$LiteralPath`"" 2>$null | Out-Null
+  }
+}
+$mergeDebugAssets = Join-Path $projectRoot "build\app\intermediates\assets\debug\mergeDebugAssets"
+Remove-DirIfExists $mergeDebugAssets
+$mergeReleaseAssets = Join-Path $projectRoot "build\app\intermediates\assets\release\mergeReleaseAssets"
+Remove-DirIfExists $mergeReleaseAssets
+
 if ($CleanBuild) {
   Write-Host "[Link26] -CleanBuild: removing build\ (Gradle asset merge lock workaround)..." -ForegroundColor Cyan
   $buildDir = Join-Path $projectRoot "build"

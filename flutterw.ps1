@@ -4,7 +4,7 @@
 #
 # Examples:
 #   .\flutterw.ps1 run
-#   .\flutterw.ps1 -CleanBuild run          # if :cleanMergeDebugAssets cannot delete build\
+#   .\flutterw.ps1 -CleanBuild run          # mergeDebugAssets / build\ 삭제 잠금 시
 #   .\flutterw.ps1 run -d <deviceId>
 #   .\flutterw.ps1 pub get
 param(

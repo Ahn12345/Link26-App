@@ -1,5 +1,6 @@
 # Flutter / Windows에서 build·.dart_tool·ephemeral 삭제가 잠금으로 실패할 때 사용합니다.
 # (OneDrive·백신·IDE·dart 분석 서버·Gradle 이 폴더를 잡는 경우가 많습니다.)
+# `cleanMergeDebugAssets` / `Unable to delete ... mergeDebugAssets` 가 나올 때도 동일합니다.
 #
 # 사용:
 #   .\tool\clean_flutter_ephemeral.ps1
