@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="simplelogin1" file="simplelogin1.png" dartConst="ImageAssets.simplelogin1">
-  <summary usage="월간 HIRA 간편인증 안내 1단계 다이얼로그"/>
-  <source path="assets/images/simplelogin1.png"/>
-  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T19:38:58.832428Z" path="assets/images/simplelogin1.png"/>
-  <responsiveImageScreen ref="simpleLogin1"/>
+  <summary usage="월간 HIRA 간편인증 안내 1단계 다이얼로그" />
+  <source path="assets/images/simplelogin1.png" />
+  <responsiveImageScreen ref="simpleLogin1" />
   <flutter>
-    <file path="lib/core/services/monthly_hira_auth_gate.dart"/>
+    <file path="lib/core/services/monthly_hira_auth_gate.dart" />
   </flutter>
-  <android strings="@string/flutter_image_simplelogin1"/>
+  <android strings="@string/flutter_image_simplelogin1" />
 </link26-png-spec>

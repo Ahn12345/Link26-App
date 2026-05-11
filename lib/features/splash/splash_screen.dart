@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';

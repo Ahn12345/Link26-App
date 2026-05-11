@@ -174,6 +174,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Daily AI question limit reached. It resets at 4:00 a.m. local time.';
 
   @override
+  String get aiChatResetQuotaButton => 'Reset limit on this device';
+
+  @override
+  String get aiChatResetQuotaTitle => 'Reset limit on this device';
+
+  @override
+  String get aiChatResetQuotaMessage =>
+      'Only the usage count stored on this device for today will go back to zero. Chat history stays; this does not change other devices or server rules.';
+
+  @override
+  String get aiChatResetQuotaConfirm => 'Reset';
+
+  @override
+  String get aiChatResetQuotaCancel => 'Cancel';
+
+  @override
+  String get aiChatResetQuotaDone => 'Usage limit reset on this device.';
+
+  @override
+  String get aiChatAttachGalleryTooltip => 'Choose image from gallery';
+
+  @override
   String get aiChatReplyError =>
       'Could not get a response. Please try again shortly.';
 

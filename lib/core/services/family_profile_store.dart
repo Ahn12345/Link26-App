@@ -1,4 +1,4 @@
-﻿import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Local profile storage. Can be replaced with backend sync later.
 class FamilyProfile {

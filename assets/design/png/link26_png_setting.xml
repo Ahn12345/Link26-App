@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="setting" file="setting.png" dartConst="ImageAssets.setting">
-  <summary usage="더보기 탭 전체 배경(기획 에셋 — 코드 연동 시 로드 정책 확인)"/>
-  <source path="assets/images/setting.png"/>
-  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3968" generatedAt="2026-05-10T19:38:58.832428Z" path="assets/images/setting.png"/>
-  <responsiveImageScreen ref=""/>
-  <flutter note="배경 에셋 — 연동 시 사용 화면 dart 경로 기재"/>
-  <android strings="@string/flutter_image_setting"/>
+  <summary usage="더보기 탭 전체 배경(기획 에셋 — 코드 연동 시 로드 정책 확인)" />
+  <source path="assets/images/setting.png" />
+  <responsiveImageScreen ref="" />
+  <flutter note="배경 에셋 — 연동 시 사용 화면 dart 경로 기재" />
+  <android strings="@string/flutter_image_setting" />
 </link26-png-spec>

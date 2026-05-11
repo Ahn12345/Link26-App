@@ -143,6 +143,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
     super.initState();
     AiChatPendingAttachmentStore.instance.addListener(_onGlobalChatUiChanged);
     AiChatOutgoingBusy.instance.addListener(_onGlobalChatUiChanged);
+    AiChatConversationCache.revision.addListener(_onGlobalChatUiChanged);
     _bootstrap();
   }
 
@@ -169,8 +170,39 @@ class _AiChatBodyState extends State<_AiChatBody> {
   void dispose() {
     AiChatPendingAttachmentStore.instance.removeListener(_onGlobalChatUiChanged);
     AiChatOutgoingBusy.instance.removeListener(_onGlobalChatUiChanged);
+    AiChatConversationCache.revision.removeListener(_onGlobalChatUiChanged);
     controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _confirmAndResetDeviceQuota() async {
+    final l10n = AppLocalizations.of(context);
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.aiChatResetQuotaTitle),
+        content: SingleChildScrollView(
+          child: Text(l10n.aiChatResetQuotaMessage),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.aiChatResetQuotaCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.aiChatResetQuotaConfirm),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !mounted) return;
+    await AiChatConversationCache.resetDeviceDailyQuota();
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.aiChatResetQuotaDone)),
+    );
   }
 
   Future<void> sendMessage() async {
@@ -262,7 +294,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
     return 'image/jpeg';
   }
 
-  /// 카메라 또는 갤러리에서 이미지를 고릅니다. 분석은 텍스트 입력 후 전송 시 실행됩니다.
+  /// 갤러리에서 이미지를 고릅니다. 분석은 텍스트 입력 후 전송 시 실행됩니다.
   Future<void> openMedicineImagePicker() async {
     final l10n = AppLocalizations.of(context);
     if (AiChatOutgoingBusy.instance.value) return;
@@ -273,34 +305,11 @@ class _AiChatBodyState extends State<_AiChatBody> {
       return;
     }
 
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(l10n.aiChatPickCamera),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.aiChatPickGallery),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (!mounted || source == null) return;
-
     final picker = ImagePicker();
     XFile? file;
     try {
       file = await picker.pickImage(
-        source: source,
+        source: ImageSource.gallery,
         maxWidth: 1600,
         maxHeight: 1600,
         imageQuality: 88,
@@ -340,8 +349,10 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final embedded = widget.embeddedInShell;
-    final shellNavPad =
-        embedded ? MediaQuery.of(context).padding.bottom + 88.0 : 0.0;
+    // 하단 탭: 시스템 인디케이터 + 내비 높이만큼만 비움(이전 padding.bottom+88은 여백이 과해 보일 수 있음).
+    final shellNavPad = embedded
+        ? MediaQuery.viewPaddingOf(context).bottom + 72.0
+        : 0.0;
     final inputEnabled = !AiChatOutgoingBusy.instance.value &&
         AiChatConversationCache.dailyUsed < _dailyLimit;
 
@@ -378,6 +389,13 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               embedded: embedded,
                               horizontalPad: 0,
                               layoutWidth: w,
+                              onResetDeviceQuota:
+                                  AiChatConversationCache.dailyUsed >=
+                                          _dailyLimit
+                                      ? () => unawaited(
+                                            _confirmAndResetDeviceQuota(),
+                                          )
+                                      : null,
                             ),
                           ),
                         ),
@@ -397,7 +415,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                             ),
                           ),
                         Expanded(
-                          child: Center(
+                          child: Align(
+                            alignment: Alignment.topCenter,
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
                                 maxWidth: Link26Layout.innerWidth(w),
@@ -408,7 +427,6 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   builder: (context, vp) {
                                     final scrollPadBottom =
                                         Link26ResponsiveUi.gapSm(w);
-                                    // 패딩만큼 빼야 말풍선이 입력/면책 바로 위에 붙습니다.
                                     final minScrollBody =
                                         vp.maxHeight - scrollPadBottom;
                                     return SingleChildScrollView(
@@ -440,6 +458,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                                       _welcomeAccessLabel ??
                                                           '…',
                                                   maxBubbleWidth: bubbleMax,
+                                                  layoutWidth: w,
                                                 ),
                                                 ...AiChatConversationCache
                                                     .messages
@@ -453,6 +472,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                                       message: m,
                                                       maxBubbleWidth:
                                                           bubbleMax,
+                                                      layoutWidth: w,
                                                     ),
                                                   ),
                                                 ),
@@ -478,11 +498,15 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 _DisclaimerBanner(
-                                    text: l10n.aiChatDisclaimerShort),
+                                  text: l10n.aiChatDisclaimerShort,
+                                  layoutWidth: w,
+                                ),
                                 if (AiChatPendingAttachmentStore
                                     .instance.hasPending)
                                   Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
+                                    padding: EdgeInsets.only(
+                                      bottom: Link26ResponsiveUi.gapSm(w),
+                                    ),
                                     child: _PendingAttachmentChip(
                                       label: l10n.aiChatImagePendingHint,
                                       onRemove: AiChatOutgoingBusy
@@ -494,6 +518,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   ),
                                 _InputBar(
                                   controller: controller,
+                                  layoutWidth: w,
+                                  attachTooltip: l10n.aiChatAttachGalleryTooltip,
                                   enabled: inputEnabled,
                                   sending:
                                       AiChatOutgoingBusy.instance.value,
@@ -539,6 +565,7 @@ class _ChatHeader extends StatelessWidget {
     required this.embedded,
     required this.horizontalPad,
     required this.layoutWidth,
+    this.onResetDeviceQuota,
   });
 
   final String title;
@@ -548,13 +575,16 @@ class _ChatHeader extends StatelessWidget {
   final bool embedded;
   final double horizontalPad;
   final double layoutWidth;
+  final VoidCallback? onResetDeviceQuota;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final progress = limit > 0 ? used / limit : 0.0;
     final leftPad = horizontalPad + (embedded ? 0 : 40);
     final w = layoutWidth;
     final padV = Link26ResponsiveUi.chatHeaderPadV(w);
+    final atLimit = used >= limit && limit > 0;
 
     return Container(
       decoration: link26ElevatedCardDecoration(),
@@ -606,6 +636,30 @@ class _ChatHeader extends StatelessWidget {
                 color: Colors.grey.shade500,
               ),
             ),
+            if (atLimit && onResetDeviceQuota != null) ...[
+              SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onResetDeviceQuota,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Link26Surface.accent,
+                    side: const BorderSide(color: Link26Surface.accent),
+                    padding: EdgeInsets.symmetric(
+                      vertical: Link26ResponsiveUi.gapSm(w),
+                      horizontal: Link26ResponsiveUi.gapMd(w),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.aiChatResetQuotaButton,
+                    style: TextStyle(
+                      fontSize: Link26ResponsiveUi.chatHint(w),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -618,21 +672,27 @@ class _AiWelcomeBubble extends StatelessWidget {
   const _AiWelcomeBubble({
     required this.timeLabel,
     required this.maxBubbleWidth,
+    required this.layoutWidth,
   });
 
   final String timeLabel;
   final double maxBubbleWidth;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final w = layoutWidth;
+    final bodyPx = Link26ResponsiveUi.body(w);
+    final pad = Link26ResponsiveUi.gapMd(w).clamp(14.0, 22.0);
+    final timePx = Link26ResponsiveUi.bodySmall(w);
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
           maxWidth: maxBubbleWidth,
         ),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(pad),
         decoration: link26ElevatedCardDecoration(),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -640,9 +700,9 @@ class _AiWelcomeBubble extends StatelessWidget {
           children: [
             RichText(
               text: TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   color: Link26Surface.textPrimary,
-                  fontSize: 15,
+                  fontSize: bodyPx,
                   height: 1.55,
                   fontWeight: FontWeight.w500,
                 ),
@@ -652,8 +712,9 @@ class _AiWelcomeBubble extends StatelessWidget {
                   TextSpan(text: l10n.aiChatWelcomeTipEmoji),
                   TextSpan(
                     text: l10n.aiChatWelcomeTipTitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
+                      fontSize: bodyPx,
                       color: Link26Surface.accent,
                     ),
                   ),
@@ -662,11 +723,11 @@ class _AiWelcomeBubble extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: Link26ResponsiveUi.gapSm(w)),
             Text(
               timeLabel,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: timePx,
                 color: Colors.grey.shade500,
               ),
             ),
@@ -713,19 +774,28 @@ class _GeminiSetupBanner extends StatelessWidget {
 }
 
 class _DisclaimerBanner extends StatelessWidget {
-  const _DisclaimerBanner({required this.text});
+  const _DisclaimerBanner({
+    required this.text,
+    required this.layoutWidth,
+  });
 
   final String text;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
+    final w = layoutWidth;
+    final fontPx = Link26ResponsiveUi.bodySmall(w);
+    final iconPx = (fontPx * 1.35).clamp(20.0, 26.0);
+    final pad = Link26ResponsiveUi.gapMd(w).clamp(12.0, 18.0);
+    final radius = (14.0 + w / 900).clamp(14.0, 20.0);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+      padding: EdgeInsets.only(bottom: Link26ResponsiveUi.gapSm(w)),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(pad),
         decoration: BoxDecoration(
           color: Link26Surface.chipTint,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(color: Link26Surface.outline),
         ),
         child: Row(
@@ -734,14 +804,14 @@ class _DisclaimerBanner extends StatelessWidget {
             Icon(
               Icons.info_outline,
               color: Link26Surface.accent,
-              size: 22,
+              size: iconPx,
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: Link26ResponsiveUi.gapSm(w)),
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: fontPx,
                   height: 1.45,
                   color: Link26Surface.textPrimary,
                 ),
@@ -813,6 +883,8 @@ class _PendingAttachmentChip extends StatelessWidget {
 class _InputBar extends StatelessWidget {
   const _InputBar({
     required this.controller,
+    required this.layoutWidth,
+    required this.attachTooltip,
     required this.enabled,
     required this.sending,
     required this.hintText,
@@ -821,6 +893,8 @@ class _InputBar extends StatelessWidget {
   });
 
   final TextEditingController controller;
+  final double layoutWidth;
+  final String attachTooltip;
   final bool enabled;
   final bool sending;
   final String hintText;
@@ -831,71 +905,93 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final canAct = enabled && !sending;
     final softOutline = Link26Surface.outline.withValues(alpha: 0.45);
+    final w = layoutWidth;
+    final hintPx = Link26ResponsiveUi.bodySmall(w);
+    final fieldPadH = Link26ResponsiveUi.gapMd(w).clamp(14.0, 20.0);
+    final fieldPadV = (hintPx * 0.75).clamp(10.0, 14.0);
+    final borderR = (12.0 + w / 700).clamp(12.0, 18.0);
+    final iconPx = (hintPx * 1.35).clamp(22.0, 30.0);
+    final attachTap = (iconPx * 1.65).clamp(44.0, 52.0);
+    final sendSize = (48.0 + (w / 500).clamp(0, 1) * 4).clamp(46.0, 54.0);
+    final sendIconPx = (sendSize * 0.45).clamp(20.0, 26.0);
+    final gapAttach = Link26ResponsiveUi.gapXs(w);
+    final gapSend = Link26ResponsiveUi.gapSm(w);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
+      padding: EdgeInsets.only(
+        bottom: Link26ResponsiveUi.gapXs(w).clamp(2.0, 8.0),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           IconButton(
             onPressed: canAct ? onAttachImage : null,
-            tooltip: '이미지 첨부',
+            tooltip: attachTooltip,
             style: IconButton.styleFrom(
               backgroundColor: Colors.transparent,
               foregroundColor: canAct
                   ? Link26Surface.textSecondary
                   : Link26Surface.textSecondary.withValues(alpha: 0.35),
-              minimumSize: const Size(48, 48),
+              minimumSize: Size(attachTap, attachTap),
               padding: EdgeInsets.zero,
             ),
-            icon: const Icon(Icons.attach_file, size: 26),
+            icon: Icon(
+              Icons.attach_file_outlined,
+              size: iconPx,
+              semanticLabel: attachTooltip,
+            ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: gapAttach),
           Expanded(
             child: TextField(
               controller: controller,
               enabled: canAct,
               minLines: 1,
               maxLines: 4,
+              style: TextStyle(
+                fontSize: Link26ResponsiveUi.body(w),
+                color: Link26Surface.textPrimary,
+              ),
               decoration: InputDecoration(
                 hintText: hintText,
                 hintStyle: TextStyle(
                   color: Colors.grey.shade500,
-                  fontSize: 15,
+                  fontSize: hintPx,
                 ),
                 filled: true,
                 fillColor: Colors.white,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: fieldPadH,
+                  vertical: fieldPadV,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(borderR),
                   borderSide: BorderSide(color: softOutline, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(borderR),
                   borderSide: const BorderSide(
                     color: Link26Surface.accent,
                     width: 1.5,
                   ),
                 ),
                 disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(borderR),
                   borderSide: BorderSide(color: softOutline, width: 1),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: gapSend),
           Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: canAct ? onSend : null,
               customBorder: const CircleBorder(),
               child: Ink(
-                width: 48,
-                height: 48,
+                width: sendSize,
+                height: sendSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: canAct
@@ -903,18 +999,18 @@ class _InputBar extends StatelessWidget {
                       : Link26Surface.accent.withValues(alpha: 0.4),
                 ),
                 child: sending
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: CircularProgressIndicator(
+                    ? Padding(
+                        padding: EdgeInsets.all(sendSize * 0.22),
+                        child: const CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
                         ),
                       )
-                    : const Center(
+                    : Center(
                         child: Icon(
                           Icons.send_rounded,
                           color: Colors.white,
-                          size: 22,
+                          size: sendIconPx,
                         ),
                       ),
               ),
@@ -930,16 +1026,22 @@ class _ChatBubble extends StatelessWidget {
   const _ChatBubble({
     required this.message,
     required this.maxBubbleWidth,
+    required this.layoutWidth,
   });
 
   final ChatMessage message;
   final double maxBubbleWidth;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
     final bg = isUser ? Link26Surface.chipTint : Colors.white;
     final align = isUser ? Alignment.centerRight : Alignment.centerLeft;
+    final w = layoutWidth;
+    final bodyPx = Link26ResponsiveUi.body(w);
+    final pad = Link26ResponsiveUi.gapMd(w).clamp(12.0, 18.0);
+    final radius = (14.0 + w / 800).clamp(14.0, 20.0);
 
     return Align(
       alignment: align,
@@ -947,10 +1049,10 @@ class _ChatBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: maxBubbleWidth,
         ),
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(pad),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(color: Link26Surface.outline),
         ),
         child: Column(
@@ -958,36 +1060,49 @@ class _ChatBubble extends StatelessWidget {
           children: [
             Text(
               message.text,
-              style: const TextStyle(
-                fontSize: 15,
+              style: TextStyle(
+                fontSize: bodyPx,
                 height: 1.5,
                 color: Link26Surface.textPrimary,
               ),
             ),
             if (message.cardTitle != null) ...[
-              const SizedBox(height: 10),
+              SizedBox(height: Link26ResponsiveUi.gapSm(w)),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(Link26ResponsiveUi.gapMd(w).clamp(10.0, 16.0)),
                 decoration: BoxDecoration(
                   color: Link26Surface.badgeTint,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(radius),
                   border: Border.all(color: Link26Surface.outline),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.medication_outlined, color: Link26Surface.accent),
-                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.medication_outlined,
+                      color: Link26Surface.accent,
+                      size: (bodyPx * 1.2).clamp(20.0, 26.0),
+                    ),
+                    SizedBox(width: Link26ResponsiveUi.gapSm(w)),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             message.cardTitle!,
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: bodyPx,
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(message.cardSubtitle ?? ''),
+                          SizedBox(height: Link26ResponsiveUi.gapXs(w)),
+                          Text(
+                            message.cardSubtitle ?? '',
+                            style: TextStyle(
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              color: Link26Surface.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -995,11 +1110,11 @@ class _ChatBubble extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 8),
+            SizedBox(height: Link26ResponsiveUi.gapSm(w)),
             Text(
               message.time,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: Link26ResponsiveUi.bodySmall(w),
                 color: Colors.grey.shade500,
               ),
             ),

@@ -104,7 +104,9 @@ class AuthWelcomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Spacer(),
+                    SizedBox(
+                      height: (c.maxHeight * 0.03).clamp(12.0, 40.0),
+                    ),
                     Align(
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(

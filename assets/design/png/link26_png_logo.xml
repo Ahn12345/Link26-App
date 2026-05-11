@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="logo" file="logo.png" dartConst="ImageAssets.logo">
-  <summary usage="환영 화면 브랜드 로고"/>
-  <source path="assets/images/logo.png"/>
-  <measured intrinsicWidth="1080" intrinsicHeight="720" bytesOnDisk="3970" generatedAt="2026-05-10T19:38:58.832428Z" path="assets/images/logo.png"/>
-  <responsiveImageScreen ref="authWelcome"/>
-  <responsiveUi hint="heroArtToContent — 카드 내 타이포 간격 ../link26_responsive_ui.xml"/>
+  <summary usage="환영 화면 브랜드 로고" />
+  <source path="assets/images/logo.png" />
+  <responsiveImageScreen ref="authWelcome" />
+  <responsiveUi hint="heroArtToContent — 카드 내 타이포 간격 ../link26_responsive_ui.xml" />
   <flutter>
-    <file path="lib/features/auth/auth_welcome_screen.dart"/>
+    <file path="lib/features/auth/auth_welcome_screen.dart" />
   </flutter>
-  <android strings="@string/flutter_image_logo"/>
-  <screenSpec ref="../screens/link26_screen_logo.xml"/>
+  <android strings="@string/flutter_image_logo" />
+  <screenSpec ref="../screens/link26_screen_logo.xml" />
 </link26-png-spec>

@@ -94,6 +94,13 @@ abstract class AppLocalizations {
   String get aiChatQuotaResetHint;
   String get aiChatInputPlaceholder;
   String get aiChatDailyLimitReached;
+  String get aiChatResetQuotaButton;
+  String get aiChatResetQuotaTitle;
+  String get aiChatResetQuotaMessage;
+  String get aiChatResetQuotaConfirm;
+  String get aiChatResetQuotaCancel;
+  String get aiChatResetQuotaDone;
+  String get aiChatAttachGalleryTooltip;
   String get aiChatReplyError;
   String get aiChatGeminiKeyMissing;
   String get aiChatDisclaimerShort;

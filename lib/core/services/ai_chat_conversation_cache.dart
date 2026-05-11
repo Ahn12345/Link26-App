@@ -33,6 +33,13 @@ abstract final class AiChatConversationCache {
     revision.value = revision.value + 1;
   }
 
+  /// 이 기기에서만 오늘 AI 질문 사용 횟수를 0으로 맞춥니다(대화 내용은 유지).
+  static Future<void> resetDeviceDailyQuota() async {
+    dailyUsed = 0;
+    await AiChatLocalStore.saveDailyUsed(0);
+    revision.value = revision.value + 1;
+  }
+
   /// 테스트·로그아웃 등 — 메모리·디스크 대화를 비웁니다.
   static Future<void> resetSession() async {
     _hydratedMessages = false;

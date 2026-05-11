@@ -167,6 +167,28 @@ class AppLocalizationsKo extends AppLocalizations {
       '오늘 AI 질문 한도에 도달했습니다. 매일 오전 4시(로컬)에 다시 이용할 수 있습니다.';
 
   @override
+  String get aiChatResetQuotaButton => '이 기기에서 한도 초기화';
+
+  @override
+  String get aiChatResetQuotaTitle => '이 기기 한도 초기화';
+
+  @override
+  String get aiChatResetQuotaMessage =>
+      '이 기기에 저장된 오늘 사용 횟수만 0으로 돌아갑니다. 대화 내용은 그대로이며, 다른 기기나 서버 정책과는 별개입니다.';
+
+  @override
+  String get aiChatResetQuotaConfirm => '초기화';
+
+  @override
+  String get aiChatResetQuotaCancel => '취소';
+
+  @override
+  String get aiChatResetQuotaDone => '이 기기 한도를 초기화했습니다.';
+
+  @override
+  String get aiChatAttachGalleryTooltip => '갤러리에서 이미지 선택';
+
+  @override
   String get aiChatReplyError =>
       '일시적으로 응답을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.';
 
