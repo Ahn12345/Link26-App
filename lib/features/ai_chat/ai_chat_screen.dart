@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
-import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/ai_chat_conversation_cache.dart';
 import 'package:link26_app/core/services/ai_chat_home_alert_notifier.dart';
@@ -368,8 +367,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                       children: [
                         Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                            constraints: BoxConstraints(
+                              maxWidth: Link26Layout.innerWidth(w),
                             ),
                             child: _ChatHeader(
                               title: l10n.aiChatBrandTitle,
@@ -386,8 +385,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                         if (!GeminiRuntimeConfig.isConfigured)
                           Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                              constraints: BoxConstraints(
+                                maxWidth: Link26Layout.innerWidth(w),
                               ),
                               child: Padding(
                                 padding: EdgeInsets.only(
@@ -400,8 +399,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                         Expanded(
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                              constraints: BoxConstraints(
+                                maxWidth: Link26Layout.innerWidth(w),
                               ),
                               child: ColoredBox(
                                 color: Link26UnifiedPage.background,
@@ -471,8 +470,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
                         ),
                         Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                            constraints: BoxConstraints(
+                              maxWidth: Link26Layout.innerWidth(w),
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,

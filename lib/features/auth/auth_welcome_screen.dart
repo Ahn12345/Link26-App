@@ -4,7 +4,6 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
-import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
@@ -55,8 +54,8 @@ class AuthWelcomeScreen extends StatelessWidget {
                     Align(
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                        constraints: BoxConstraints(
+                          maxWidth: Link26Layout.innerWidth(w),
                         ),
                         child: Link26FramedPageCard(
                           padding: EdgeInsets.symmetric(vertical: authPadV, horizontal: authPadH),
@@ -109,8 +108,8 @@ class AuthWelcomeScreen extends StatelessWidget {
                     Align(
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                        constraints: BoxConstraints(
+                          maxWidth: Link26Layout.innerWidth(w),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,

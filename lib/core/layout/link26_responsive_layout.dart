@@ -14,18 +14,30 @@ abstract final class Link26Layout {
     return Link26ResponsiveTokens.paddingExpanded;
   }
 
-  /// 좁은 화면: 최소 측면 패딩. 넓은 화면: [contentMaxWidth] 가운데 정렬용 동일 여백.
-  static double horizontalPadding(double width) {
-    final minSide = _pagePaddingH(width);
-    final maxContent = Link26ResponsiveTokens.contentMaxWidth;
-    if (width <= maxContent + 2 * minSide) return minSide;
-    return (width - maxContent) / 2;
+  /// 디자인 기준(폰) 폭. 더 넓은 기기에서는 [innerWidth] 가 단계적으로 커집니다.
+  static double _designContentCap(double width) {
+    if (width < Link26ResponsiveTokens.breakpointCompact) {
+      return Link26ResponsiveTokens.contentMaxWidth;
+    }
+    if (width < Link26ResponsiveTokens.breakpointMedium) {
+      return 720;
+    }
+    return 960;
   }
 
-  /// 스크롤/폼 본문 실제 사용 가능 너비.
+  /// 가운데 정렬 컬럼의 목표 너비(패딩 제외). 좁은 화면은 거의 전체 폭, 태블릿·데스크톱은 상한까지 확장.
   static double innerWidth(double width) {
-    final side = horizontalPadding(width);
-    return (width - 2 * side).clamp(0, double.infinity);
+    final side = _pagePaddingH(width);
+    final available =
+        (width - 2 * side).clamp(0.0, double.infinity);
+    final cap = _designContentCap(width);
+    return available <= cap ? available : cap;
+  }
+
+  /// [innerWidth] 만큼의 컬럼을 가운데 두기 위한 좌우 여백.
+  static double horizontalPadding(double width) {
+    final cw = innerWidth(width);
+    return ((width - cw) / 2).clamp(0.0, double.infinity);
   }
 
   static EdgeInsets pageInsets(double width) {
@@ -50,7 +62,7 @@ abstract final class Link26Layout {
 
   static double chatBubbleMaxWidth(double innerWidth) {
     final f = Link26ResponsiveTokens.chatBubbleMaxFraction;
-    return (innerWidth * f).clamp(120, Link26ResponsiveTokens.contentMaxWidth);
+    return (innerWidth * f).clamp(120.0, innerWidth);
   }
 
   static double chatListHorizontal(double width) {
@@ -86,7 +98,7 @@ class Link26ResponsiveScroll extends StatelessWidget {
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                maxWidth: Link26Layout.innerWidth(w),
               ),
               child: child,
             ),
@@ -122,7 +134,7 @@ class Link26ResponsiveList extends StatelessWidget {
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                  maxWidth: Link26Layout.innerWidth(w),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
