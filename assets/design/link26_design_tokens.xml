@@ -10,7 +10,7 @@
 -->
 <link26-design version="1">
   <colors>
-    <color name="accent">#0047AB</color>
+    <color name="accent">#0046AD</color>
     <color name="text_primary">#0F172A</color>
     <color name="text_secondary">#475569</color>
     <color name="text_muted">#64748B</color>
@@ -27,7 +27,7 @@
     <color name="disclaimer_bg">#EAF3FF</color>
     <color name="disclaimer_text">#0F172A</color>
     <color name="input_fill">#FFFFFF</color>
-    <color name="send_button">#0047AB</color>
+    <color name="send_button">#0046AD</color>
     <color name="user_bubble">#EAF3FF</color>
   </colors>
 

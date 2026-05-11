@@ -81,7 +81,7 @@ Future<void> _finalizeAiChatFailure({
   }
 }
 
-/// AI 약 정보 채팅 — 색·타이포는 [Link26Surface]·디자인 토큰(`accent` #0047AB) 기준.
+/// AI 약 정보 채팅 — 색·타이포는 [Link26Surface]·디자인 토큰(`accent` #0046AD) 기준.
 ///
 /// [embeddedInShell]: 하단 탭일 때 뒤로가기 없음.
 class AiChatScreen extends StatelessWidget {
@@ -349,10 +349,11 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final embedded = widget.embeddedInShell;
-    // 하단 탭: 시스템 인디케이터 + 내비 높이만큼만 비움(이전 padding.bottom+88은 여백이 과해 보일 수 있음).
+    // 하단 탭: Material 3 NavigationBar(약 80dp) + 시스템 제스처 — 입력창이 내비에 가리지 않게 여유를 둔다.
     final shellNavPad = embedded
-        ? MediaQuery.viewPaddingOf(context).bottom + 72.0
+        ? MediaQuery.viewPaddingOf(context).bottom + 96.0
         : 0.0;
+    final keyboardLift = MediaQuery.viewInsetsOf(context).bottom;
     final inputEnabled = !AiChatOutgoingBusy.instance.value &&
         AiChatConversationCache.dailyUsed < _dailyLimit;
 
@@ -370,7 +371,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
             children: [
               Positioned.fill(
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: shellNavPad),
+                  padding: EdgeInsets.only(
+                    bottom: shellNavPad + keyboardLift,
+                  ),
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: sideScreen),
                     child: Column(
@@ -967,7 +970,7 @@ class _InputBar extends StatelessWidget {
               controller: controller,
               enabled: canAct,
               minLines: 1,
-              maxLines: 4,
+              maxLines: 5,
               style: TextStyle(
                 fontSize: Link26ResponsiveUi.body(w),
                 color: Link26Surface.textPrimary,

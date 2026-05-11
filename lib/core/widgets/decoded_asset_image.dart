@@ -45,7 +45,16 @@ class DecodedAssetImage extends StatelessWidget {
       filterQuality: FilterQuality.medium,
       cacheWidth: cw,
       cacheHeight: ch,
-      errorBuilder: errorBuilder,
+      errorBuilder: errorBuilder ??
+          (context, error, stackTrace) => Center(
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  size: (width != null || height != null)
+                      ? ((width ?? height ?? 24) * 0.35).clamp(18.0, 40.0)
+                      : 28,
+                  color: Colors.grey.shade500,
+                ),
+              ),
     );
 
     if (borderRadius != null) {

@@ -4,9 +4,9 @@
   네이티브 스플래시·참조 레이아웃(reference_*.xml)용.
 -->
 <resources>
-    <color name="link26_accent">#0047AB</color>
+    <color name="link26_accent">#0046AD</color>
     <color name="link26_primary">@color/link26_accent</color>
-    <color name="link26_primary_seed">#0047AB</color>
+    <color name="link26_primary_seed">#0046AD</color>
     <color name="link26_text_primary">#0F172A</color>
     <color name="link26_text_secondary">#475569</color>
     <color name="link26_text_muted">#64748B</color>
@@ -25,7 +25,7 @@
     <color name="link26_disclaimer_bg">#EAF3FF</color>
     <color name="link26_disclaimer_text">#0F172A</color>
     <color name="link26_input_fill">#FFFFFF</color>
-    <color name="link26_send_button">#0047AB</color>
+    <color name="link26_send_button">#0046AD</color>
     <color name="link26_user_bubble">#EAF3FF</color>
     <color name="splash_background">@color/link26_scaffold_tint</color>
     <color name="ic_launcher_background">#EEF4FA</color>

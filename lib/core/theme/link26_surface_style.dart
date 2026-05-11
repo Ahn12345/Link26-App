@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 // Regenerate: dart run tool/generate_link26_surface.dart
 
 abstract final class Link26Surface {
-  static const accent = Color(0xFF0047AB);
+  static const accent = Color(0xFF0046AD);
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF475569);
   static const textMuted = Color(0xFF64748B);
