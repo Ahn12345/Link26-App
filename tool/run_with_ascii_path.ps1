@@ -18,7 +18,7 @@ function Test-ContainsNonAscii([string]$s) {
 }
 
 if (-not (Test-ContainsNonAscii $projectRoot)) {
-  Write-Host "[Link26] 경로에 비ASCII 문자가 없습니다. flutter를 그대로 실행합니다."
+  Write-Host "[Link26] Path is ASCII-only; running flutter as usual."
   Set-Location $projectRoot
   & flutter @FlutterArgs
   exit $LASTEXITCODE
@@ -37,19 +37,27 @@ if ($null -eq $drive) {
   exit 1
 }
 
-Write-Host "[Link26] 비ASCII 경로 감지: 프로젝트를 ${drive}: 드라이브에 연결합니다."
-Write-Host "       원본: $projectRoot"
+# 콘솔 인코딩 문제로 한글이 깨질 수 있어 SUBST 안내는 ASCII 문구로 출력합니다.
+Write-Host "[Link26] Non-ASCII path: project mapped to ${drive}: (original folder unchanged)."
+Write-Host "       $projectRoot"
 cmd /c "subst ${drive}: `"$projectRoot`""
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "subst 실패. 관리자 권한이 필요한 경우가 있습니다."
+  Write-Error "subst failed (try running PowerShell as Administrator)."
   exit 1
 }
 
+$code = 1
 try {
   Set-Location "${drive}:\"
   & flutter @FlutterArgs
   $code = $LASTEXITCODE
 } finally {
+  # SUBST 해제 전에 실제 프로젝트 폴더로 돌아가야, 다음에 PS L:\> 에서 tool 경로를 못 찾는 문제가 나지 않습니다.
+  try {
+    Set-Location -LiteralPath $projectRoot
+  } catch {
+    # ignore
+  }
   cmd /c "subst ${drive}: /d" 2>$null | Out-Null
 }
 
