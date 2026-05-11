@@ -17,6 +17,8 @@ $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
+& (Join-Path $PSScriptRoot "clean_flutter_ephemeral.ps1")
+
 Write-Host "== flutter clean ==" -ForegroundColor Cyan
 flutter clean
 
