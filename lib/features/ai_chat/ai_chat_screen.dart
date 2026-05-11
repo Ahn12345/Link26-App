@@ -13,8 +13,10 @@ import 'package:link26_app/core/services/ai_chat_pending_attachment_store.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
+import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/models/link_models.dart';
@@ -905,6 +907,14 @@ class _PendingAttachmentChip extends StatelessWidget {
                   height: 52,
                   fit: BoxFit.cover,
                   filterQuality: FilterQuality.medium,
+                  errorBuilder: (context, error, stackTrace) =>
+                      DecodedAssetImage(
+                        ImageAssets.applogo,
+                        width: 52,
+                        height: 52,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                 ),
               ),
               const SizedBox(width: 10),

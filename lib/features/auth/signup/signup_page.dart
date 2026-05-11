@@ -227,14 +227,6 @@ class _SignupPageState extends State<SignupPage> {
                               borderRadius: BorderRadius.circular(
                                 Link26Surface.radiusInput,
                               ),
-                              errorBuilder: (context, error, stackTrace) {
-                                debugPrint('signup art: $error');
-                                return const Icon(
-                                  Icons.person_add_alt_1,
-                                  size: 120,
-                                  color: Link26Surface.accent,
-                                );
-                              },
                             ),
                           ),
                         ),

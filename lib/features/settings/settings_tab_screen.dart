@@ -61,8 +61,6 @@ class SettingsTabScreen extends StatelessWidget {
                   height: thumb,
                   fit: BoxFit.cover,
                   borderRadius: BorderRadius.circular(8),
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.groups, size: thumb),
                 ),
                 title: Text(l10n.settingsFamilyAddEntry),
                 subtitle: Text(l10n.familyProfilesSubtitle),
@@ -190,8 +188,6 @@ class SettingsTabScreen extends StatelessWidget {
               height: thumb,
               fit: BoxFit.cover,
               borderRadius: BorderRadius.circular(8),
-              errorBuilder: (context, error, stackTrace) =>
-                  Icon(icon ?? Icons.folder, size: thumb),
             )
           : Icon(icon ?? Icons.chevron_right, size: thumb),
       title: Text(title),

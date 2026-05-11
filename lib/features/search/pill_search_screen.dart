@@ -100,8 +100,6 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                             borderRadius: BorderRadius.circular(
                               Link26Surface.radiusInput,
                             ),
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
                           ),
                         ),
                       ),

@@ -42,8 +42,6 @@ class EmergencyContactScreen extends StatelessWidget {
                     fit: BoxFit.contain,
                     borderRadius:
                         BorderRadius.circular(Link26Surface.radiusInput),
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.phone_in_talk, size: 120),
                   ),
                 ),
               ),

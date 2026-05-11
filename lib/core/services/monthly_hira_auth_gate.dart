@@ -61,8 +61,6 @@ abstract final class MonthlyHiraAuthGate {
                       fit: BoxFit.contain,
                       borderRadius:
                           BorderRadius.circular(Link26Surface.radiusInput),
-                      errorBuilder: (context, error, stackTrace) =>
-                          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                     ),
                   ),
                 ),
@@ -121,8 +119,6 @@ abstract final class MonthlyHiraAuthGate {
                       fit: BoxFit.contain,
                       borderRadius:
                           BorderRadius.circular(Link26Surface.radiusInput),
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox.shrink(),
                     ),
                   ),
                 ),
