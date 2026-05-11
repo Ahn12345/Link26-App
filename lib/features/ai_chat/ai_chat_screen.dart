@@ -997,7 +997,7 @@ class _InputBar extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
             icon: Icon(
-              Icons.photo_library_outlined,
+              Icons.attach_file,
               size: iconPx,
               semanticLabel: attachTooltip,
             ),
@@ -1008,7 +1008,7 @@ class _InputBar extends StatelessWidget {
               controller: controller,
               enabled: canAct,
               minLines: 1,
-              maxLines: 5,
+              maxLines: null,
               style: TextStyle(
                 fontSize: Link26ResponsiveUi.body(w),
                 color: Link26Surface.textPrimary,

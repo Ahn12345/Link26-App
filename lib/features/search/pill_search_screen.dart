@@ -89,8 +89,10 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                       Center(
                         child: SizedBox(
                           width: heroW,
+                          height: heroH,
                           child: DecodedAssetImage(
                             ImageAssets.pillsearch,
+                            width: heroW,
                             height: heroH,
                             fit: BoxFit.contain,
                             borderRadius: BorderRadius.circular(

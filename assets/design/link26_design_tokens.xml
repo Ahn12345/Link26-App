@@ -6,6 +6,7 @@
   - 이미지 목록: assets/images/link26_image_assets.xml
   - 화면별 PNG 반응형: assets/design/link26_responsive_images.xml
   - UI/UX 타이포·간격: assets/design/link26_responsive_ui.xml
+  - 표준 본문 프레임: Flutter [Link26StandardFrame] — 배경 #F3F8FF, 패딩 좌우 16·상하 20 ([Link26UnifiedPage.standardFramePadding]), 카드 라운드 20은 [Link26UnifiedPage.frameRadius]
   - 화면 스펙 인덱스(카탈로그 1:1): assets/design/screens/link26_screen_index.xml
 -->
 <link26-design version="1">

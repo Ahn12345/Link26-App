@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
-import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/features/home/home_notification_center_screen.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
@@ -20,7 +20,7 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = showScaffold ? Theme.of(context).scaffoldBackgroundColor : Colors.transparent;
+    final bg = showScaffold ? Link26UnifiedPage.background : Colors.transparent;
     final body = ColoredBox(color: bg, child: const _MoreBody());
     if (!showScaffold) return body;
     return Scaffold(backgroundColor: bg, body: body);
@@ -34,7 +34,6 @@ class _MoreBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
     final w = MediaQuery.sizeOf(context).width;
-    final logoSz = Link26ResponsiveUi.moreLogoSize(w);
     return SafeArea(
       child: Link26ResponsiveList(
         bottomInset: bottomPad + 4,
@@ -56,16 +55,25 @@ class _MoreBody extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: Link26ResponsiveUi.gapMd(w)),
-              SizedBox(
-                width: logoSz,
-                height: logoSz,
-                child: DecodedAssetImage(
-                  ImageAssets.applogo,
-                  height: logoSz,
-                  width: logoSz,
-                  fit: BoxFit.contain,
+              IconButton(
+                tooltip: '알림',
+                onPressed: () {
+                  Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => HomeNotificationCenterScreen(
+                        doseAlarms: const [],
+                        onListsChanged: () {},
+                      ),
+                    ),
+                  );
+                },
+                style: IconButton.styleFrom(
+                  foregroundColor: Link26Surface.textSecondary,
+                  backgroundColor: Colors.white,
+                  elevation: 1,
+                  shadowColor: Colors.black.withValues(alpha: 0.06),
                 ),
+                icon: const Icon(Icons.notifications_none_rounded, size: 26),
               ),
             ],
           ),
@@ -181,7 +189,7 @@ class _MenuTile extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(Link26UnifiedPage.frameRadius),
             onTap: onTap,
             child: Padding(
               padding: EdgeInsets.symmetric(

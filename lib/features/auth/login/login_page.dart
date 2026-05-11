@@ -227,8 +227,10 @@ class _LoginPageState extends State<LoginPage> {
                         Center(
                           child: SizedBox(
                             width: heroW,
+                            height: heroH,
                             child: DecodedAssetImage(
                               ImageAssets.login,
+                              width: heroW,
                               height: heroH,
                               fit: BoxFit.contain,
                               borderRadius: BorderRadius.circular(

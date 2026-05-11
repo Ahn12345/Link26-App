@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 
-/// 인증·검색 등 공통: [Link26UnifiedPage.background] + 페이지 인셋 + [innerWidth] 중앙 정렬.
-/// 디자인 토큰(`link26_design_tokens.xml`의 responsive padding)과 [Link26Layout]을 그대로 따릅니다.
+/// 인증·검색·탭 내 페이지 공통: 배경 `#F3F8FF` + 표준 여백(좌우 16·상하 20) + [innerWidth] 중앙 정렬.
+/// [paddingOverride] 없을 때는 [Link26UnifiedPage.standardFramePadding]을 씁니다.
 class Link26StandardFrame extends StatelessWidget {
   const Link26StandardFrame({
     super.key,
@@ -18,7 +18,7 @@ class Link26StandardFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    final pad = paddingOverride ?? Link26Layout.pageInsets(w);
+    final pad = paddingOverride ?? Link26UnifiedPage.standardFramePadding;
     return ColoredBox(
       color: Link26UnifiedPage.background,
       child: Padding(

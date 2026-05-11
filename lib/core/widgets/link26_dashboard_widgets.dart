@@ -8,7 +8,7 @@ import 'package:link26_app/core/theme/link26_unified_page.dart';
 BoxDecoration link26ElevatedCardDecoration({Color? color}) {
   return BoxDecoration(
     color: color ?? Colors.white,
-    borderRadius: BorderRadius.circular(16),
+    borderRadius: BorderRadius.circular(Link26UnifiedPage.frameRadius),
     border: Border.all(color: Link26Surface.outline),
     boxShadow: [
       BoxShadow(

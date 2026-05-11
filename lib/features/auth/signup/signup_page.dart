@@ -216,8 +216,10 @@ class _SignupPageState extends State<SignupPage> {
                         Center(
                           child: SizedBox(
                             width: heroW,
+                            height: heroH,
                             child: DecodedAssetImage(
                               ImageAssets.signup,
+                              width: heroW,
                               height: heroH,
                               fit: BoxFit.contain,
                               borderRadius: BorderRadius.circular(

@@ -64,8 +64,10 @@ class AuthWelcomeScreen extends StatelessWidget {
                                 Center(
                                   child: SizedBox(
                                     width: logoW,
+                                    height: logoH,
                                     child: DecodedAssetImage(
                                       ImageAssets.logo,
+                                      width: logoW,
                                       height: logoH,
                                       fit: BoxFit.contain,
                                     ),
