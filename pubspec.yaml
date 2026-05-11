@@ -1,5 +1,6 @@
 # Gradle 빌드는 OneDrive 동기화 폴더 밖(예: C:\dev\Link26-App 복사본)에서 실행하는 것을 권장합니다.
-# 경로에 한글이 있으면 plain `flutter run` 대신: .\flutterw.ps1 run  (또는 .\tool\run_with_ascii_path.ps1 run)
+# 경로에 한글이 있으면 plain `flutter run` 대신: .\flutterw.ps1 run
+# cleanMergeDebugAssets 잠금 시: .\flutterw.ps1 -CleanBuild run  또는  .\tool\clean_flutter_ephemeral.ps1
 name: link26_app
 description: Link26 mobile app (Android & iOS).
 publish_to: "none"

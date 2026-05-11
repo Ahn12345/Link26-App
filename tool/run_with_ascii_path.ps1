@@ -1,8 +1,9 @@
 # Android 빌드 도구(aapt 등)가 한글·특수문자 경로에서 APK를 열지 못할 때 사용합니다.
 # 사용:  .\tool\run_with_ascii_path.ps1 run
+#       .\tool\run_with_ascii_path.ps1 -CleanBuild run   # cleanMergeDebugAssets 잠금 시 build\ 비우기
 #       .\tool\run_with_ascii_path.ps1 build apk
-#       .\tool\run_with_ascii_path.ps1 doctor
 param(
+  [switch] $CleanBuild,
   [Parameter(ValueFromRemainingArguments = $true)]
   [string[]]$FlutterArgs
 )
@@ -58,6 +59,19 @@ if (Test-Path -LiteralPath $gradleBat) {
   } finally {
     Pop-Location
   }
+}
+
+if ($CleanBuild) {
+  Write-Host "[Link26] -CleanBuild: removing build\ (Gradle asset merge lock workaround)..." -ForegroundColor Cyan
+  $buildDir = Join-Path $projectRoot "build"
+  if (Test-Path -LiteralPath $buildDir) {
+    try {
+      cmd.exe /c "attrib -r -s -h `"$buildDir\*`" /s /d" 2>$null | Out-Null
+    } catch {}
+    Remove-Item -LiteralPath $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+    cmd.exe /c "rmdir /s /q `"$buildDir`"" 2>$null | Out-Null
+  }
+  Start-Sleep -Milliseconds 400
 }
 
 $code = 1

@@ -4,9 +4,11 @@
 #
 # Examples:
 #   .\flutterw.ps1 run
+#   .\flutterw.ps1 -CleanBuild run          # if :cleanMergeDebugAssets cannot delete build\
 #   .\flutterw.ps1 run -d <deviceId>
 #   .\flutterw.ps1 pub get
 param(
+  [switch] $CleanBuild,
   [Parameter(ValueFromRemainingArguments = $true)]
   [string[]]$FlutterArgs
 )
@@ -19,6 +21,7 @@ Usage: .\flutterw.ps1 <flutter arguments...>
 
 Examples:
   .\flutterw.ps1 run
+  .\flutterw.ps1 -CleanBuild run
   .\flutterw.ps1 run -d <deviceId>
   .\flutterw.ps1 pub get
 
@@ -27,5 +30,5 @@ Do not use plain `flutter run` when the path has non-ASCII characters.
   exit 2
 }
 
-& $wrapper @FlutterArgs
+& $wrapper -CleanBuild:$CleanBuild @FlutterArgs
 exit $LASTEXITCODE
