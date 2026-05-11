@@ -65,11 +65,21 @@ if ($CleanBuild) {
   Write-Host "[Link26] -CleanBuild: removing build\ (Gradle asset merge lock workaround)..." -ForegroundColor Cyan
   $buildDir = Join-Path $projectRoot "build"
   if (Test-Path -LiteralPath $buildDir) {
+    $oldEa = $ErrorActionPreference
     try {
-      cmd.exe /c "attrib -r -s -h `"$buildDir\*`" /s /d" 2>$null | Out-Null
-    } catch {}
-    Remove-Item -LiteralPath $buildDir -Recurse -Force -ErrorAction SilentlyContinue
-    cmd.exe /c "rmdir /s /q `"$buildDir`"" 2>$null | Out-Null
+      $ErrorActionPreference = "SilentlyContinue"
+      try {
+        cmd.exe /c "attrib -r -s -h `"$buildDir\*`" /s /d" | Out-Null
+      } catch {}
+      Remove-Item -LiteralPath $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+      if (Test-Path -LiteralPath $buildDir) {
+        try {
+          cmd.exe /c "rmdir /s /q `"$buildDir`"" | Out-Null
+        } catch {}
+      }
+    } finally {
+      $ErrorActionPreference = $oldEa
+    }
   }
   Start-Sleep -Milliseconds 400
 }
