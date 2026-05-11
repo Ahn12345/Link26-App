@@ -8,6 +8,9 @@ import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/ai_chat_conversation_cache.dart';
+import 'package:link26_app/core/services/ai_chat_home_alert_notifier.dart';
+import 'package:link26_app/core/services/ai_chat_outgoing_busy.dart';
+import 'package:link26_app/core/services/ai_chat_pending_attachment_store.dart';
 import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
@@ -69,19 +72,16 @@ class _AiChatBody extends StatefulWidget {
 class _AiChatBodyState extends State<_AiChatBody> {
   final controller = TextEditingController();
 
-  /// 클립으로 고른 사진은 텍스트 입력 후 전송할 때까지 보관합니다.
-  Uint8List? _pendingImageBytes;
-  String? _pendingImageMime;
-
   /// 첫 말풍선 하단 시각 — [AiChatSessionStore.touchAccess] 로 저장되는 접속 시각과 동일.
   String? _welcomeAccessLabel;
 
   static const int _dailyLimit = 10;
-  bool _sending = false;
 
   @override
   void initState() {
     super.initState();
+    AiChatPendingAttachmentStore.instance.addListener(_onGlobalChatUiChanged);
+    AiChatOutgoingBusy.instance.addListener(_onGlobalChatUiChanged);
     _bootstrap();
   }
 
@@ -100,8 +100,14 @@ class _AiChatBodyState extends State<_AiChatBody> {
     });
   }
 
+  void _onGlobalChatUiChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    AiChatPendingAttachmentStore.instance.removeListener(_onGlobalChatUiChanged);
+    AiChatOutgoingBusy.instance.removeListener(_onGlobalChatUiChanged);
     controller.dispose();
     super.dispose();
   }
@@ -109,10 +115,11 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Future<void> sendMessage() async {
     final l10n = AppLocalizations.of(context);
     final text = controller.text.trim();
-    if (_sending) return;
+    if (AiChatOutgoingBusy.instance.value) return;
 
-    final pendingBytes = _pendingImageBytes;
-    final pendingMime = _pendingImageMime;
+    final attach = AiChatPendingAttachmentStore.instance;
+    final pendingBytes = attach.bytes;
+    final pendingMime = attach.mime;
     final hasPendingImage =
         pendingBytes != null && pendingBytes.isNotEmpty && (pendingMime ?? '').isNotEmpty;
 
@@ -135,26 +142,29 @@ class _AiChatBodyState extends State<_AiChatBody> {
         ? '${l10n.aiChatImageUserCaption}\n\n$text'
         : text;
 
+    final homeAlertTitle = l10n.homeAiChatImageReplyTitle;
+    final analyzingLabel = l10n.aiChatImageAnalyzing;
+    final replyError = l10n.aiChatReplyError;
+
     setState(() {
       AiChatConversationCache.messages.add(
         ChatMessage(isUser: true, time: _nowLabel(), text: userBubbleText),
       );
-      _pendingImageBytes = null;
-      _pendingImageMime = null;
       if (hasPendingImage) {
         AiChatConversationCache.messages.add(
           ChatMessage(
             isUser: false,
             time: _nowLabel(),
-            text: l10n.aiChatImageAnalyzing,
+            text: analyzingLabel,
           ),
         );
       }
-      _sending = true;
     });
+    attach.clear();
     controller.clear();
     await AiChatConversationCache.persist();
 
+    AiChatOutgoingBusy.instance.value = true;
     try {
       final body = (await AiChatService().respondChat(
         text,
@@ -162,46 +172,24 @@ class _AiChatBodyState extends State<_AiChatBody> {
         imageMime: hasPendingImage ? pendingMime : null,
       ))
           .trim();
-      if (!mounted) return;
-      setState(() {
-        if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
-          final last = AiChatConversationCache.messages.last;
-          if (!last.isUser && last.text == l10n.aiChatImageAnalyzing) {
-            AiChatConversationCache.messages.removeLast();
-          }
-        }
-        AiChatConversationCache.messages.add(
-          ChatMessage(
-            isUser: false,
-            time: _nowLabel(),
-            text: body.isEmpty ? l10n.aiChatReplyError : body,
-          ),
-        );
-        if (AiChatConversationCache.dailyUsed < _dailyLimit) {
-          AiChatConversationCache.dailyUsed++;
-        }
-        _sending = false;
-      });
-      await AiChatConversationCache.persist();
+      await _applyAiChatReplySuccess(
+        hasPendingImage: hasPendingImage,
+        analyzingLabel: analyzingLabel,
+        body: body,
+        replyError: replyError,
+        homeAlertTitle: homeAlertTitle,
+        dailyLimit: _dailyLimit,
+      );
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
-          final last = AiChatConversationCache.messages.last;
-          if (!last.isUser && last.text == l10n.aiChatImageAnalyzing) {
-            AiChatConversationCache.messages.removeLast();
-          }
-        }
-        AiChatConversationCache.messages.add(
-          ChatMessage(
-            isUser: false,
-            time: _nowLabel(),
-            text: l10n.aiChatReplyError,
-          ),
-        );
-        _sending = false;
-      });
-      await AiChatConversationCache.persist();
+      await _applyAiChatReplyError(
+        hasPendingImage: hasPendingImage,
+        analyzingLabel: analyzingLabel,
+        replyError: replyError,
+        homeAlertTitle: homeAlertTitle,
+      );
+    } finally {
+      AiChatOutgoingBusy.instance.value = false;
+      if (mounted) setState(() {});
     }
   }
 

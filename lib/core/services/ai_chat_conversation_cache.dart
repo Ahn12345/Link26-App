@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:link26_app/core/services/ai_chat_local_store.dart';
 import 'package:link26_app/models/link_models.dart';
 
@@ -9,6 +11,9 @@ abstract final class AiChatConversationCache {
   static final List<ChatMessage> messages = <ChatMessage>[];
 
   static int dailyUsed = 0;
+
+  /// 말풍선 목록이 바뀌면 증가 — 탭 밖에서 [persist]만 호출돼도 AI 탭이 다시 그려집니다.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
 
   static bool _hydratedMessages = false;
 
@@ -25,6 +30,7 @@ abstract final class AiChatConversationCache {
   static Future<void> persist() async {
     await AiChatLocalStore.saveDailyUsed(dailyUsed);
     await AiChatLocalStore.saveMessages(messages);
+    revision.value = revision.value + 1;
   }
 
   /// 테스트·로그아웃 등에서만 사용.
@@ -32,5 +38,6 @@ abstract final class AiChatConversationCache {
     _hydratedMessages = false;
     messages.clear();
     dailyUsed = 0;
+    revision.value = revision.value + 1;
   }
 }

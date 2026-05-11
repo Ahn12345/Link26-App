@@ -47,6 +47,8 @@
   "medicineCatalogSubtitle": "Known items (demo). Replace with your backend or local DB.",
   "medicineCatalogTooltip": "Open medicine list",
   "medicineCatalogEmpty": "No medicines to show.",
+  "homeAiChatImageReplyTitle": "AI medicine reply ready",
+  "homeAiChatImageReplyCta": "Open AI chat",
   "aiChatBrandTitle": "AI medicine info",
   "aiChatQuotaResetHint": "Resets at 4:00 a.m.",
   "aiChatInputPlaceholder": "Ask about your medicine…",

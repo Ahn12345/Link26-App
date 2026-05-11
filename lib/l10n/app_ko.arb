@@ -47,6 +47,8 @@
   "medicineCatalogSubtitle": "등록된 항목(데모). 이후 서버·로컬 DB와 연결하세요.",
   "medicineCatalogTooltip": "약 목록 열기",
   "medicineCatalogEmpty": "표시할 약이 없습니다.",
+  "homeAiChatImageReplyTitle": "AI 약 정보 답변 도착",
+  "homeAiChatImageReplyCta": "AI 채팅에서 보기",
   "aiChatBrandTitle": "AI 약 정보",
   "aiChatQuotaResetHint": "오전 4시에 초기화됩니다",
   "aiChatInputPlaceholder": "약에 대해 궁금한 점을 물어보세요…",

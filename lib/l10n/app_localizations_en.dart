@@ -268,6 +268,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTodayAlertsTitle => 'Today\'s reminders';
 
   @override
+  String get homeAiChatImageReplyTitle => 'AI medicine reply ready';
+
+  @override
+  String get homeAiChatImageReplyCta => 'Open AI chat';
+
+  @override
   String get homeTodayAlertsViewAll => 'View all reminders';
 
   @override

@@ -121,6 +121,8 @@ abstract class AppLocalizations {
   String get medicineCatalogTooltip;
   String get medicineCatalogEmpty;
   String get homeTodayAlertsTitle;
+  String get homeAiChatImageReplyTitle;
+  String get homeAiChatImageReplyCta;
   String get homeTodayAlertsViewAll;
   String get homeMyMedicinesTitle;
   String get homeAddMedicine;

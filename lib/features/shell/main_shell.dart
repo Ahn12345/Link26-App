@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import '../../core/services/main_shell_tab_bus.dart';
 import '../../core/services/monthly_hira_auth_gate.dart';
 import '../../core/theme/link26_surface_style.dart';
 import '../../core/theme/link26_unified_page.dart';
@@ -26,6 +27,16 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    MainShellTabBus.bind((index) {
+      if (!mounted) return;
+      setState(() {
+        final from = _index;
+        _index = index.clamp(0, 2);
+        if (_index == 1 && from != 1) {
+          _aiVisitStamp++;
+        }
+      });
+    });
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -38,6 +49,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    MainShellTabBus.unbind();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

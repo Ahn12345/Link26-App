@@ -260,6 +260,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeTodayAlertsTitle => '오늘의 알림';
 
   @override
+  String get homeAiChatImageReplyTitle => 'AI 약 정보 답변 도착';
+
+  @override
+  String get homeAiChatImageReplyCta => 'AI 채팅에서 보기';
+
+  @override
   String get homeTodayAlertsViewAll => '전체 보기';
 
   @override
