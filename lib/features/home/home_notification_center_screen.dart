@@ -232,10 +232,9 @@ class _HomeNotificationCenterScreenState
                 await AiChatHomeAlertNotifier.instance.refreshBannerFromDb();
                 await _loadAi();
                 widget.onListsChanged();
-                if (context.mounted) {
-                  MainShellTabBus.goTo(1);
-                  Navigator.pop(context);
-                }
+                if (!mounted) return;
+                MainShellTabBus.goTo(1);
+                Navigator.of(context).pop();
               },
               child: Padding(
                 padding: const EdgeInsets.all(16),
