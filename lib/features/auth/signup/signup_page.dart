@@ -152,6 +152,15 @@ class _SignupPageState extends State<SignupPage> {
           (route) => false,
         );
       }
+    } catch (e, st) {
+      debugPrint('SignupPage: submit failed: $e\n$st');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.loginFailed}: $e'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -422,6 +431,18 @@ class _SignupPageState extends State<SignupPage> {
                                       fontWeight: FontWeight.w800),
                                 ),
                         ),
+                        if (!_busy && !canSubmit) ...[
+                          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                          Text(
+                            l10n.authContinueSignupHint,
+                            style: TextStyle(
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              color: Link26Surface.textMuted,
+                              height: 1.35,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   );

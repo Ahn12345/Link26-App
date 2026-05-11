@@ -11,14 +11,14 @@
     <height compact="100" medium="124" expanded="144" />
     <widthFraction cap="0.92" />
   </screen>
-  <!-- 로그인: login.png -->
+  <!-- 로그인: login.png — 컴팩트에서 히어로를 낮춰 입력 폼이 한 화면에 더 들어오게 함 -->
   <screen id="login" image="login.png">
-    <height compact="130" medium="168" expanded="200" />
+    <height compact="108" medium="160" expanded="192" />
     <widthFraction cap="1" />
   </screen>
   <!-- 회원가입: signup.png -->
   <screen id="signup" image="signup.png">
-    <height compact="130" medium="168" expanded="200" />
+    <height compact="108" medium="160" expanded="192" />
     <widthFraction cap="1" />
   </screen>
   <!-- AI 채팅 헤더 일러스트: aichat.png -->

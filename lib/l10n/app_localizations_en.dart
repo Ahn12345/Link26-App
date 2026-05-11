@@ -553,4 +553,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginDividerLocalAccount => 'Sign in with name and phone';
+
+  @override
+  String get authContinueLoginHint =>
+      'Enter your name and mobile number (10–11 digits) to enable Continue.';
+
+  @override
+  String get authContinueSignupHint =>
+      'Fill name, phone, gender, 13-digit resident ID, and accept privacy to enable Continue.';
+
+  @override
+  String get authSessionInitFailed =>
+      'Could not load local account data. Restart the app or check storage.';
 }

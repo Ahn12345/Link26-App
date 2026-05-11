@@ -20,24 +20,24 @@ abstract final class Link26ResponsiveImageHeights {
 
   static double login(double width) {
     if (width < Link26ResponsiveTokens.breakpointCompact) {
-      return 130.0;
+      return 108.0;
     }
     if (width < Link26ResponsiveTokens.breakpointMedium) {
-      return 168.0;
+      return 160.0;
     }
-    return 200.0;
+    return 192.0;
   }
 
   static double loginDisplayWidth(double width) => (Link26Layout.innerWidth(width) * 1.0).clamp(0.0, double.infinity);
 
   static double signup(double width) {
     if (width < Link26ResponsiveTokens.breakpointCompact) {
-      return 130.0;
+      return 108.0;
     }
     if (width < Link26ResponsiveTokens.breakpointMedium) {
-      return 168.0;
+      return 160.0;
     }
-    return 200.0;
+    return 192.0;
   }
 
   static double signupDisplayWidth(double width) => (Link26Layout.innerWidth(width) * 1.0).clamp(0.0, double.infinity);

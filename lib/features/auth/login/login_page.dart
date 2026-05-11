@@ -41,10 +41,19 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _ensureRegisteredUser() async {
-    final has = await UserLocalRepository.hasAnyUser();
-    if (!mounted) return;
-    if (!has) {
-      await Navigator.of(context).pushReplacementNamed(SignupPage.routeName);
+    try {
+      final has = await UserLocalRepository.hasAnyUser();
+      if (!mounted) return;
+      if (!has) {
+        await Navigator.of(context).pushReplacementNamed(SignupPage.routeName);
+      }
+    } catch (e, st) {
+      debugPrint('LoginPage: ensureRegisteredUser failed: $e\n$st');
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.authSessionInitFailed)),
+      );
     }
   }
 
@@ -339,6 +348,18 @@ class _LoginPageState extends State<LoginPage> {
                                       fontWeight: FontWeight.w800),
                                 ),
                         ),
+                        if (!_busy && !canLocalLogin) ...[
+                          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                          Text(
+                            l10n.authContinueLoginHint,
+                            style: TextStyle(
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              color: Link26Surface.textMuted,
+                              height: 1.35,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   );

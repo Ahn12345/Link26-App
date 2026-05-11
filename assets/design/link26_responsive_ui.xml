@@ -57,8 +57,8 @@
   <token id="menuTileHPadding" compact="10" medium="12" expanded="12" />
   <token id="menuTileVPadding" compact="8" medium="10" expanded="10" />
   <token id="menuTileBottomGap" compact="8" medium="10" expanded="10" />
-  <token id="authCardPadVertical" compact="20" medium="24" expanded="24" />
-  <token id="authCardPadHorizontal" compact="18" medium="20" expanded="20" />
+  <token id="authCardPadVertical" compact="16" medium="22" expanded="24" />
+  <token id="authCardPadHorizontal" compact="16" medium="20" expanded="20" />
   <token id="welcomeTopInset" compact="10" medium="12" expanded="12" />
   <token id="adBannerPadH" compact="18" medium="20" expanded="22" />
   <token id="adBannerPadV" compact="20" medium="22" expanded="24" />
@@ -70,7 +70,7 @@
   <token id="medicineAvatarRadius" compact="20" medium="22" expanded="22" />
 
   <!-- PNG 일러스트 ↔ 바로 아래 텍스트·컨트롤 (카드·채팅 리스트 등 통일) -->
-  <token id="heroArtToContent" compact="16" medium="18" expanded="20" />
+  <token id="heroArtToContent" compact="12" medium="16" expanded="18" />
   <!-- 설정 탭 등 ListTile 앞 작은 일러스트 -->
   <token id="listTileIllustrationSize" compact="40" medium="44" expanded="48" />
   <!-- 스플래시 중앙 applogo -->

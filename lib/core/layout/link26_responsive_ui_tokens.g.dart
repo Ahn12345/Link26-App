@@ -507,17 +507,17 @@ abstract final class Link26ResponsiveUi {
 
   static double authCardPadVertical(double width) {
     if (width < Link26ResponsiveTokens.breakpointCompact) {
-      return 20.0;
+      return 16.0;
     }
     if (width < Link26ResponsiveTokens.breakpointMedium) {
-      return 24.0;
+      return 22.0;
     }
     return 24.0;
   }
 
   static double authCardPadHorizontal(double width) {
     if (width < Link26ResponsiveTokens.breakpointCompact) {
-      return 18.0;
+      return 16.0;
     }
     if (width < Link26ResponsiveTokens.breakpointMedium) {
       return 20.0;
@@ -617,12 +617,12 @@ abstract final class Link26ResponsiveUi {
 
   static double heroArtToContent(double width) {
     if (width < Link26ResponsiveTokens.breakpointCompact) {
-      return 16.0;
+      return 12.0;
     }
     if (width < Link26ResponsiveTokens.breakpointMedium) {
-      return 18.0;
+      return 16.0;
     }
-    return 20.0;
+    return 18.0;
   }
 
   static double listTileIllustrationSize(double width) {

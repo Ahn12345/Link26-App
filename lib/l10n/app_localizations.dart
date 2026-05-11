@@ -210,6 +210,9 @@ abstract class AppLocalizations {
   String get socialLoginApple;
   String get loginDividerEmail;
   String get loginDividerLocalAccount;
+  String get authContinueLoginHint;
+  String get authContinueSignupHint;
+  String get authSessionInitFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

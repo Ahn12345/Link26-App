@@ -541,4 +541,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get loginDividerLocalAccount => '이름과 전화번호로 로그인';
+
+  @override
+  String get authContinueLoginHint =>
+      '이름과 휴대전화 번호(숫자 10~11자리)를 입력하면 계속 버튼이 활성화됩니다.';
+
+  @override
+  String get authContinueSignupHint =>
+      '이름·전화·성별·주민등록번호 13자리·(필수) 개인정보 동의를 모두 입력하면 계속 버튼이 활성화됩니다.';
+
+  @override
+  String get authSessionInitFailed =>
+      '로컬 계정 정보를 불러오지 못했습니다. 앱을 다시 시작하거나 저장 공간을 확인해 주세요.';
 }

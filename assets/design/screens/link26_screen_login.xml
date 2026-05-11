@@ -10,6 +10,11 @@
       file="login.png"
       responsiveScreenId="login"
       flutterConst="ImageAssets.login" />
+  <!--
+    연동: BFF 없이 로그인/가입이 멈추면 .env 에 NHIS_USE_MOCK=true 또는 NHIS_BASE_URL 비움.
+    NHIS_LOGIN_REQUIRED=true 인데 서버가 없으면 로그인 후 홈으로 가지 않습니다.
+  -->
+  <integration nhisMockWhenNoBff="true" />
   <flutter path="lib/features/auth/login/login_page.dart" />
   <android-reference layout="reference_login_screen.xml" />
 </link26-screen-spec>

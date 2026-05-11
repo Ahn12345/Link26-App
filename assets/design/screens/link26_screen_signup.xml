@@ -10,6 +10,11 @@
       file="signup.png"
       responsiveScreenId="signup"
       flutterConst="ImageAssets.signup" />
+  <!--
+    연동: NHIS_SIGNUP_REQUIRED=true 이고 BFF 가 실패하면 가입이 롤백됩니다.
+    로컬 개발은 NHIS_USE_MOCK=true 또는 NHIS_SIGNUP_REQUIRED=false 권장.
+  -->
+  <integration nhisMockWhenNoBff="true" />
   <flutter path="lib/features/auth/signup/signup_page.dart" />
   <android-reference layout="reference_signup_screen.xml" />
 </link26-screen-spec>
