@@ -212,6 +212,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatImageReadFailed => 'Could not read the image file.';
 
   @override
+  String get aiChatImagePendingHint =>
+      'Photo attached · type a message, then send';
+
+  @override
+  String get aiChatImagePendingSnack =>
+      'Add your question or notes, then tap send.';
+
+  @override
+  String get aiChatImageNeedText =>
+      'To send with a photo, type a question or description first.';
+
+  @override
   String get aiChatWelcomeIntro => 'Hello! I can help with medicine information.\n\n';
 
   @override

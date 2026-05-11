@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -16,6 +18,12 @@ class AiChatService {
   AiChatService({Dio? dio}) : _dio = dio ?? ApiClient.dio;
 
   static String get _modelId => GeminiRuntimeConfig.modelId;
+
+  /// NHIS 스냅샷이 느리면 AI 채팅 전체가 멈춘 것처럼 보이므로 상한을 둡니다.
+  static const Duration _nhisSnapshotBudget = Duration(seconds: 14);
+
+  /// 멀티모달·긴 프롬프트 대비.
+  static const Duration _geminiBudget = Duration(seconds: 120);
 
   final Dio _dio;
 
@@ -40,8 +48,13 @@ class AiChatService {
     final key = GeminiRuntimeConfig.apiKey;
     if (key.isEmpty) return null;
     try {
-      final res = await _geminiModel().generateContent([Content.text(prompt)]);
+      final res = await _geminiModel()
+          .generateContent([Content.text(prompt)])
+          .timeout(_geminiBudget);
       return res.text?.trim();
+    } on TimeoutException {
+      if (kDebugMode) debugPrint('Gemini generateContent timeout');
+      return null;
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('Gemini generateContent failed: $e\n$st');
@@ -53,8 +66,12 @@ class AiChatService {
   Future<String?> _geminiFromContents(List<Content> contents) async {
     if (GeminiRuntimeConfig.apiKey.isEmpty) return null;
     try {
-      final res = await _geminiModel().generateContent(contents);
+      final res =
+          await _geminiModel().generateContent(contents).timeout(_geminiBudget);
       return res.text?.trim();
+    } on TimeoutException {
+      if (kDebugMode) debugPrint('Gemini multimodal timeout');
+      return null;
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('Gemini multimodal failed: $e\n$st');
@@ -122,7 +139,9 @@ class AiChatService {
     final key = GeminiRuntimeConfig.apiKey;
     final durQuery = userText.isEmpty ? '의약품' : userText;
     final durCtx = await DurAssetContext.buildSnippetForQuery(durQuery);
-    final nhisA = await NhisChatContext.fetchMedicationsSnapshot();
+    final nhisA = await NhisChatContext.fetchMedicationsSnapshot(
+      timeLimit: _nhisSnapshotBudget,
+    );
     final cacheNames = await NhisChatContext.cachedMedicineNamesSummary();
 
     if (key.isEmpty) {
@@ -174,7 +193,9 @@ JSON 형식만 출력:
       return '🟡 권고 —\n1차 분석을 생성하지 못했습니다. 네트워크·API 키·모델명을 확인해 주세요.';
     }
 
-    final nhisB = await NhisChatContext.fetchMedicationsSnapshot();
+    final nhisB = await NhisChatContext.fetchMedicationsSnapshot(
+      timeLimit: _nhisSnapshotBudget,
+    );
 
     final secondPrompt = '''
 [2차 최종 검토 — 출력 형식 엄수]

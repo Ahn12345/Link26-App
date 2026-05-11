@@ -105,6 +105,9 @@ abstract class AppLocalizations {
   String get aiChatImageAnalyzing;
   String get aiChatImageOpenFailed;
   String get aiChatImageReadFailed;
+  String get aiChatImagePendingHint;
+  String get aiChatImagePendingSnack;
+  String get aiChatImageNeedText;
   String get aiChatWelcomeIntro;
   String get aiChatWelcomeUploadHint;
   String get aiChatWelcomeTipEmoji;

@@ -205,6 +205,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiChatImageReadFailed => '이미지 파일을 읽지 못했습니다.';
 
   @override
+  String get aiChatImagePendingHint => '사진 첨부됨 · 내용 입력 후 전송';
+
+  @override
+  String get aiChatImagePendingSnack =>
+      '질문이나 설명을 입력한 뒤 전송 버튼을 눌러 주세요.';
+
+  @override
+  String get aiChatImageNeedText =>
+      '이미지와 함께 보내려면 질문이나 설명을 먼저 입력해 주세요.';
+
+  @override
   String get aiChatWelcomeIntro => '안녕하세요! 약 정보를 도와드리겠습니다.\n\n';
 
   @override

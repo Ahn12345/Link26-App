@@ -69,6 +69,10 @@ class _AiChatBody extends StatefulWidget {
 class _AiChatBodyState extends State<_AiChatBody> {
   final controller = TextEditingController();
 
+  /// 클립으로 고른 사진은 텍스트 입력 후 전송할 때까지 보관합니다.
+  Uint8List? _pendingImageBytes;
+  String? _pendingImageMime;
+
   /// 첫 말풍선 하단 시각 — [AiChatSessionStore.touchAccess] 로 저장되는 접속 시각과 동일.
   String? _welcomeAccessLabel;
 
@@ -105,7 +109,21 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Future<void> sendMessage() async {
     final l10n = AppLocalizations.of(context);
     final text = controller.text.trim();
-    if (text.isEmpty || _sending) return;
+    if (_sending) return;
+
+    final pendingBytes = _pendingImageBytes;
+    final pendingMime = _pendingImageMime;
+    final hasPendingImage =
+        pendingBytes != null && pendingBytes.isNotEmpty && (pendingMime ?? '').isNotEmpty;
+
+    if (text.isEmpty && !hasPendingImage) return;
+    if (hasPendingImage && text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.aiChatImageNeedText)),
+      );
+      return;
+    }
+
     if (AiChatConversationCache.dailyUsed >= _dailyLimit) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.aiChatDailyLimitReached)),
@@ -113,19 +131,45 @@ class _AiChatBodyState extends State<_AiChatBody> {
       return;
     }
 
+    final userBubbleText = hasPendingImage
+        ? '${l10n.aiChatImageUserCaption}\n\n$text'
+        : text;
+
     setState(() {
       AiChatConversationCache.messages.add(
-        ChatMessage(isUser: true, time: _nowLabel(), text: text),
+        ChatMessage(isUser: true, time: _nowLabel(), text: userBubbleText),
       );
+      _pendingImageBytes = null;
+      _pendingImageMime = null;
+      if (hasPendingImage) {
+        AiChatConversationCache.messages.add(
+          ChatMessage(
+            isUser: false,
+            time: _nowLabel(),
+            text: l10n.aiChatImageAnalyzing,
+          ),
+        );
+      }
       _sending = true;
     });
     controller.clear();
     await AiChatConversationCache.persist();
 
     try {
-      final body = (await AiChatService().respondChat(text)).trim();
+      final body = (await AiChatService().respondChat(
+        text,
+        imageBytes: hasPendingImage ? pendingBytes : null,
+        imageMime: hasPendingImage ? pendingMime : null,
+      ))
+          .trim();
       if (!mounted) return;
       setState(() {
+        if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
+          final last = AiChatConversationCache.messages.last;
+          if (!last.isUser && last.text == l10n.aiChatImageAnalyzing) {
+            AiChatConversationCache.messages.removeLast();
+          }
+        }
         AiChatConversationCache.messages.add(
           ChatMessage(
             isUser: false,
@@ -142,6 +186,12 @@ class _AiChatBodyState extends State<_AiChatBody> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
+        if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
+          final last = AiChatConversationCache.messages.last;
+          if (!last.isUser && last.text == l10n.aiChatImageAnalyzing) {
+            AiChatConversationCache.messages.removeLast();
+          }
+        }
         AiChatConversationCache.messages.add(
           ChatMessage(
             isUser: false,
@@ -163,7 +213,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
     return 'image/jpeg';
   }
 
-  /// 카메라 또는 갤러리에서 이미지를 고른 뒤 Gemini(또는 키 없을 때 안내)로 분석합니다.
+  /// 카메라 또는 갤러리에서 이미지를 고릅니다. 분석은 텍스트 입력 후 전송 시 실행됩니다.
   Future<void> openMedicineImagePicker() async {
     final l10n = AppLocalizations.of(context);
     if (_sending) return;
@@ -215,69 +265,26 @@ class _AiChatBodyState extends State<_AiChatBody> {
     }
     if (!mounted || file == null) return;
 
-    setState(() {
-      AiChatConversationCache.messages.add(
-        ChatMessage(
-          isUser: true,
-          time: _nowLabel(),
-          text: l10n.aiChatImageUserCaption,
-        ),
-      );
-      AiChatConversationCache.messages.add(
-        ChatMessage(
-          isUser: false,
-          time: _nowLabel(),
-          text: l10n.aiChatImageAnalyzing,
-        ),
-      );
-      _sending = true;
-    });
-    await AiChatConversationCache.persist();
-
     late Uint8List bytes;
     try {
       bytes = await file.readAsBytes();
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        AiChatConversationCache.messages.removeLast();
-        AiChatConversationCache.messages.add(
-          ChatMessage(
-            isUser: false,
-            time: _nowLabel(),
-            text: l10n.aiChatImageReadFailed,
-          ),
-        );
-        _sending = false;
-      });
-      await AiChatConversationCache.persist();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.aiChatImageReadFailed)),
+      );
       return;
     }
 
     final mime = _mimeFromImagePath(file.path);
-    final reply = (await AiChatService().respondChat(
-      '',
-      imageBytes: bytes,
-      imageMime: mime,
-    ))
-        .trim();
-
     if (!mounted) return;
     setState(() {
-      AiChatConversationCache.messages.removeLast();
-      AiChatConversationCache.messages.add(
-        ChatMessage(
-          isUser: false,
-          time: _nowLabel(),
-          text: reply.isEmpty ? l10n.aiChatReplyError : reply,
-        ),
-      );
-      if (AiChatConversationCache.dailyUsed < _dailyLimit) {
-        AiChatConversationCache.dailyUsed++;
-      }
-      _sending = false;
+      _pendingImageBytes = bytes;
+      _pendingImageMime = mime;
     });
-    await AiChatConversationCache.persist();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.aiChatImagePendingSnack)),
+    );
   }
 
   String _nowLabel() =>
@@ -416,6 +423,19 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               children: [
                                 _DisclaimerBanner(
                                     text: l10n.aiChatDisclaimerShort),
+                                if (_pendingImageBytes != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: _PendingAttachmentChip(
+                                      label: l10n.aiChatImagePendingHint,
+                                      onRemove: _sending
+                                          ? null
+                                          : () => setState(() {
+                                                _pendingImageBytes = null;
+                                                _pendingImageMime = null;
+                                              }),
+                                    ),
+                                  ),
                                 _InputBar(
                                   controller: controller,
                                   enabled: inputEnabled,
@@ -670,6 +690,62 @@ class _DisclaimerBanner extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 첨부 이미지가 전송 대기 중일 때 입력창 위에 표시합니다.
+class _PendingAttachmentChip extends StatelessWidget {
+  const _PendingAttachmentChip({
+    required this.label,
+    required this.onRemove,
+  });
+
+  final String label;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final softOutline = Link26Surface.outline.withValues(alpha: 0.45);
+    return Material(
+      color: Colors.white,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: softOutline),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.attach_file, size: 20, color: Link26Surface.accent),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Link26Surface.textPrimary,
+                ),
+              ),
+            ),
+            if (onRemove != null)
+              IconButton(
+                onPressed: onRemove,
+                tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                icon: Icon(
+                  Icons.close,
+                  size: 20,
+                  color: Link26Surface.textSecondary,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
           ],
         ),
       ),
