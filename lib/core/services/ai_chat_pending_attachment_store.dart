@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 
 /// 클립으로 첨부한 이미지 — [MainShell] 탭 전환으로 AI 화면이 dispose 되어도 유지됩니다.

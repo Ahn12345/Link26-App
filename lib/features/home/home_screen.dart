@@ -1,8 +1,15 @@
-﻿import 'package:flutter/foundation.dart';
+﻿import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'package:link26_app/core/database/home_notification_repository.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
+import 'package:link26_app/core/services/ai_chat_home_alert_notifier.dart';
+import 'package:link26_app/core/services/main_shell_tab_bus.dart';
+import 'package:link26_app/features/home/home_notification_center_screen.dart';
+import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
@@ -27,6 +34,9 @@ class HomeDashboardContent extends StatefulWidget {
 
 class _HomeDashboardContentState extends State<HomeDashboardContent> {
   List<Medicine> medicines = [];
+
+  /// 종 아이콘 배지: 미읽음 AI 알림 + 미완료 복용 건수.
+  int _bellBadgeCount = 0;
 
   String _normMedName(String name) =>
       name.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
@@ -69,7 +79,59 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrapMedicines());
+    HomeNotificationRepository.revision.addListener(_onBellDepsChanged);
+    AiChatHomeAlertNotifier.instance.addListener(_onBellDepsChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _bootstrapMedicines();
+      if (!mounted) return;
+      unawaited(AiChatHomeAlertNotifier.instance.refreshBannerFromDb());
+      unawaited(_refreshBellBadge());
+    });
+  }
+
+  void _onBellDepsChanged() {
+    unawaited(_refreshBellBadge());
+  }
+
+  @override
+  void dispose() {
+    HomeNotificationRepository.revision.removeListener(_onBellDepsChanged);
+    AiChatHomeAlertNotifier.instance.removeListener(_onBellDepsChanged);
+    super.dispose();
+  }
+
+  Future<void> _refreshBellBadge() async {
+    final aiUnread = await HomeNotificationRepository.unreadCountAiChat();
+    final pendingDose = alarms.where((a) => !a.completed).length;
+    if (mounted) setState(() => _bellBadgeCount = aiUnread + pendingDose);
+  }
+
+  Future<void> _dismissAiChatBannerAndRefresh() async {
+    await AiChatHomeAlertNotifier.instance.dismiss();
+    if (!mounted) return;
+    await _refreshBellBadge();
+  }
+
+  Future<void> _openAiChatFromBannerAndRefresh() async {
+    await AiChatHomeAlertNotifier.instance.dismiss();
+    if (!mounted) return;
+    MainShellTabBus.goTo(1);
+    await _refreshBellBadge();
+  }
+
+  Future<void> _openNotificationCenter() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => HomeNotificationCenterScreen(
+          doseAlarms: alarms,
+          onListsChanged: () {
+            setState(() {});
+            unawaited(_refreshBellBadge());
+          },
+        ),
+      ),
+    );
+    if (mounted) await _refreshBellBadge();
   }
 
   /// 세션 전화가 없어도, 로그인 상태이고 로컬 사용자가 한 명이면 DB 전화로 BFF 동기화.
@@ -175,8 +237,16 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     await _reloadMedicinesFromStores();
   }
 
+  String _shortTime(DateTime? t) {
+    if (t == null) return '';
+    final h = t.hour;
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final completed = alarms.where((e) => e.completed).length;
     // [MainShell] extendBody: true 이면 본문이 하단 네비 뒤로 깔리므로 여백을 둡니다.
     final bottomPad =
@@ -221,10 +291,46 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                         shape: const CircleBorder(),
                         elevation: 1,
                         shadowColor: Colors.black.withValues(alpha: 0.06),
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.notifications_none_rounded),
-                          color: Link26Surface.textSecondary,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              onPressed: _openNotificationCenter,
+                              icon: const Icon(Icons.notifications_none_rounded),
+                              color: Link26Surface.textSecondary,
+                            ),
+                            if (_bellBadgeCount > 0)
+                              Positioned(
+                                right: 4,
+                                top: 4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 2,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE53935),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    _bellBadgeCount > 99
+                                        ? '99+'
+                                        : '$_bellBadgeCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
@@ -274,9 +380,36 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     ),
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                  ListenableBuilder(
+                    listenable: AiChatHomeAlertNotifier.instance,
+                    builder: (context, _) {
+                      final n = AiChatHomeAlertNotifier.instance;
+                      if (!n.visible) return const SizedBox.shrink();
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: Link26ResponsiveUi.gapSm(w),
+                        ),
+                        child: _AiChatImageReplyHomeBanner(
+                          title: n.title.isNotEmpty
+                              ? n.title
+                              : l10n.homeAiChatImageReplyTitle,
+                          preview: n.preview,
+                          timeLabel: _shortTime(n.at),
+                          ctaLabel: l10n.homeAiChatImageReplyCta,
+                          onOpenChat: () =>
+                              unawaited(_openAiChatFromBannerAndRefresh()),
+                          onDismiss: () =>
+                              unawaited(_dismissAiChatBannerAndRefresh()),
+                        ),
+                      );
+                    },
+                  ),
                   _AlarmPreviewCard(
                     item: alarms.first,
-                    onDone: () => setState(() => alarms.first.completed = true),
+                    onDone: () {
+                      setState(() => alarms.first.completed = true);
+                      unawaited(_refreshBellBadge());
+                    },
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                   Text(
@@ -322,6 +455,113 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
             ),
           ],
         ),
+        ),
+      ),
+    );
+  }
+}
+
+/// AI 채팅(이미지 포함) 답변 완료 시 「오늘의 알림」 상단에 표시.
+class _AiChatImageReplyHomeBanner extends StatelessWidget {
+  const _AiChatImageReplyHomeBanner({
+    required this.title,
+    required this.preview,
+    required this.timeLabel,
+    required this.ctaLabel,
+    required this.onOpenChat,
+    required this.onDismiss,
+  });
+
+  final String title;
+  final String preview;
+  final String timeLabel;
+  final String ctaLabel;
+  final VoidCallback onOpenChat;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Link26ElevatedCard(
+      child: InkWell(
+        onTap: onOpenChat,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: EdgeInsets.all(Link26ResponsiveUi.gapMd(w)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: Link26ResponsiveUi.alarmAvatarRadius(w),
+                backgroundColor: const Color(0xFFE8F5E9),
+                child: const Icon(
+                  Icons.smart_toy_outlined,
+                  color: Color(0xFF2E7D32),
+                ),
+              ),
+              SizedBox(width: Link26ResponsiveUi.alarmRowGap(w)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: Link26ResponsiveUi.bodySmall(w) + 1,
+                              fontWeight: FontWeight.w900,
+                              color: Link26Surface.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (timeLabel.isNotEmpty)
+                          Text(
+                            timeLabel,
+                            style: TextStyle(
+                              fontSize: Link26ResponsiveUi.caption(w),
+                              fontWeight: FontWeight.w700,
+                              color: Link26Surface.textMuted,
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                    Text(
+                      preview,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: Link26ResponsiveUi.bodySmall(w),
+                        height: 1.35,
+                        color: Link26Surface.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                    Text(
+                      ctaLabel,
+                      style: TextStyle(
+                        fontSize: Link26ResponsiveUi.caption(w),
+                        fontWeight: FontWeight.w900,
+                        color: Link26Surface.accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: onDismiss,
+                icon: Icon(
+                  Icons.close_rounded,
+                  color: Link26Surface.textMuted,
+                  size: 22,
+                ),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              ),
+            ],
+          ),
         ),
       ),
     );

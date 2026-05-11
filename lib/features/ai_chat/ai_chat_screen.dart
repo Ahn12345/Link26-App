@@ -20,6 +20,68 @@ import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/models/link_models.dart';
 
+Future<void> _finalizeAiChatSuccess({
+  required bool hasPendingImage,
+  required String analyzingLabel,
+  required String body,
+  required String replyError,
+  required String homeAlertTitle,
+  required int dailyLimit,
+}) async {
+  if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
+    final last = AiChatConversationCache.messages.last;
+    if (!last.isUser && last.text == analyzingLabel) {
+      AiChatConversationCache.messages.removeLast();
+    }
+  }
+  final replyText = body.isEmpty ? replyError : body;
+  AiChatConversationCache.messages.add(
+    ChatMessage(
+      isUser: false,
+      time: AiChatSessionStore.formatAccessLabel(DateTime.now()),
+      text: replyText,
+    ),
+  );
+  if (AiChatConversationCache.dailyUsed < dailyLimit) {
+    AiChatConversationCache.dailyUsed++;
+  }
+  await AiChatConversationCache.persist();
+  if (hasPendingImage) {
+    await AiChatHomeAlertNotifier.instance.onNewAiChatImageReply(
+      title: homeAlertTitle,
+      previewText: replyText,
+    );
+  }
+}
+
+Future<void> _finalizeAiChatFailure({
+  required bool hasPendingImage,
+  required String analyzingLabel,
+  required String replyError,
+  required String homeAlertTitle,
+}) async {
+  if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
+    final last = AiChatConversationCache.messages.last;
+    if (!last.isUser && last.text == analyzingLabel) {
+      AiChatConversationCache.messages.removeLast();
+    }
+  }
+  AiChatConversationCache.messages.add(
+    ChatMessage(
+      isUser: false,
+      time: AiChatSessionStore.formatAccessLabel(DateTime.now()),
+      text: replyError,
+    ),
+  );
+  await AiChatConversationCache.persist();
+  if (hasPendingImage) {
+    await AiChatHomeAlertNotifier.instance.onNewAiChatImageReply(
+      title: homeAlertTitle,
+      previewText: replyError,
+    );
+  }
+}
+
 /// AI 약 정보 채팅 — 색·타이포는 [Link26Surface]·디자인 토큰(`accent` #0047AB) 기준.
 ///
 /// [embeddedInShell]: 하단 탭일 때 뒤로가기 없음.
@@ -172,7 +234,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
         imageMime: hasPendingImage ? pendingMime : null,
       ))
           .trim();
-      await _applyAiChatReplySuccess(
+      await _finalizeAiChatSuccess(
         hasPendingImage: hasPendingImage,
         analyzingLabel: analyzingLabel,
         body: body,
@@ -181,7 +243,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
         dailyLimit: _dailyLimit,
       );
     } catch (_) {
-      await _applyAiChatReplyError(
+      await _finalizeAiChatFailure(
         hasPendingImage: hasPendingImage,
         analyzingLabel: analyzingLabel,
         replyError: replyError,
@@ -204,7 +266,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
   /// 카메라 또는 갤러리에서 이미지를 고릅니다. 분석은 텍스트 입력 후 전송 시 실행됩니다.
   Future<void> openMedicineImagePicker() async {
     final l10n = AppLocalizations.of(context);
-    if (_sending) return;
+    if (AiChatOutgoingBusy.instance.value) return;
     if (AiChatConversationCache.dailyUsed >= _dailyLimit) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.aiChatDailyLimitReached)),
@@ -266,10 +328,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
 
     final mime = _mimeFromImagePath(file.path);
     if (!mounted) return;
-    setState(() {
-      _pendingImageBytes = bytes;
-      _pendingImageMime = mime;
-    });
+    AiChatPendingAttachmentStore.instance.setAttachment(bytes, mime);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.aiChatImagePendingSnack)),
     );
@@ -284,8 +343,8 @@ class _AiChatBodyState extends State<_AiChatBody> {
     final embedded = widget.embeddedInShell;
     final shellNavPad =
         embedded ? MediaQuery.of(context).padding.bottom + 88.0 : 0.0;
-    final inputEnabled =
-        !_sending && AiChatConversationCache.dailyUsed < _dailyLimit;
+    final inputEnabled = !AiChatOutgoingBusy.instance.value &&
+        AiChatConversationCache.dailyUsed < _dailyLimit;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -366,31 +425,41 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                               ? minScrollBody
                                               : vp.maxHeight,
                                         ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            _AiWelcomeBubble(
-                                              timeLabel: _welcomeAccessLabel ??
-                                                  '…',
-                                              maxBubbleWidth: bubbleMax,
-                                            ),
-                                            ...AiChatConversationCache.messages
-                                                .map(
-                                              (m) => Padding(
-                                                padding: EdgeInsets.only(
-                                                  top: Link26ResponsiveUi.gapMd(
-                                                      w),
-                                                ),
-                                                child: _ChatBubble(
-                                                  message: m,
+                                        child: ValueListenableBuilder<int>(
+                                          valueListenable:
+                                              AiChatConversationCache.revision,
+                                          builder: (context, rev, _) {
+                                            assert(rev >= 0);
+                                            return Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                _AiWelcomeBubble(
+                                                  timeLabel:
+                                                      _welcomeAccessLabel ??
+                                                          '…',
                                                   maxBubbleWidth: bubbleMax,
                                                 ),
-                                              ),
-                                            ),
-                                          ],
+                                                ...AiChatConversationCache
+                                                    .messages
+                                                    .map(
+                                                  (m) => Padding(
+                                                    padding: EdgeInsets.only(
+                                                      top: Link26ResponsiveUi
+                                                          .gapMd(w),
+                                                    ),
+                                                    child: _ChatBubble(
+                                                      message: m,
+                                                      maxBubbleWidth:
+                                                          bubbleMax,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
                                         ),
                                       ),
                                     );
@@ -411,23 +480,24 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               children: [
                                 _DisclaimerBanner(
                                     text: l10n.aiChatDisclaimerShort),
-                                if (_pendingImageBytes != null)
+                                if (AiChatPendingAttachmentStore
+                                    .instance.hasPending)
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: _PendingAttachmentChip(
                                       label: l10n.aiChatImagePendingHint,
-                                      onRemove: _sending
+                                      onRemove: AiChatOutgoingBusy
+                                              .instance.value
                                           ? null
-                                          : () => setState(() {
-                                                _pendingImageBytes = null;
-                                                _pendingImageMime = null;
-                                              }),
+                                          : () => AiChatPendingAttachmentStore
+                                              .instance.clear(),
                                     ),
                                   ),
                                 _InputBar(
                                   controller: controller,
                                   enabled: inputEnabled,
-                                  sending: _sending,
+                                  sending:
+                                      AiChatOutgoingBusy.instance.value,
                                   hintText: l10n.aiChatInputPlaceholder,
                                   onSend: () => unawaited(sendMessage()),
                                   onAttachImage: () =>

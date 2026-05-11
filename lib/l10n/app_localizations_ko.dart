@@ -266,6 +266,57 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeAiChatImageReplyCta => 'AI 채팅에서 보기';
 
   @override
+  String get homeNotificationCenterTitle => '알림';
+
+  @override
+  String get homeNotificationMarkAiRead => 'AI 읽음';
+
+  @override
+  String get homeNotificationTabAll => '전체';
+
+  @override
+  String get homeNotificationTabAi => 'AI';
+
+  @override
+  String get homeNotificationTabDose => '복용';
+
+  @override
+  String get homeNotificationTabCall => '전화';
+
+  @override
+  String get homeNotificationSectionAi => 'AI 약 정보';
+
+  @override
+  String get homeNotificationSectionDose => '복용 알림';
+
+  @override
+  String get homeNotificationSectionCall => '전화 복용 안내';
+
+  @override
+  String get homeNotificationEmptyAi => 'AI 분석 알림이 없습니다.';
+
+  @override
+  String get homeNotificationEmptyDose => '앱 복용 알림이 없습니다.';
+
+  @override
+  String get homeNotificationEmptyCall => '전화 복용 알림이 없습니다.';
+
+  @override
+  String get homeNotificationNewBadge => 'NEW';
+
+  @override
+  String get homeNotificationKindApp => '알림';
+
+  @override
+  String get homeNotificationKindCall => '전화';
+
+  @override
+  String get homeNotificationDoseConfirmed => '확인됨';
+
+  @override
+  String get homeNotificationMarkDoseDone => '복용 완료';
+
+  @override
   String get homeTodayAlertsViewAll => '전체 보기';
 
   @override

@@ -274,6 +274,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAiChatImageReplyCta => 'Open AI chat';
 
   @override
+  String get homeNotificationCenterTitle => 'Notifications';
+
+  @override
+  String get homeNotificationMarkAiRead => 'Mark AI read';
+
+  @override
+  String get homeNotificationTabAll => 'All';
+
+  @override
+  String get homeNotificationTabAi => 'AI';
+
+  @override
+  String get homeNotificationTabDose => 'Doses';
+
+  @override
+  String get homeNotificationTabCall => 'Calls';
+
+  @override
+  String get homeNotificationSectionAi => 'AI medicine';
+
+  @override
+  String get homeNotificationSectionDose => 'Dose reminders';
+
+  @override
+  String get homeNotificationSectionCall => 'Phone reminders';
+
+  @override
+  String get homeNotificationEmptyAi => 'No AI notifications yet.';
+
+  @override
+  String get homeNotificationEmptyDose => 'No app dose reminders.';
+
+  @override
+  String get homeNotificationEmptyCall => 'No phone dose reminders.';
+
+  @override
+  String get homeNotificationNewBadge => 'NEW';
+
+  @override
+  String get homeNotificationKindApp => 'App';
+
+  @override
+  String get homeNotificationKindCall => 'Call';
+
+  @override
+  String get homeNotificationDoseConfirmed => 'Confirmed';
+
+  @override
+  String get homeNotificationMarkDoseDone => 'Taken';
+
+  @override
   String get homeTodayAlertsViewAll => 'View all reminders';
 
   @override

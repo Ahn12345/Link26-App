@@ -1,11 +1,10 @@
-import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:link26_app/core/constants/storage_keys.dart';
+import 'package:link26_app/core/database/ai_chat_message_repository.dart';
 import 'package:link26_app/models/link_models.dart';
 
-/// AI 채팅 일일 한도·말풍선 로컬 저장 (탭 이동·재실행 후에도 유지).
+/// AI 채팅 일일 한도(SharedPreferences)·말풍선(SQLite) 로컬 저장.
 abstract final class AiChatLocalStore {
   AiChatLocalStore._();
 
@@ -38,28 +37,15 @@ abstract final class AiChatLocalStore {
   }
 
   static Future<List<ChatMessage>> loadMessages() async {
-    final p = await SharedPreferences.getInstance();
-    final raw = p.getString(StorageKeys.aiChatMessagesJsonV1);
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      final list = jsonDecode(raw) as List<dynamic>;
-      return list
-          .map(
-            (e) => ChatMessage.fromJson(Map<String, dynamic>.from(e as Map)),
-          )
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    return AiChatMessageRepository.loadMessages();
   }
 
   static Future<void> saveMessages(List<ChatMessage> list) async {
-    final p = await SharedPreferences.getInstance();
-    final raw = jsonEncode(list.map((m) => m.toJson()).toList());
-    await p.setString(StorageKeys.aiChatMessagesJsonV1, raw);
+    await AiChatMessageRepository.saveMessages(list);
   }
 
   static Future<void> clearMessages() async {
+    await AiChatMessageRepository.clearMessages();
     final p = await SharedPreferences.getInstance();
     await p.remove(StorageKeys.aiChatMessagesJsonV1);
   }

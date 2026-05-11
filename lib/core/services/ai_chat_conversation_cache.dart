@@ -4,7 +4,7 @@ import 'package:link26_app/core/services/ai_chat_local_store.dart';
 import 'package:link26_app/models/link_models.dart';
 
 /// 탭 전환으로 [AiChatScreen] 이 dispose 되어도 대화·일일 사용 횟수를 메모리에 유지합니다.
-/// [AiChatLocalStore] 와 함께 쓰면 앱 재시작 후에도 복원됩니다.
+/// 말풍선은 [AiChatLocalStore] → SQLite(`link26_ai_chat.db`)에 저장되어 앱 재시작 후에도 복원됩니다.
 abstract final class AiChatConversationCache {
   AiChatConversationCache._();
 
@@ -33,11 +33,12 @@ abstract final class AiChatConversationCache {
     revision.value = revision.value + 1;
   }
 
-  /// 테스트·로그아웃 등에서만 사용.
-  static void resetSession() {
+  /// 테스트·로그아웃 등 — 메모리·디스크 대화를 비웁니다.
+  static Future<void> resetSession() async {
     _hydratedMessages = false;
     messages.clear();
     dailyUsed = 0;
     revision.value = revision.value + 1;
+    await AiChatLocalStore.clearMessages();
   }
 }
