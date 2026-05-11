@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
@@ -16,16 +17,46 @@ class AiChatService {
 
   final Dio _dio;
 
+  static bool _restBackendConfigured() {
+    var b = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    if (b.length >= 2 &&
+        ((b.startsWith('"') && b.endsWith('"')) ||
+            (b.startsWith("'") && b.endsWith("'")))) {
+      b = b.substring(1, b.length - 1).trim();
+    }
+    if (b.isEmpty) return false;
+    if (b.toLowerCase().contains('example.com')) return false;
+    return true;
+  }
+
   Future<String?> _geminiText(String prompt) async {
     final key = GeminiRuntimeConfig.apiKey;
     if (key.isEmpty) return null;
-    final model = GenerativeModel(model: _modelId, apiKey: key);
-    final res = await model.generateContent([Content.text(prompt)]);
-    return res.text?.trim();
+    try {
+      final model = GenerativeModel(model: _modelId, apiKey: key);
+      final res = await model.generateContent([Content.text(prompt)]);
+      return res.text?.trim();
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('Gemini generateContent failed: $e\n$st');
+      }
+      return null;
+    }
   }
 
-  /// REST `POST /ai/chat` — 실패 시 [triageMessage] 폴백.
+  static const String _geminiFailureHintKo =
+      'Gemini 응답을 받지 못했습니다. Google AI Studio에서 발급한 키를 프로젝트 루트 `.env`의 '
+      'GEMINI_API_KEY에 넣고, `pubspec.yaml`에 `.env`가 assets로 포함돼 있는지 확인한 뒤 앱을 '
+      '완전히 다시 실행(재빌드)하세요. 모델 ID(GEMINI_MODEL_ID)도 AI Studio에서 쓰는 이름과 맞추세요.';
+
+  /// REST `POST /ai/chat` — 백엔드가 없거나 실패 시 [triageMessage](Gemini·규칙).
   Future<String> sendChatMessage(String message) async {
+    if (!_restBackendConfigured()) {
+      final t = await triageMessage(message);
+      final a = t.primaryAnswer.trim();
+      final f = t.followUpPrompt.trim();
+      return f.isEmpty ? a : '$a\n\n$f';
+    }
     try {
       final response = await _dio.post<dynamic>(
         ApiEndpoints.aiChat,
@@ -154,6 +185,12 @@ class AiChatService {
           secondaryReview: second,
         );
       }
+      return ChatTriageResult(
+        urgent: false,
+        primaryAnswer: _geminiFailureHintKo,
+        followUpPrompt:
+            '키·네트워크·모델명을 확인한 뒤 다시 질문해 보세요. 응급 증상이면 119·응급실로 연락하세요.',
+      );
     }
     return Future.value(_ruleBasedTriage(message));
   }

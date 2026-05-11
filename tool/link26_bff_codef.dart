@@ -234,6 +234,15 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
     if (!path.startsWith('/')) {
       throw StateError('CODEF_MEDICATION_PATH 는 / 로 시작해야 합니다.');
     }
+    final pathLower = path.toLowerCase();
+    if (pathLower.contains('connectedid-list') ||
+        pathLower.contains('/v1/account/')) {
+      throw StateError(
+        'CODEF_MEDICATION_PATH 가 계정/연동 목록 API($path)를 가리킵니다. '
+        'developer.codef.io 에서 「국민건강보험공단 건보진료정보」등 복약·진료 상품의 '
+        '요청 URL 경로를 그대로 넣어야 합니다. connectedId-list 는 약 목록이 아닙니다.',
+      );
+    }
     final bearer = await _codefToken.token(clientId: id, clientSecret: secret);
     final decoded = await codefProductRaw(
       baseUrl: base,

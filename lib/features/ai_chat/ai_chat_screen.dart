@@ -10,6 +10,7 @@ import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/models/link_models.dart';
@@ -241,6 +242,20 @@ class _AiChatBodyState extends State<_AiChatBody> {
                           ),
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                        if (!GeminiRuntimeConfig.isConfigured)
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: Link26ResponsiveTokens.contentMaxWidth,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: Link26ResponsiveUi.gapSm(w),
+                                ),
+                                child: _GeminiSetupBanner(text: l10n.aiChatGeminiKeyMissing),
+                              ),
+                            ),
+                          ),
                         Expanded(
                           child: Center(
                             child: ConstrainedBox(

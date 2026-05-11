@@ -1,7 +1,9 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
 //
-// 포트: 환경변수 PORT 가 있으면 그 포트만 사용.
-// 없으면 8787~8796 시도 후, 전부 실패 시 OS 임의 포트(0) 사용 → errno 10048 에도 실행 가능.
+// 포트: 환경변수 PORT 가 있으면 그 포트만 사용 (이미 다른 터미널에서 쓰 중이면 errno 10048).
+// PORT 를 비우고 실행하면 8787부터 빈 포트를 순서대로 잡습니다 — VS·PowerShell 이중 실행 시
+// 서로 다른 포트가 될 수 있으니, 앱 NHIS_BASE_URL 은 실제로 뜬 포트에 맞출 것.
+// 전부 실패 시 OS 임의 포트(0) 사용.
 //
 // Windows PowerShell 고정 포트: $env:PORT="8788"; dart run tool/link26_bff.dart
 
@@ -45,7 +47,19 @@ Future<HttpServer> _bindServer() async {
       return await HttpServer.bind(InternetAddress.anyIPv4, p);
     } catch (e) {
       stderr.writeln('PORT=$p 바인드 실패: $e');
-      stderr.writeln('다른 포트: \$env:PORT=8788 (PowerShell)');
+      stderr.writeln('');
+      stderr.writeln('원인: 이 포트를 이미 쓰는 프로세스가 있습니다(다른 터미널에서 BFF 중복 실행 등).');
+      stderr.writeln('해결 택1 — 기존 것만 쓰기: 다른 터미널의 link26_bff 를 하나만 남기고 나머지는 Ctrl+C 로 종료.');
+      stderr.writeln('해결 택2 — PID 종료(PowerShell):');
+      stderr.writeln(
+        '  Get-NetTCPConnection -LocalPort $p -ErrorAction SilentlyContinue '
+        '| Select-Object OwningProcess',
+      );
+      stderr.writeln('  Stop-Process -Id <위 OwningProcess> -Force');
+      stderr.writeln('해결 택3 — 다른 포트: \$env:PORT=8788; dart run tool/link26_bff.dart');
+      stderr.writeln('          (앱 .env 의 NHIS_BASE_URL 포트도 같이 변경)');
+      stderr.writeln('해결 택4 — 자동으로 빈 포트: Remove-Item Env:PORT; dart run tool/link26_bff.dart');
+      stderr.writeln('');
       exit(1);
     }
   }
