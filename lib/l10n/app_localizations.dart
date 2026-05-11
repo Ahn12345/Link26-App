@@ -213,6 +213,7 @@ abstract class AppLocalizations {
   String get authContinueLoginHint;
   String get authContinueSignupHint;
   String get authSessionInitFailed;
+  String get signupSubmitFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

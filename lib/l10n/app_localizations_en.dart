@@ -565,4 +565,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authSessionInitFailed =>
       'Could not load local account data. Restart the app or check storage.';
+
+  @override
+  String get signupSubmitFailed =>
+      'Sign-up failed. Check your input or restart the app.';
 }

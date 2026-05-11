@@ -553,4 +553,8 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get authSessionInitFailed =>
       '로컬 계정 정보를 불러오지 못했습니다. 앱을 다시 시작하거나 저장 공간을 확인해 주세요.';
+
+  @override
+  String get signupSubmitFailed =>
+      '회원가입 처리 중 오류가 발생했습니다. 입력 내용을 확인하거나 앱을 다시 시작해 주세요.';
 }

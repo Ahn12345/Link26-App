@@ -155,9 +155,12 @@ class _SignupPageState extends State<SignupPage> {
     } catch (e, st) {
       debugPrint('SignupPage: submit failed: $e\n$st');
       if (!context.mounted) return;
+      final body = e is DatabaseException
+          ? l10n.authSessionInitFailed
+          : '${l10n.signupSubmitFailed}\n$e';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${l10n.loginFailed}: $e'),
+          content: Text(body),
           duration: const Duration(seconds: 8),
         ),
       );

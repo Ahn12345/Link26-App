@@ -16,6 +16,8 @@ import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/auth/services/nhis_login_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
+import 'package:sqflite/sqflite.dart';
+
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
@@ -149,8 +151,11 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       if (context.mounted) {
+        final body = e is DatabaseException
+            ? l10n.authSessionInitFailed
+            : '${l10n.loginFailed}: $e';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.loginFailed}: $e')),
+          SnackBar(content: Text(body)),
         );
       }
     } finally {

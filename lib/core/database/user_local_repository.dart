@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io' show File;
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -52,24 +54,63 @@ abstract final class UserLocalRepository {
     String columnName,
     String columnDefinition,
   ) async {
-    final cols = await db.rawQuery('PRAGMA table_info(users)');
-    final exists = cols.any((row) => row['name'] == columnName);
-    if (!exists) {
+    try {
+      final cols = await db.rawQuery('PRAGMA table_info(users)');
+      final names = cols
+          .map((row) => '${row['name'] ?? ''}')
+          .where((n) => n.isNotEmpty)
+          .toSet();
+      if (names.contains(columnName)) return;
       await db.execute(
         'ALTER TABLE users ADD COLUMN $columnDefinition',
       );
+    } on DatabaseException catch (e) {
+      if (_isDuplicateColumnError(e)) return;
+      rethrow;
     }
+  }
+
+  static bool _isDuplicateColumnError(DatabaseException e) {
+    return e.toString().toLowerCase().contains('duplicate column');
+  }
+
+  static Future<void> _erasePhysicalDb(String dbPath) async {
+    try {
+      await deleteDatabase(dbPath);
+    } catch (_) {}
+    for (final suffix in <String>['', '-wal', '-shm', '-journal']) {
+      final path = suffix.isEmpty ? dbPath : '$dbPath$suffix';
+      try {
+        final f = File(path);
+        if (await f.exists()) {
+          await f.delete();
+        }
+      } catch (_) {}
+    }
+  }
+
+  static Future<void> _disposeDb() async {
+    final existing = _db;
+    _db = null;
+    if (existing == null) return;
+    try {
+      if (existing.isOpen) {
+        await existing.close();
+      }
+    } catch (_) {}
   }
 
   static Future<Database> _open() async {
     if (_db != null) return _db!;
     final dir = await getApplicationDocumentsDirectory();
     final dbPath = p.join(dir.path, 'link26_users.db');
-    _db = await openDatabase(
-      dbPath,
-      version: 4,
-      onCreate: (db, version) async {
-        await db.execute('''
+
+    Future<Database> openOnce() async {
+      return openDatabase(
+        dbPath,
+        version: 4,
+        onCreate: (db, version) async {
+          await db.execute('''
           CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT NOT NULL UNIQUE,
@@ -86,45 +127,67 @@ abstract final class UserLocalRepository {
             created_at INTEGER NOT NULL
           )
         ''');
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await _addUsersColumnIfMissing(db, 'phone', 'phone TEXT');
-          await _addUsersColumnIfMissing(db, 'gender', 'gender TEXT');
-          await _addUsersColumnIfMissing(
-            db,
-            'resident_registration_hash',
-            'resident_registration_hash TEXT',
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await _addUsersColumnIfMissing(db, 'phone', 'phone TEXT');
+            await _addUsersColumnIfMissing(db, 'gender', 'gender TEXT');
+            await _addUsersColumnIfMissing(
+              db,
+              'resident_registration_hash',
+              'resident_registration_hash TEXT',
+            );
+            await _addUsersColumnIfMissing(
+              db,
+              'privacy_consent',
+              'privacy_consent INTEGER NOT NULL DEFAULT 0',
+            );
+          }
+          if (oldVersion < 3) {
+            await _addUsersColumnIfMissing(
+                db, 'nhis_sync_ok', 'nhis_sync_ok INTEGER');
+            await _addUsersColumnIfMissing(
+              db,
+              'nhis_sync_error',
+              'nhis_sync_error TEXT',
+            );
+            await _addUsersColumnIfMissing(
+              db,
+              'nhis_synced_at',
+              'nhis_synced_at INTEGER',
+            );
+          }
+          if (oldVersion < 4) {
+            await _addUsersColumnIfMissing(
+              db,
+              'codef_connected_id',
+              'codef_connected_id TEXT',
+            );
+          }
+        },
+      );
+    }
+
+    Object? lastError;
+    StackTrace? lastStack;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        _db = await openOnce();
+        return _db!;
+      } catch (e, st) {
+        lastError = e;
+        lastStack = st;
+        await _disposeDb();
+        if (attempt == 0) {
+          debugPrint(
+            'UserLocalRepository: openDatabase failed, recreating DB once: $e',
           );
-          await _addUsersColumnIfMissing(
-            db,
-            'privacy_consent',
-            'privacy_consent INTEGER NOT NULL DEFAULT 0',
-          );
+          debugPrint('$st');
+          await _erasePhysicalDb(dbPath);
         }
-        if (oldVersion < 3) {
-          await _addUsersColumnIfMissing(db, 'nhis_sync_ok', 'nhis_sync_ok INTEGER');
-          await _addUsersColumnIfMissing(
-            db,
-            'nhis_sync_error',
-            'nhis_sync_error TEXT',
-          );
-          await _addUsersColumnIfMissing(
-            db,
-            'nhis_synced_at',
-            'nhis_synced_at INTEGER',
-          );
-        }
-        if (oldVersion < 4) {
-          await _addUsersColumnIfMissing(
-            db,
-            'codef_connected_id',
-            'codef_connected_id TEXT',
-          );
-        }
-      },
-    );
-    return _db!;
+      }
+    }
+    Error.throwWithStackTrace(lastError!, lastStack!);
   }
 
   static String _hash(String email, String password) {
