@@ -28,7 +28,7 @@ abstract final class Link26Surface {
       FilledButton.styleFrom(
         backgroundColor: accent,
         foregroundColor: Colors.white,
-        minimumSize: minimumSize ?? const Size(0, 48),
+        minimumSize: minimumSize ?? const Size(0, 56.0),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
       );

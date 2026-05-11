@@ -66,6 +66,7 @@ void main() {
 
   final radiusInput = dimens['radius_input'] ?? 12;
   final radiusButton = dimens['radius_button'] ?? 12;
+  final ctaMinHeight = dimens['cta_min_height'] ?? 48;
 
   final gradientLines = backdropStops.map((h) => '    Color(${_hexToDart(h)}),').join('\n');
 
@@ -98,7 +99,7 @@ $gradientLines
       FilledButton.styleFrom(
         backgroundColor: accent,
         foregroundColor: Colors.white,
-        minimumSize: minimumSize ?? const Size(0, 48),
+        minimumSize: minimumSize ?? const Size(0, $ctaMinHeight),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
       );

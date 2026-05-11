@@ -46,6 +46,8 @@ class NhisMedicinesSyncOutcome {
   bool get showBannerOnBootstrap {
     if (result == NhisMedicinesSyncResult.failed) return true;
     if (result == NhisMedicinesSyncResult.skipped) return true;
+    // BFF 스텁으로 성공한 경우 매 부팅 "데모입니다" 스낵바는 생략(로그만).
+    if (result == NhisMedicinesSyncResult.success && isStubDemo) return false;
     if (isStubDemo) return true;
     if (isCodefError) return true;
     if (isMissingConnectedId) return true;

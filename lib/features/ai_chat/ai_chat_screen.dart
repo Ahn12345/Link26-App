@@ -509,6 +509,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                     ),
                                     child: _PendingAttachmentChip(
                                       label: l10n.aiChatImagePendingHint,
+                                      previewBytes:
+                                          AiChatPendingAttachmentStore
+                                              .instance.bytes,
                                       onRemove: AiChatOutgoingBusy
                                               .instance.value
                                           ? null
@@ -829,14 +832,17 @@ class _PendingAttachmentChip extends StatelessWidget {
   const _PendingAttachmentChip({
     required this.label,
     required this.onRemove,
+    this.previewBytes,
   });
 
   final String label;
   final VoidCallback? onRemove;
+  final Uint8List? previewBytes;
 
   @override
   Widget build(BuildContext context) {
     final softOutline = Link26Surface.outline.withValues(alpha: 0.45);
+    final hasPreview = previewBytes != null && previewBytes!.isNotEmpty;
     return Material(
       color: Colors.white,
       elevation: 0,
@@ -849,8 +855,22 @@ class _PendingAttachmentChip extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.attach_file, size: 20, color: Link26Surface.accent),
-            const SizedBox(width: 8),
+            if (hasPreview) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  previewBytes!,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
+              const SizedBox(width: 10),
+            ] else ...[
+              Icon(Icons.attach_file, size: 20, color: Link26Surface.accent),
+              const SizedBox(width: 8),
+            ],
             Expanded(
               child: Text(
                 label,

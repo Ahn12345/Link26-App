@@ -13,6 +13,8 @@
     <color name="link26_outline">#E8EEF5</color>
     <color name="link26_card_shadow">#14000000</color>
     <color name="link26_scaffold_tint">#EEF4FA</color>
+    <!-- Flutter [Link26UnifiedPage.background] 와 동일 — 마케팅/인증 프레임 배경 -->
+    <color name="link26_page_marketing_bg">#F3F8FF</color>
     <color name="link26_chip_tint">#EAF3FF</color>
     <color name="link26_badge_tint">#EAF2FF</color>
     <color name="link26_surface">#FFFFFF</color>

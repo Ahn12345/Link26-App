@@ -27,6 +27,7 @@ alwaysApply: true
 - PNG·카탈로그 경로는 **`assets/images/...`** 와 `ImageAssets` / `link26_image_assets.xml` 과 맞출 것.
 - DUR 데이터는 **`lib/data/DUR1/`**, **`lib/data/DUR2/`** (pubspec에 디렉터리 등록됨). 경로 문자열을 임의로 바꾸지 않는다.
 - `.env`는 루트 `.env` (pubspec 등록)만 사용한다.
+- 복약 동기화 스낵바: `.env` 의 **`NHIS_SHOW_SYNC_SNACKBARS=false`** 로 홈 부팅·새로고침 시 안내를 끌 수 있다(시연·스크린샷).
 
 ## 디자인 토큰
 

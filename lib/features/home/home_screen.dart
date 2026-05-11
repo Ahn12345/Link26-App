@@ -169,7 +169,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
     final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
     if (mounted) await _reloadMedicinesFromStores();
-    if (mounted && syncOut.showBannerOnBootstrap) {
+    if (mounted &&
+        syncOut.showBannerOnBootstrap &&
+        NhisRuntimeConfig.showMedicationSyncSnackbars) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(syncOut.userMessageKo),
@@ -211,7 +213,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       final phone = await _phoneForNhisSync();
       final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
       if (mounted) await _reloadMedicinesFromStores();
-      if (mounted) {
+      if (mounted &&
+          syncOut.showBannerOnBootstrap &&
+          NhisRuntimeConfig.showMedicationSyncSnackbars) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(syncOut.userMessageKo),

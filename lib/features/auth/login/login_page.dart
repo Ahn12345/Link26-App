@@ -336,7 +336,7 @@ class _LoginPageState extends State<LoginPage> {
                               ? null
                               : () => _submit(context),
                           style: Link26UnifiedPage.filledCtaButton(
-                            minimumSize: const Size.fromHeight(52),
+                            minimumSize: const Size.fromHeight(56),
                           ),
                           child: _busy
                               ? const SizedBox(

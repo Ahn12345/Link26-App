@@ -38,6 +38,7 @@
     <dimen name="radius_card">16</dimen>
     <dimen name="space_page_h">20</dimen>
     <dimen name="space_page_v">16</dimen>
+    <dimen name="cta_min_height">56</dimen>
   </dimens>
 
   <gradients>

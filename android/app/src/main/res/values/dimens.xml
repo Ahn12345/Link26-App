@@ -12,6 +12,7 @@
     <dimen name="link26_radius_input">12dp</dimen>
     <dimen name="link26_radius_button">12dp</dimen>
     <dimen name="link26_radius_card">16dp</dimen>
+    <dimen name="link26_cta_min_height">56dp</dimen>
     <dimen name="link26_radius_pill">18dp</dimen>
     <dimen name="link26_header_title">20sp</dimen>
     <dimen name="link26_body">15sp</dimen>

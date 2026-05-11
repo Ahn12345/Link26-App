@@ -74,4 +74,11 @@ abstract final class NhisRuntimeConfig {
     if (b.isNotEmpty) return b;
     return null;
   }
+
+  /// `false`이면 홈 부팅·당겨서 새로고침 시 복약 동기화 스낵바를 띄우지 않습니다(데모·CODEF 안내 숨김).
+  static bool get showMedicationSyncSnackbars {
+    final s = _stripQuotes(dotenv.env['NHIS_SHOW_SYNC_SNACKBARS']).toLowerCase();
+    if (s == 'false' || s == '0' || s == 'no') return false;
+    return true;
+  }
 }

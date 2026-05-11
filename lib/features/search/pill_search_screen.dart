@@ -116,7 +116,7 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                       FilledButton.icon(
                         onPressed: _add,
                         style: Link26UnifiedPage.filledCtaButton(
-                          minimumSize: const Size(double.infinity, 52),
+                          minimumSize: const Size(double.infinity, 56),
                         ),
                         icon: const Icon(Icons.add),
                         label: Text(l10n.homeAddMedicine),

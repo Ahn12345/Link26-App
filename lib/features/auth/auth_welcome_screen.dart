@@ -23,7 +23,7 @@ class AuthWelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final outlineBtn = OutlinedButton.styleFrom(
-      minimumSize: const Size.fromHeight(52),
+      minimumSize: const Size.fromHeight(56),
       foregroundColor: Link26UnifiedPage.ctaBlue,
       side: const BorderSide(color: Link26UnifiedPage.ctaBlue, width: 1.5),
       shape: RoundedRectangleBorder(
@@ -121,7 +121,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                                 Navigator.of(context).pushNamed(LoginPage.routeName);
                               },
                               style: Link26UnifiedPage.filledCtaButton(
-                                minimumSize: const Size.fromHeight(52),
+                                minimumSize: const Size.fromHeight(56),
                               ),
                               child: Text(l10n.login, style: const TextStyle(fontWeight: FontWeight.w800)),
                             ),
