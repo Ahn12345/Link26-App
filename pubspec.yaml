@@ -48,7 +48,8 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - .env
+    # 루트 .env 는 OneDrive/Gradle 스냅샷 이슈 가능 — 빌드 전 sync_dotenv_asset.ps1 가 아래로 복사
+    - assets/env/dotenv
     - assets/design/
     - assets/design/png/
     - assets/design/screens/

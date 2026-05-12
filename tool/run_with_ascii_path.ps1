@@ -11,6 +11,8 @@ param(
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
+& (Join-Path $PSScriptRoot "sync_dotenv_asset.ps1") -ProjectRoot $projectRoot
+
 function Test-ContainsNonAscii([string]$s) {
   foreach ($ch in $s.ToCharArray()) {
     if ([int][char]$ch -gt 127) { return $true }

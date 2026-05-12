@@ -13,7 +13,7 @@ import 'app.dart';
 /// asset 문자열을 읽은 뒤 [dotenv.testLoad] 로 항상 초기화까지 마칩니다.
 Future<void> _loadDotenvFromAssets() async {
   try {
-    var raw = await rootBundle.loadString('.env', cache: false);
+    var raw = await rootBundle.loadString('assets/env/dotenv', cache: false);
     if (raw.isNotEmpty && raw.codeUnitAt(0) == 0xFEFF) {
       raw = raw.substring(1);
     }
@@ -21,8 +21,8 @@ Future<void> _loadDotenvFromAssets() async {
   } catch (e, st) {
     if (kDebugMode) {
       debugPrint(
-        'Link26: .env 로드 실패 — pubspec assets에 `.env`가 있는지, '
-        '프로젝트 루트에 파일이 있는지 확인 후 flutter clean / 재빌드 하세요.',
+        'Link26: dotenv 로드 실패 — `assets/env/dotenv` 및 루트 `.env` 확인, '
+        '빌드 전 `tool/sync_dotenv_asset.ps1` 실행 후 flutter clean / 재빌드.',
       );
       debugPrint('Link26: detail: $e');
       debugPrint('$st');

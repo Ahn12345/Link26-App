@@ -151,7 +151,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     await _reloadMedicinesFromStores();
     if (!mounted) return;
     try {
-      await dotenv.load(fileName: '.env');
+      await dotenv.load(fileName: 'assets/env/dotenv');
     } catch (_) {}
 
     final shouldSync =
@@ -209,7 +209,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
 
   Future<void> _refreshMedicinesFromServer() async {
     try {
-      await dotenv.load(fileName: '.env');
+      await dotenv.load(fileName: 'assets/env/dotenv');
     } catch (_) {}
     final shouldSync =
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;

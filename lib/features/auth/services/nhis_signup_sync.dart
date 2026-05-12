@@ -18,7 +18,7 @@ abstract final class NhisSignupSync {
     required String residentRegistrationHash,
   }) async {
     try {
-      await dotenv.load(fileName: '.env');
+      await dotenv.load(fileName: 'assets/env/dotenv');
     } catch (_) {}
 
     if (NhisRuntimeConfig.useMock) {

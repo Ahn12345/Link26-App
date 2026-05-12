@@ -84,6 +84,8 @@ if (-not $ready) {
 Write-Host "[Link26] BFF is up - starting Flutter..." -ForegroundColor Cyan
 Write-Host ""
 
+& (Join-Path $PSScriptRoot "sync_dotenv_asset.ps1") -ProjectRoot $projectRoot
+
 $flutterCmd = @("run") + $FlutterArgs
 $runScript = Join-Path $projectRoot "tool\run_with_ascii_path.ps1"
 
