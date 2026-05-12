@@ -13,6 +13,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
+import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
@@ -150,6 +151,16 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   Future<void> _bootstrapMedicines() async {
     await _reloadMedicinesFromStores();
     if (!mounted) return;
+
+    final bffAdvice = Link26BffAdvice.takePendingNoticeKo();
+    if (bffAdvice != null && bffAdvice.isNotEmpty) {
+      await HomeNotificationRepository.insertSystemSyncNotice(
+        title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
+        preview: bffAdvice,
+      );
+      await _refreshBellBadge();
+    }
+
     try {
       await dotenv.load(fileName: 'assets/env/dotenv');
     } catch (_) {}

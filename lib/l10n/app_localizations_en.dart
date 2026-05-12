@@ -201,7 +201,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChatGeminiKeyMissing =>
-      'No Gemini API key. Create one in Google AI Studio (https://aistudio.google.com/apikey), add GEMINI_API_KEY=... to the project root `.env`, and rebuild. Ensure `.env` is listed under flutter assets in pubspec.yaml.';
+      'No Gemini API key. Create one in Google AI Studio (https://aistudio.google.com/apikey), add GEMINI_API_KEY=... to the project root `.env`, run `tool/sync_dotenv_asset.ps1` (or the combined run script) to refresh `assets/env/dotenv`, then rebuild the app.';
 
   @override
   String get aiChatDisclaimerShort =>

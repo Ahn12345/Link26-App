@@ -194,7 +194,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiChatGeminiKeyMissing =>
-      'Gemini API 키가 없습니다. Google AI Studio(https://aistudio.google.com/apikey)에서 키를 발급해 프로젝트 루트 `.env`에 GEMINI_API_KEY=... 로 넣고 앱을 다시 빌드하세요. pubspec.yaml에 .env가 assets에 포함돼 있어야 합니다.';
+      'Gemini API 키가 없습니다. Google AI Studio(https://aistudio.google.com/apikey)에서 발급 후 루트 `.env`에 GEMINI_API_KEY=... 를 넣고, `tool/sync_dotenv_asset.ps1`(또는 run_bff_and_flutter.ps1)로 assets/env/dotenv를 갱신한 뒤 앱을 다시 빌드하세요.';
 
   @override
   String get aiChatDisclaimerShort =>

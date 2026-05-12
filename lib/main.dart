@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/design/link26_design_catalog.dart';
+import 'package:link26_app/core/services/link26_bff_advice.dart';
 
 import 'app.dart';
 
@@ -34,6 +35,7 @@ Future<void> _loadDotenvFromAssets() async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _loadDotenvFromAssets();
+  await Link26BffAdvice.evaluateAfterDotenv();
   await Link26DesignCatalog.load();
   if (kDebugMode) {
     final n = GeminiRuntimeConfig.apiKey.length;

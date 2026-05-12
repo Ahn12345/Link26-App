@@ -239,7 +239,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
 
     final homeAlertTitle = l10n.homeAiChatImageReplyTitle;
     final analyzingLabel = l10n.aiChatImageAnalyzing;
-    final replyError = l10n.aiChatReplyError;
+    final replyError = GeminiRuntimeConfig.isConfigured
+        ? l10n.aiChatReplyError
+        : l10n.aiChatGeminiKeyMissing;
 
     setState(() {
       AiChatConversationCache.messages.add(

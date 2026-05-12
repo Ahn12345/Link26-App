@@ -29,6 +29,7 @@ dependencies:
   xml: ^6.6.1
   encrypt: ^5.0.3
   pointycastle: ^3.9.1
+  device_info_plus: ^13.1.0
 
 dev_dependencies:
   flutter_test:
