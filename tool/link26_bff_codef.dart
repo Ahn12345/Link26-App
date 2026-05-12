@@ -12,23 +12,26 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-/// 프로젝트 루트 `.env` 를 읽습니다 (BFF 실행 cwd 또는 스크립트 기준 상위).
-/// `BFF_*` / `CODEF_*` / `NHIS_*` 키는 비어 있지 않은 [Platform.environment] 값이 우선합니다.
+/// 프로젝트 루트 환경을 읽습니다.
+///
+/// 1) `assets/env/dotenv` — Flutter 빌드 전 `sync_dotenv_asset.ps1` 가 루트 `.env` 를 복사한 파일.
+/// 2) `.env` — 루트(덮어쓰기 우선).
+///
+/// 예전에는 BFF가 `.env` 만 봐서, 키를 `dotenv` 쪽에만 맞춰 둔 경우(또는 동기화만 한 경우)
+/// e약은요·틸코 키가 "비어 있다"고 나왔습니다. 두 파일을 병합합니다.
+/// `BFF_*` / `CODEF_*` / `NHIS_*` … 는 비어 있지 않은 [Platform.environment] 값이 마지막에 덮어씁니다.
 Map<String, String> loadBffDotEnv() {
-  final paths = <String>[
-    p.join(Directory.current.path, '.env'),
-    p.normalize(
-      p.join(p.dirname(Platform.script.toFilePath()), '..', '.env'),
-    ),
-  ];
   final merged = <String, String>{};
-  for (final path in paths) {
-    final f = File(path);
+  final root = _link26ProjectRoot();
+  void mergeFile(String relativePath) {
+    final f = File(p.join(root, relativePath));
     if (f.existsSync()) {
       merged.addAll(_parseDotEnv(f.readAsStringSync()));
-      break;
     }
   }
+  mergeFile(p.join('assets', 'env', 'dotenv'));
+  mergeFile('.env');
+
   for (final e in Platform.environment.entries) {
     final k = e.key;
     if (!k.startsWith('BFF_') &&
@@ -43,6 +46,23 @@ Map<String, String> loadBffDotEnv() {
     if (v.isNotEmpty) merged[k] = v;
   }
   return merged;
+}
+
+/// `dart run tool/link26_bff.dart` 기준 상위 폴더, 또는 cwd 가 레포 루트일 때 그 경로.
+String _link26ProjectRoot() {
+  final scriptRoot = p.normalize(
+    p.join(p.dirname(Platform.script.toFilePath()), '..'),
+  );
+  final cwd = Directory.current.path;
+  if (File(p.join(cwd, '.env')).existsSync() ||
+      File(p.join(cwd, 'assets', 'env', 'dotenv')).existsSync()) {
+    return cwd;
+  }
+  if (File(p.join(scriptRoot, '.env')).existsSync() ||
+      File(p.join(scriptRoot, 'assets', 'env', 'dotenv')).existsSync()) {
+    return scriptRoot;
+  }
+  return scriptRoot;
 }
 
 /// 공공데이터포털 `serviceKey`(e약은요 등). `.env` 에 이름이 여러 가지로 흔해 한 함수로 묶습니다.

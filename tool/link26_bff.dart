@@ -425,10 +425,10 @@ Future<void> _handleEasyDrug(HttpRequest request) async {
     await _json(request, 503, {
       'ok': false,
       'detail':
-          '공공데이터 serviceKey 가 비어 있습니다. 프로젝트 루트 `.env` 에 아래 중 하나에 '
-          '발급받은 키를 넣고 BFF 창을 재시작하세요: PUBLIC_DATA_SERVICE_KEY, '
-          'DATA_GO_KR_SERVICE_KEY, NHIS_SERVICE_KEY(앱·BFF 공용). '
-          'BFF는 `dart run` 시 이 `.env` 파일만 읽습니다(assets/env/dotenv 아님).',
+          '공공데이터 serviceKey 가 비어 있습니다. 루트 `.env` 또는 '
+          '`assets/env/dotenv`(sync 복사본) 중 하나에 아래 키를 넣고 BFF를 재시작하세요: '
+          'PUBLIC_DATA_SERVICE_KEY, DATA_GO_KR_SERVICE_KEY, NHIS_SERVICE_KEY. '
+          'BFF는 두 파일을 병합해 읽으며, `.env` 값이 같은 키를 덮어씁니다.',
     });
     return;
   }
