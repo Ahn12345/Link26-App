@@ -17,6 +17,16 @@ abstract final class HomeNotificationRepository {
 
   static void _bump() => revision.value = revision.value + 1;
 
+  static Future<void> _deleteAllKind(String kind) async {
+    final db = await _open();
+    await db.delete(
+      'home_notifications',
+      where: 'kind = ?',
+      whereArgs: [kind],
+    );
+    _bump();
+  }
+
   static Future<Database> _open() async {
     if (_db != null) return _db!;
     final dir = await getApplicationDocumentsDirectory();
@@ -47,6 +57,7 @@ abstract final class HomeNotificationRepository {
     required String title,
     required String preview,
   }) async {
+    await _deleteAllKind(_kindAiChatImage);
     final db = await _open();
     var ptext = preview.trim();
     if (ptext.length > 500) ptext = '${ptext.substring(0, 500)}…';
@@ -65,6 +76,7 @@ abstract final class HomeNotificationRepository {
     required String title,
     required String preview,
   }) async {
+    await _deleteAllKind(_kindSystemSync);
     final db = await _open();
     var ptext = preview.trim();
     if (ptext.length > 800) ptext = '${ptext.substring(0, 800)}…';

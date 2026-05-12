@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -117,7 +118,13 @@ class _AllAlarmsScreenState extends State<AllAlarmsScreen> {
             ...filtered.map(
               (item) => _AlarmTile(
                 item: item,
-                onDone: () => setState(() => item.completed = true),
+                onDone: () async {
+                  await DoseReminderCompletionStore.markCompleted(
+                    item.medicineName,
+                  );
+                  if (!mounted) return;
+                  setState(() => item.completed = true);
+                },
               ),
             ),
           ],

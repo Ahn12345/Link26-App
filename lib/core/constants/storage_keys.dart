@@ -9,6 +9,9 @@ abstract final class StorageKeys {
   static const hiraMonthlyAuthMonth = 'hira_monthly_auth_month_v1';
   static const localMyMedicinesJson = 'local_my_medicines_json_v1';
 
+  /// 날짜(yyyy-MM-dd) → 해당 일에 복용 완료 처리한 약 이름 정규화 목록 JSON.
+  static const doseReminderCompletedByDayV1 = 'dose_reminder_completed_by_day_v1';
+
   /// [Medicine] 목록 JSON (이름·용량·복용법·시간) — NHIS/BFF 동기화·수동 추가 병합.
   static const nhisSyncedMedicinesJsonV1 = 'nhis_synced_medicines_json_v1';
 

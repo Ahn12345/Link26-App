@@ -12,6 +12,7 @@ import 'package:link26_app/features/home/home_notification_center_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/auth_session.dart';
+import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
@@ -35,6 +36,7 @@ class HomeDashboardContent extends StatefulWidget {
 
 class _HomeDashboardContentState extends State<HomeDashboardContent> {
   List<Medicine> medicines = [];
+  List<AlarmItem> _doseAlarms = [];
 
   /// 종 아이콘 배지: 미읽음 AI 알림 + 미완료 복용 건수.
   int _bellBadgeCount = 0;
@@ -42,40 +44,39 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   String _normMedName(String name) =>
       name.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
-  final List<AlarmItem> alarms = [
-    AlarmItem(
-      date: '2024년 5월 20일 (월)',
-      time: '08:00',
-      medicineName: '알로디핀',
-      dose: '5mg',
-      type: AlarmType.app,
-      completed: false,
-    ),
-    AlarmItem(
-      date: '2024년 5월 20일 (월)',
-      time: '08:00',
-      medicineName: '아스피린',
-      dose: '100mg',
-      type: AlarmType.call,
-      completed: true,
-    ),
-    AlarmItem(
-      date: '2024년 5월 20일 (월)',
-      time: '08:00',
-      medicineName: '메트프로민',
-      dose: '500mg',
-      type: AlarmType.app,
-      completed: true,
-    ),
-    AlarmItem(
-      date: '2024년 5월 20일 (월)',
-      time: '12:00',
-      medicineName: '비타민 D',
-      dose: '1000IU',
-      type: AlarmType.app,
-      completed: true,
-    ),
-  ];
+  String _doseAlarmDateLabel() {
+    final now = DateTime.now();
+    const w = ['월', '화', '수', '목', '금', '토', '일'];
+    return '${now.year}년 ${now.month}월 ${now.day}일 (${w[now.weekday - 1]})';
+  }
+
+  List<AlarmItem> _buildDoseAlarms(
+    List<Medicine> meds,
+    Set<String> completedNorms,
+  ) {
+    if (meds.isEmpty) return [];
+    final dateStr = _doseAlarmDateLabel();
+    return meds
+        .map(
+          (m) => AlarmItem(
+            date: dateStr,
+            time: _alarmTimeFromMedicine(m),
+            medicineName: m.name,
+            dose: m.dose,
+            type: AlarmType.app,
+            completed: completedNorms.contains(_normMedName(m.name)),
+          ),
+        )
+        .toList();
+  }
+
+  String _alarmTimeFromMedicine(Medicine m) {
+    final t = m.time.trim();
+    if (t.isEmpty || t == '-') return '09:00';
+    final match = RegExp(r'(\d{1,2}:\d{2})').firstMatch(t);
+    if (match != null) return match.group(1)!;
+    return t;
+  }
 
   @override
   void initState() {
@@ -105,7 +106,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     final aiUnread = await HomeNotificationRepository.unreadCountAiChat();
     final systemUnread =
         await HomeNotificationRepository.unreadCountSystemSync();
-    final pendingDose = alarms.where((a) => !a.completed).length;
+    final pendingDose = _doseAlarms.where((a) => !a.completed).length;
     if (mounted) {
       setState(() => _bellBadgeCount = aiUnread + systemUnread + pendingDose);
     }
@@ -128,7 +129,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => HomeNotificationCenterScreen(
-          doseAlarms: alarms,
+          doseAlarms: _doseAlarms,
           onListsChanged: () {
             setState(() {});
             unawaited(_refreshBellBadge());
@@ -153,12 +154,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     if (!mounted) return;
 
     final bffAdvice = Link26BffAdvice.takePendingNoticeKo();
+    final previewParts = <String>[];
     if (bffAdvice != null && bffAdvice.isNotEmpty) {
-      await HomeNotificationRepository.insertSystemSyncNotice(
-        title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
-        preview: bffAdvice,
-      );
-      await _refreshBellBadge();
+      previewParts.add(bffAdvice);
     }
 
     try {
@@ -173,6 +171,13 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
           'NHIS: mock 꺼짐 + NHIS_BASE_URL 비어 있음 — 복약 동기화 생략',
         );
       }
+      if (mounted && previewParts.isNotEmpty) {
+        await HomeNotificationRepository.insertSystemSyncNotice(
+          title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
+          preview: previewParts.join('\n\n'),
+        );
+        await _refreshBellBadge();
+      }
       return;
     }
 
@@ -186,13 +191,14 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     if (mounted) await _reloadMedicinesFromStores();
     if (mounted && syncOut.showBannerOnBootstrap) {
       final msg = syncOut.userMessageKo.trim();
-      if (msg.isNotEmpty) {
-        await HomeNotificationRepository.insertSystemSyncNotice(
-          title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
-          preview: msg,
-        );
-        await _refreshBellBadge();
-      }
+      if (msg.isNotEmpty) previewParts.add(msg);
+    }
+    if (mounted && previewParts.isNotEmpty) {
+      await HomeNotificationRepository.insertSystemSyncNotice(
+        title: AppLocalizations.of(context).homeNotificationSystemSyncTitle,
+        preview: previewParts.join('\n\n'),
+      );
+      await _refreshBellBadge();
     }
   }
 
@@ -215,7 +221,12 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
     final merged = byName.values.toList()
       ..sort((a, b) => a.name.compareTo(b.name));
-    if (mounted) setState(() => medicines = merged);
+    final completed = await DoseReminderCompletionStore.completedNormsToday();
+    if (!mounted) return;
+    setState(() {
+      medicines = merged;
+      _doseAlarms = _buildDoseAlarms(merged, completed);
+    });
   }
 
   Future<void> _refreshMedicinesFromServer() async {
@@ -263,10 +274,40 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     return '$h:$m';
   }
 
+  Widget _buildAlarmPreviewCard(double w) {
+    if (_doseAlarms.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: Link26ResponsiveUi.gapSm(w)),
+        child: Text(
+          '내 약 목록에 약이 있으면 여기에 오늘 복용 알림이 표시됩니다.',
+          style: TextStyle(
+            color: Link26Surface.textMuted,
+            fontSize: Link26ResponsiveUi.bodySmall(w),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+    final pending = _doseAlarms.where((a) => !a.completed).toList();
+    final item = pending.isNotEmpty ? pending.first : _doseAlarms.first;
+    return _AlarmPreviewCard(
+      item: item,
+      onDone: () async {
+        await DoseReminderCompletionStore.markCompleted(item.medicineName);
+        if (!mounted) return;
+        final c = await DoseReminderCompletionStore.completedNormsToday();
+        setState(() {
+          _doseAlarms = _buildDoseAlarms(medicines, c);
+        });
+        unawaited(_refreshBellBadge());
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final completed = alarms.where((e) => e.completed).length;
+    final completed = _doseAlarms.where((e) => e.completed).length;
     // [MainShell] extendBody: true 이면 본문이 하단 네비 뒤로 깔리므로 여백을 둡니다.
     final bottomPad =
         MediaQuery.of(context).padding.bottom + 88;
@@ -369,7 +410,8 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                         Expanded(
                           child: _Stat(
                             title: '오늘 복용',
-                            value: '$completed/${alarms.length}',
+                            value:
+                                '${_doseAlarms.isEmpty ? 0 : completed}/${_doseAlarms.length}',
                           ),
                         ),
                         Container(
@@ -394,7 +436,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     onAction: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (_) => AllAlarmsScreen(alarms: alarms),
+                        builder: (_) => AllAlarmsScreen(alarms: _doseAlarms),
                       ),
                     ),
                   ),
@@ -423,13 +465,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       );
                     },
                   ),
-                  _AlarmPreviewCard(
-                    item: alarms.first,
-                    onDone: () {
-                      setState(() => alarms.first.completed = true);
-                      unawaited(_refreshBellBadge());
-                    },
-                  ),
+                  _buildAlarmPreviewCard(w),
                   SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                   Text(
                     '복용 완료',
@@ -440,7 +476,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     ),
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                  ...alarms
+                  ..._doseAlarms
                       .where((e) => e.completed)
                       .map((e) => _CompletedTile(item: e)),
                   SizedBox(height: Link26ResponsiveUi.gapLg(w)),

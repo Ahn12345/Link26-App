@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/database/home_notification_repository.dart';
 import 'package:link26_app/core/services/ai_chat_home_alert_notifier.dart';
+import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/main_shell_tab_bus.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
@@ -604,7 +605,11 @@ class _HomeNotificationCenterScreenState
               ),
               if (!item.completed)
                 FilledButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await DoseReminderCompletionStore.markCompleted(
+                      item.medicineName,
+                    );
+                    if (!mounted) return;
                     setState(() {
                       item.completed = true;
                       widget.onListsChanged();

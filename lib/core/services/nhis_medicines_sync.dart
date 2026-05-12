@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
+import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
@@ -157,7 +158,13 @@ abstract final class NhisMedicinesSync {
     final body = (result as Success<String>).data;
     final meta = _parseResponseMeta(body);
     final fromApi = NhisMedicationsParser.parseResponseBody(body);
-    await _mergeIntoLocal(fromApi);
+    final src = meta?['source'] as String?;
+    if (_shouldReplaceLocalWithAuthoritative(src)) {
+      await _replaceLocalWithRemote(fromApi);
+      await DoseReminderCompletionStore.clearAll();
+    } else {
+      await _mergeIntoLocal(fromApi);
+    }
 
     return NhisMedicinesSyncOutcome(
       result: NhisMedicinesSyncResult.success,
@@ -181,6 +188,19 @@ abstract final class NhisMedicinesSync {
     } catch (_) {
       return null;
     }
+  }
+
+  /// BFF `meta.source == codef` 인 경우에만: 데모·수동 병합 없이 서버 목록으로 덮어씁니다.
+  static bool _shouldReplaceLocalWithAuthoritative(String? source) =>
+      source?.trim() == 'codef';
+
+  static Future<void> _replaceLocalWithRemote(List<Medicine> fromApi) async {
+    await NhisMedicineCacheStore.saveMedicines(fromApi);
+    final names = fromApi
+        .map((m) => m.name.trim())
+        .where((n) => n.isNotEmpty)
+        .toList();
+    await LocalMedicineListStore.save(names);
   }
 
   static Future<void> _mergeIntoLocal(List<Medicine> fromApi) async {
