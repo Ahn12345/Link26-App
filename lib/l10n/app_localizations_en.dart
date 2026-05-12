@@ -618,7 +618,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthLinkBffHint =>
-      'Uses BFF when NHIS_BASE_URL is set and NHIS_USE_MOCK is off.';
+      'Uses BFF for Tilko/easy-drug when NHIS_BASE_URL is set. '
+      'NHIS_USE_MOCK only affects signup/login/medication sync stubs.';
 
   @override
   String get healthLinkDirectHint =>
@@ -633,4 +634,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pillSearchPublicDataEmpty =>
       'When BFF is configured, search loads MFDS drug summaries here.';
+
+  @override
+  String get pillSearchNeedBffUrl =>
+      'Set NHIS_BASE_URL in .env to your PC BFF (e.g. http://10.0.2.2:8787), run sync + BFF, then rebuild the app.';
 }

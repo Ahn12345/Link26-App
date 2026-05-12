@@ -233,6 +233,7 @@ abstract class AppLocalizations {
   String get healthLinkJsonLabel;
   String get pillSearchPublicDataTitle;
   String get pillSearchPublicDataEmpty;
+  String get pillSearchNeedBffUrl;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

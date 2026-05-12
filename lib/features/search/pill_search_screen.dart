@@ -64,8 +64,9 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
     final q = _ctrl.text.trim();
     if (q.isEmpty) return;
     if (!Link26BffIntegrationsClient.canCall) {
+      final msg = AppLocalizations.of(context).pillSearchNeedBffUrl;
       setState(() {
-        _publicError = null;
+        _publicError = msg;
         _publicRows = [];
       });
       return;

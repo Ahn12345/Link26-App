@@ -117,9 +117,10 @@
   "healthLinkSubtitle": "With keys on the BFF (NHIS_BASE_URL), requests go through the server. Without BFF, the app can call Tilko directly if TILKO_API_KEY is set (dev only).",
   "healthLinkFlowCta": "Easy auth + CODEF",
   "healthLinkTilkoOnlyCta": "Tilko easy auth only",
-  "healthLinkBffHint": "Uses BFF when NHIS_BASE_URL is set and NHIS_USE_MOCK is off.",
+  "healthLinkBffHint": "Uses BFF for Tilko/easy-drug when NHIS_BASE_URL is set. NHIS_USE_MOCK only affects signup/login/medication sync stubs.",
   "healthLinkDirectHint": "Direct mode requires TILKO_API_KEY in .env.",
   "healthLinkJsonLabel": "Extra CODEF JSON object",
   "pillSearchPublicDataTitle": "Public e-약은요 (via BFF)",
-  "pillSearchPublicDataEmpty": "When BFF is configured, search loads MFDS drug summaries here."
+  "pillSearchPublicDataEmpty": "When BFF is configured, search loads MFDS drug summaries here.",
+  "pillSearchNeedBffUrl": "Set NHIS_BASE_URL in .env to your PC BFF (e.g. http://10.0.2.2:8787), run sync + BFF, then rebuild the app."
 }

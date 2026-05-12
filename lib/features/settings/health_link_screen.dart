@@ -127,9 +127,10 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
           Text(l10n.healthLinkSubtitle),
           const SizedBox(height: 8),
           Text(
-            mock
-                ? 'NHIS_USE_MOCK=true — BFF 연동이 꺼져 있습니다.'
-                : (useBff ? l10n.healthLinkBffHint : l10n.healthLinkDirectHint),
+            useBff
+                ? '${l10n.healthLinkBffHint}'
+                    '${mock ? ' NHIS_USE_MOCK=true 이면 가입·로그인·복약 동기화만 목 동작입니다.' : ''}'
+                : l10n.healthLinkDirectHint,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 16),

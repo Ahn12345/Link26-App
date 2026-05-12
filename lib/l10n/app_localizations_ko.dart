@@ -606,7 +606,8 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get healthLinkBffHint =>
-      'NHIS_BASE_URL이 설정되고 목(mock)이 아니면 BFF로 요청합니다.';
+      'NHIS_BASE_URL이 있으면 틸코·e약은요 등은 BFF로 요청합니다. '
+      'NHIS_USE_MOCK은 가입·로그인·복약 동기화 목에만 해당합니다.';
 
   @override
   String get healthLinkDirectHint =>
@@ -621,4 +622,8 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get pillSearchPublicDataEmpty =>
       'BFF 연결 시 약 이름으로 식약처 요약을 불러옵니다.';
+
+  @override
+  String get pillSearchNeedBffUrl =>
+      '.env에 NHIS_BASE_URL을 BFF 주소로 넣고(예: 에뮬 http://10.0.2.2:8787), sync 후 BFF 실행·앱 재빌드하세요.';
 }
