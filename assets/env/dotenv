@@ -7,3 +7,10 @@ NHIS_USE_MOCK=false
 # 실제 안드로이드 폰(같은 Wi-Fi): PC IP. 에뮬레이터만 쓸 때는 http://10.0.2.2:8787
 NHIS_BASE_URL=http://192.168.150.143:8787
 NHIS_SHOW_SYNC_SNACKBARS=false
+
+# 공공데이터포털에서 발급한 serviceKey — e약은요(/v1/public/easy-drug). 비우면 약 검색 503.
+PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6a501623c
+
+# 틸코 간편인증 — 비우면 /v1/tilko/* 사용 불가
+TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
+TILKO_API_HOST=https://dev.tilko.net

@@ -47,6 +47,7 @@ Future<void> main() async {
       '  가입/로그인 프록시: signup=${pSu.isNotEmpty} login=${pLo.isNotEmpty} (.env NHIS_PROXY_*)',
     );
   }
+  _printEnvReadinessSummary(bootEnv);
 
   await for (final request in server) {
     unawaited(_handle(request));
@@ -104,6 +105,33 @@ Future<HttpServer> _bindServer() async {
     'OS 임의 포트(0)로 바인드합니다. 아래에 나온 포트로 .env 를 맞추세요.',
   );
   return HttpServer.bind(InternetAddress.anyIPv4, 0);
+}
+
+void _printEnvReadinessSummary(Map<String, String> env) {
+  final pub = bffPublicDataConfigured(env);
+  final tilko = (env['TILKO_API_KEY'] ?? '').trim().isNotEmpty;
+  final codefOAuth =
+      (env['CODEF_CLIENT_ID'] ?? '').trim().isNotEmpty &&
+          (env['CODEF_CLIENT_SECRET'] ?? '').trim().isNotEmpty;
+  final codefMeds = bffMedicationsCodefConfigured(env);
+  // ignore: avoid_print
+  stdout.writeln('');
+  // ignore: avoid_print
+  stdout.writeln(
+    '  [.env 요약 — false 이면 해당 API는 503/스킵될 수 있음]',
+  );
+  // ignore: avoid_print
+  stdout.writeln(
+    '    공공 e약은요 serviceKey: $pub  (PUBLIC_DATA_SERVICE_KEY / DATA_GO_KR_SERVICE_KEY / NHIS_SERVICE_KEY)',
+  );
+  // ignore: avoid_print
+  stdout.writeln('    틸코 TILKO_API_KEY: $tilko');
+  // ignore: avoid_print
+  stdout.writeln(
+    '    CODEF OAuth(클라이언트): $codefOAuth  |  복약상품 경로까지: $codefMeds  (BFF_USE_CODEF_FOR_MEDICATIONS + CODEF_MEDICATION_PATH)',
+  );
+  // ignore: avoid_print
+  stdout.writeln('');
 }
 
 /// /health 전용: 어떤 env 키가 serviceKey 소스인지(민감값 미포함).
@@ -438,7 +466,8 @@ Future<void> _handleEasyDrug(HttpRequest request) async {
 
   final uri = Uri.https(
     'apis.data.go.kr',
-    '/1471000/DrbEasyDrugInfo/getDrbEasyDrugList',
+    // 공공데이터포털 문서 기준 서비스명: DrbEasyDrugInfoService
+    '/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList',
     {
       'serviceKey': key,
       'pageNo': q['pageNo'] ?? '1',
