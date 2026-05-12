@@ -9,6 +9,14 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+try {
+  $utf8 = [System.Text.UTF8Encoding]::new($false)
+  [Console]::OutputEncoding = $utf8
+  $OutputEncoding = $utf8
+  if ($PSVersionTable.PSVersion.Major -lt 7) {
+    chcp 65001 | Out-Null
+  }
+} catch { }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 & (Join-Path $PSScriptRoot "sync_dotenv_asset.ps1") -ProjectRoot $projectRoot

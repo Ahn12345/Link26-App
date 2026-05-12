@@ -22,6 +22,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+# 한글 안내가 � 로 깨지지 않게 (Windows PowerShell 5 / 콘솔 코드 페이지)
+try {
+  $utf8 = [System.Text.UTF8Encoding]::new($false)
+  [Console]::OutputEncoding = $utf8
+  $OutputEncoding = $utf8
+  if ($PSVersionTable.PSVersion.Major -lt 7) {
+    chcp 65001 | Out-Null
+  }
+} catch { }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 function Test-ContainsNonAscii([string]$s) {
