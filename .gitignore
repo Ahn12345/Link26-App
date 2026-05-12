@@ -33,6 +33,10 @@ migrate_working_dir/
 /build/
 coverage/
 
+# SUBST(한글 경로) 빌드 — tool/run_with_ascii_path.ps1 가 프로젝트 루트에 둠
+.link26_gradle_user/
+.link26_tmp/
+
 # Symbolication / obfuscation
 app.*.symbols
 app.*.map.json

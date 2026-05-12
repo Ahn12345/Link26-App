@@ -103,6 +103,16 @@ if ($CleanBuild) {
 $code = 1
 try {
   Set-Location "${drive}:\"
+  # aapt/일부 JDK API는 UTF-8 경로(예: OneDrive\문서\...)에서 실패함. SUBST(L:)로 작업할 때도
+  # Gradle 캐시·TEMP가 UNC/한글로 흐르면 compileFlutterBuildDebug 등에서 깨질 수 있어
+  # 경로 문자열을 드라이브 문자(L:\...)만 쓰도록 아래를 SUBST 루트 아래에 둡니다.
+  $linkGradle = "${drive}:\.link26_gradle_user"
+  $linkTmp = "${drive}:\.link26_tmp"
+  New-Item -ItemType Directory -Force -Path $linkGradle | Out-Null
+  New-Item -ItemType Directory -Force -Path $linkTmp | Out-Null
+  $env:GRADLE_USER_HOME = $linkGradle
+  $env:TMP = $linkTmp
+  $env:TEMP = $linkTmp
   & flutter @FlutterArgs
   $code = $LASTEXITCODE
 } finally {

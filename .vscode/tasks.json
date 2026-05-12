@@ -43,6 +43,46 @@
       "problemMatcher": []
     },
     {
+      "label": "Link26: BFF only (dart link26_bff, PORT=8787)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "Set-Location -LiteralPath '${workspaceFolder}'; $env:PORT='8787'; dart run tool/link26_bff.dart"
+      ],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Link26: Dev — BFF + Flutter (통합)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/tool/run_bff_and_flutter.ps1"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Link26: Clean ephemeral (잠금 시 IDE 종료 후)",
       "type": "shell",
       "command": "powershell",
