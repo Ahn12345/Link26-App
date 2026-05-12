@@ -102,6 +102,19 @@ Future<HttpServer> _bindServer() async {
   return HttpServer.bind(InternetAddress.anyIPv4, 0);
 }
 
+/// /health 전용: 어떤 env 키가 serviceKey 소스인지(민감값 미포함).
+String? _publicDataKeySourceForHealth(Map<String, String> env) {
+  const keys = [
+    'PUBLIC_DATA_SERVICE_KEY',
+    'DATA_GO_KR_SERVICE_KEY',
+    'NHIS_SERVICE_KEY',
+  ];
+  for (final k in keys) {
+    if ((env[k] ?? '').trim().isNotEmpty) return k;
+  }
+  return null;
+}
+
 Future<void> _handle(HttpRequest request) async {
   try {
     final path = request.uri.path;
@@ -119,11 +132,8 @@ Future<void> _handle(HttpRequest request) async {
           'configured': (env['TILKO_API_KEY'] ?? '').trim().isNotEmpty,
         },
         'publicData': {
-          'configured': (env['PUBLIC_DATA_SERVICE_KEY'] ??
-                  env['DATA_GO_KR_SERVICE_KEY'] ??
-                  '')
-              .trim()
-              .isNotEmpty,
+          'configured': bffPublicDataConfigured(env),
+          'serviceKeyFrom': _publicDataKeySourceForHealth(env) ?? 'none',
         },
         'medicationsSource':
             codefMedicationsReady ? 'codef' : 'stub',
@@ -406,13 +416,15 @@ Future<void> _handleEasyDrug(HttpRequest request) async {
     return;
   }
   final env = loadBffDotEnv();
-  var key = (env['PUBLIC_DATA_SERVICE_KEY'] ?? env['DATA_GO_KR_SERVICE_KEY'] ?? '')
-      .trim();
+  var key = bffPublicDataServiceKey(env);
   if (key.isEmpty) {
     await _json(request, 503, {
       'ok': false,
       'detail':
-          'PUBLIC_DATA_SERVICE_KEY (또는 DATA_GO_KR_SERVICE_KEY) 가 BFF .env 에 없습니다.',
+          '공공데이터 serviceKey 가 비어 있습니다. 프로젝트 루트 `.env` 에 아래 중 하나에 '
+          '발급받은 키를 넣고 BFF 창을 재시작하세요: PUBLIC_DATA_SERVICE_KEY, '
+          'DATA_GO_KR_SERVICE_KEY, NHIS_SERVICE_KEY(앱·BFF 공용). '
+          'BFF는 `dart run` 시 이 `.env` 파일만 읽습니다(assets/env/dotenv 아님).',
     });
     return;
   }

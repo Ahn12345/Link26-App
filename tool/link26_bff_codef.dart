@@ -45,6 +45,23 @@ Map<String, String> loadBffDotEnv() {
   return merged;
 }
 
+/// 공공데이터포털 `serviceKey`(e약은요 등). `.env` 에 이름이 여러 가지로 흔해 한 함수로 묶습니다.
+String bffPublicDataServiceKey(Map<String, String> env) {
+  const candidates = [
+    'PUBLIC_DATA_SERVICE_KEY',
+    'DATA_GO_KR_SERVICE_KEY',
+    'NHIS_SERVICE_KEY',
+  ];
+  for (final k in candidates) {
+    final v = (env[k] ?? '').trim();
+    if (v.isNotEmpty) return v;
+  }
+  return '';
+}
+
+bool bffPublicDataConfigured(Map<String, String> env) =>
+    bffPublicDataServiceKey(env).isNotEmpty;
+
 Map<String, String> _parseDotEnv(String raw) {
   final out = <String, String>{};
   for (var line in LineSplitter.split(raw)) {
