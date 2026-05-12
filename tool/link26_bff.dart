@@ -1,5 +1,9 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
 //
+// 제품 흐름(의도): 로그인/가입 후 틸코 간편인증 → (CODEF 등) 건강보험 진료·투약 정보 → 본인 복약.
+// 이 Dart BFF는 그중 틸코 프록시·공공 e약은요·CODEF 상품(/v1/medications)을 한 PC에서 돕는 역할입니다.
+// 앱은 NHIS_BASE_URL 로만 이 BFF에 붙고, 공단/틸코 비밀키는 루트 `.env` 에 둡니다.
+//
 // 포트: 환경변수 PORT 가 있으면 그 포트만 사용 (이미 다른 터미널에서 쓰 중이면 errno 10048).
 // PORT 를 비우고 실행하면 8787부터 빈 포트를 순서대로 잡습니다 — VS·PowerShell 이중 실행 시
 // 서로 다른 포트가 될 수 있으니, 앱 NHIS_BASE_URL 은 실제로 뜬 포트에 맞출 것.

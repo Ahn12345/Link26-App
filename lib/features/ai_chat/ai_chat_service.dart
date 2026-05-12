@@ -9,6 +9,7 @@ import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/network/api_client.dart';
 import 'package:link26_app/core/network/api_endpoints.dart';
 import 'package:link26_app/features/ai_chat/dur_asset_context.dart';
+import 'package:link26_app/features/ai_chat/easy_drug_chat_context.dart';
 import 'package:link26_app/features/ai_chat/nhis_chat_context.dart';
 
 import 'ai_chat_models.dart';
@@ -138,18 +139,26 @@ class AiChatService {
   ) async {
     final key = GeminiRuntimeConfig.apiKey;
     final durQuery = userText.isEmpty ? '의약품' : userText;
-    final durCtx = await DurAssetContext.buildSnippetForQuery(durQuery);
-    final nhisA = await NhisChatContext.fetchMedicationsSnapshot(
-      timeLimit: _nhisSnapshotBudget,
-    );
-    final cacheNames = await NhisChatContext.cachedMedicineNamesSummary();
+    final ctx = await Future.wait<Object>([
+      DurAssetContext.buildSnippetForQuery(durQuery),
+      NhisChatContext.fetchMedicationsSnapshot(
+        timeLimit: _nhisSnapshotBudget,
+      ),
+      NhisChatContext.cachedMedicineNamesSummary(),
+      EasyDrugChatContext.buildSnippetForUserText(userText),
+    ]);
+    final durCtx = ctx[0] as String;
+    final nhisA = ctx[1] as String;
+    final cacheNames = ctx[2] as String;
+    final easyDrugA = ctx[3] as String;
 
     if (key.isEmpty) {
       return '🟡 권고 —\n'
           'Gemini 분석을 쓰려면 GEMINI_API_KEY가 필요합니다.\n\n'
           '[DUR 발췌]\n$durCtx\n\n'
           '[건강보험 복약 스냅샷]\n$nhisA\n\n'
-          '[로컬 복약 이름]\n$cacheNames';
+          '[로컬 복약 이름]\n$cacheNames\n\n'
+          '[식약처 e약은요·공공데이터 발췌]\n$easyDrugA';
     }
 
     final primaryIntro = '''
@@ -166,10 +175,14 @@ $nhisA
 [CONTEXT: 로컬에 저장된 복약 이름 요약]
 $cacheNames
 
+[CONTEXT: 식약처 e약은요(공공데이터) — 약 검색·효능·용법 참고. 이미지만 있을 때는 추정 약명을 names_guessed에 넣으세요]
+$easyDrugA
+
 JSON 형식만 출력:
-{"draft_signal":"green|yellow|red","draft_reason":"한글 2문장 이내","dur_note":"한글","nhis_note":"한글","names_guessed":[]}
+{"draft_signal":"green|yellow|red","draft_reason":"한글 2문장 이내","dur_note":"한글","nhis_note":"한글","names_guessed":["추정한_약_이름"]}
 
 의미: green=현재 자료 기준 특별한 병용·금기 징후가 약함, yellow=주의·확인·전문가 상담 필요, red=병용금기·중대 위험 가능성이 높음.
+names_guessed: 사용자 문장·이미지에서 추정한 의약품 이름(한글 상품명 위주, 없으면 []).
 ''';
 
     final List<Content> primaryCall;
@@ -197,6 +210,11 @@ JSON 형식만 출력:
       timeLimit: _nhisSnapshotBudget,
     );
 
+    final guessedNames =
+        EasyDrugChatContext.parseNamesGuessedFromPrimaryJson(primaryRaw);
+    final easyDrugB =
+        await EasyDrugChatContext.buildSnippetForNames(guessedNames);
+
     final secondPrompt = '''
 [2차 최종 검토 — 출력 형식 엄수]
 첫 줄은 반드시 아래 중 하나로 **시작** (공백·이모지 동일):
@@ -218,6 +236,8 @@ $nhisA
 
 [NHIS 복약 API 2차 재조회 스냅샷 — 1차와 다르면 더 최신·보수적으로 판단]
 $nhisB
+
+${easyDrugB.isEmpty ? '' : '[e약은요·1차 추정 약명 기준 보강]\n$easyDrugB\n'}
 
 불확실하면 🟡, 위험 징후가 있으면 🔴를 선택하세요.
 ''';
