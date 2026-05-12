@@ -86,6 +86,24 @@ Write-Host ""
 
 & (Join-Path $PSScriptRoot "sync_dotenv_asset.ps1") -ProjectRoot $projectRoot
 
+Write-Host "[Link26] 연결 확인 — 앱은 .env 의 NHIS_BASE_URL 로만 BFF에 붙습니다." -ForegroundColor DarkGray
+Write-Host "       에뮬레이터: NHIS_BASE_URL=http://10.0.2.2:$Port" -ForegroundColor DarkGray
+Write-Host "       Chrome/같은 PC: http://127.0.0.1:$Port" -ForegroundColor DarkGray
+try {
+  $lan = @(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress -notmatch '^(127\.|169\.254\.)' } |
+    Sort-Object InterfaceMetric |
+    ForEach-Object { $_.IPAddress }) | Select-Object -Unique
+  if ($lan.Count -gt 0) {
+    $one = $lan[0]
+    Write-Host "       실제 폰(USB/Wi-Fi): 보통 NHIS_BASE_URL=http://${one}:$Port (PC IP가 다르면 ipconfig 로 맞추세요)" -ForegroundColor Yellow
+    Write-Host "       폰 브라우저에서 http://${one}:$Port/health 가 열리면 네트워크·방화벽 OK." -ForegroundColor DarkGray
+  }
+} catch { }
+Write-Host "       NHIS_USE_MOCK=true 이면 BFF로 안 붙고 목 동작합니다. 실연동은 false." -ForegroundColor DarkGray
+Write-Host "       BFF 창에 나온 '실제 포트'가 $Port 가 아니면 .env 포트를 그에 맞게 수정 후 다시 이 스크립트." -ForegroundColor DarkGray
+Write-Host ""
+
 $flutterCmd = @("run") + $FlutterArgs
 $runScript = Join-Path $projectRoot "tool\run_with_ascii_path.ps1"
 
