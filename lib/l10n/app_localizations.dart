@@ -234,6 +234,12 @@ abstract class AppLocalizations {
   String get pillSearchPublicDataTitle;
   String get pillSearchPublicDataEmpty;
   String get pillSearchNeedBffUrl;
+  String get tilkoNhisLinkTitle;
+  String get tilkoNhisLinkBody;
+  String get tilkoNhisLinkRrnLabel;
+  String get tilkoNhisLinkConfirm;
+  String get tilkoNhisLinkSkip;
+  String get tilkoNhisLinkRrnInvalid;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

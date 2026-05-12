@@ -235,10 +235,24 @@ Future<void> _handle(HttpRequest request) async {
           body: merged,
         );
         final codefDecoded = jsonDecode(raw) as Map<String, dynamic>;
+        final items = bffMapCodefRootToMedicationItems(codefDecoded);
+        String? cfCode;
+        String? cfMsg;
+        final resObj = codefDecoded['result'];
+        if (resObj is Map) {
+          cfCode = '${resObj['code'] ?? ''}';
+          cfMsg = '${resObj['message'] ?? ''}';
+        }
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoRes,
           'codef': codefDecoded,
+          'items': items,
+          'meta': {
+            'source': 'tilko_codef_nhis',
+            'codefResultCode': cfCode,
+            'codefResultMessage': cfMsg,
+          },
         });
       } catch (e, st) {
         // ignore: avoid_print

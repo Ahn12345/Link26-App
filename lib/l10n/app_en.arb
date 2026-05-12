@@ -122,5 +122,11 @@
   "healthLinkJsonLabel": "Extra CODEF JSON object",
   "pillSearchPublicDataTitle": "Public e-약은요 (via BFF)",
   "pillSearchPublicDataEmpty": "When BFF is configured, search loads MFDS drug summaries here.",
-  "pillSearchNeedBffUrl": "Set NHIS_BASE_URL in .env to your PC BFF (e.g. http://10.0.2.2:8787), run sync + BFF, then rebuild the app."
+  "pillSearchNeedBffUrl": "Set NHIS_BASE_URL in .env to your PC BFF (e.g. http://10.0.2.2:8787), run sync + BFF, then rebuild the app.",
+  "tilkoNhisLinkTitle": "NHIS treatment & prescription link",
+  "tilkoNhisLinkBody": "We use Tilko easy auth, then CODEF to fetch NHIS treatment and prescription data. Your resident ID is not stored on device and is used only for this request.",
+  "tilkoNhisLinkRrnLabel": "Resident registration number (13 digits)",
+  "tilkoNhisLinkConfirm": "Authenticate & fetch",
+  "tilkoNhisLinkSkip": "Not now",
+  "tilkoNhisLinkRrnInvalid": "Enter a valid 13-digit resident registration number."
 }

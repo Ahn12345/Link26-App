@@ -291,7 +291,7 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
       body: body,
     );
     final map = jsonDecode(decoded) as Map<String, dynamic>;
-    final items = _mapCodefToMedicationItems(map);
+    final items = bffMapCodefRootToMedicationItems(map);
     final result = map['result'];
     String? code;
     String? message;
@@ -324,7 +324,8 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
   }
 }
 
-List<Map<String, dynamic>> _mapCodefToMedicationItems(Map<String, dynamic> root) {
+/// CODEF 건강iN/건보 진료·투약 JSON 루트에서 앱/BFF 공통 약 행 목록을 뽑습니다.
+List<Map<String, dynamic>> bffMapCodefRootToMedicationItems(Map<String, dynamic> root) {
   final rows = _extractDataRows(root['data']);
   final out = <Map<String, dynamic>>[];
   for (final r in rows) {

@@ -142,8 +142,8 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
 
+      await HiraLinkService.afterLogin(context: context, user: user);
       await AuthSession.signIn(phoneDigits: user.phoneDigits);
-      await HiraLinkService.afterLogin();
       if (context.mounted) {
         await Navigator.of(context).pushNamedAndRemoveUntil(
           MainShell.routeName,

@@ -44,6 +44,8 @@ class NhisMedicinesSyncOutcome {
 
   bool get isMissingConnectedId => metaSource == 'codef_missing_connected_id';
 
+  bool get isTilkoCodefNhis => metaSource == 'tilko_codef_nhis';
+
   bool get showBannerOnBootstrap {
     if (result == NhisMedicinesSyncResult.failed) return true;
     if (result == NhisMedicinesSyncResult.skipped) return true;
@@ -59,6 +61,16 @@ class NhisMedicinesSyncOutcome {
       return true;
     }
     if (metaSource == 'codef' && remoteItemCount == 0) return true;
+    if (isTilkoCodefNhis &&
+        remoteItemCount == 0 &&
+        codefResultCode != null &&
+        codefResultCode != 'CF-00000') {
+      return true;
+    }
+    if (isTilkoCodefNhis && remoteItemCount == 0) return true;
+    if (metaSource == 'tilko_only' && (metaNote ?? '').trim().isNotEmpty) {
+      return true;
+    }
     return false;
   }
 
@@ -85,6 +97,16 @@ class NhisMedicinesSyncOutcome {
           final m = codefResultMessage ?? '';
           return '연동 응답은 왔지만 복약 항목이 0건입니다. '
               'CODEF connectedId·상품 경로·추가인증을 확인하세요. ($c ${m.isNotEmpty ? m : ''})';
+        }
+        if (isTilkoCodefNhis && remoteItemCount == 0) {
+          final c = codefResultCode ?? '';
+          final m = codefResultMessage ?? '';
+          return '틸코 간편인증 후 조회했지만 복약 항목이 0건입니다. '
+              'BFF .env의 CODEF 건보 진료·투약 상품 경로·connectedId를 확인하세요. ($c ${m.isNotEmpty ? m : ''})';
+        }
+        if (metaSource == 'tilko_only' &&
+            (metaNote ?? '').trim().isNotEmpty) {
+          return metaNote!.trim();
         }
         if (metaNote != null && metaNote!.isNotEmpty) return metaNote!;
         return '복약 $remoteItemCount건을 반영했습니다.';
@@ -159,7 +181,7 @@ abstract final class NhisMedicinesSync {
     final meta = _parseResponseMeta(body);
     final fromApi = NhisMedicationsParser.parseResponseBody(body);
     final src = meta?['source'] as String?;
-    if (_shouldReplaceLocalWithAuthoritative(src)) {
+    if (isAuthoritativeMedicationsMetaSource(src)) {
       await _replaceLocalWithRemote(fromApi);
       await DoseReminderCompletionStore.clearAll();
     } else {
@@ -176,6 +198,36 @@ abstract final class NhisMedicinesSync {
     );
   }
 
+  /// 틸코→CODEF(건보) 플로우 등에서 이미 파싱된 목록을 반영할 때 사용합니다.
+  static Future<NhisMedicinesSyncOutcome> applyRemoteMedicines({
+    required List<Medicine> medicines,
+    String? metaSource,
+    String? codefResultCode,
+    String? codefResultMessage,
+    String? metaNote,
+  }) async {
+    if (isAuthoritativeMedicationsMetaSource(metaSource)) {
+      await _replaceLocalWithRemote(medicines);
+      await DoseReminderCompletionStore.clearAll();
+    } else {
+      await _mergeIntoLocal(medicines);
+    }
+    return NhisMedicinesSyncOutcome(
+      result: NhisMedicinesSyncResult.success,
+      remoteItemCount: medicines.length,
+      metaSource: metaSource,
+      codefResultCode: codefResultCode,
+      codefResultMessage: codefResultMessage,
+      metaNote: metaNote,
+    );
+  }
+
+  /// [codef]·[tilko_codef_nhis] 응답은 로컬 데모·수동 목록을 덮어씁니다.
+  static bool isAuthoritativeMedicationsMetaSource(String? source) {
+    final s = source?.trim() ?? '';
+    return s == 'codef' || s == 'tilko_codef_nhis';
+  }
+
   static Map<String, dynamic>? _parseResponseMeta(String raw) {
     try {
       final decoded = jsonDecode(raw);
@@ -189,10 +241,6 @@ abstract final class NhisMedicinesSync {
       return null;
     }
   }
-
-  /// BFF `meta.source == codef` 인 경우에만: 데모·수동 병합 없이 서버 목록으로 덮어씁니다.
-  static bool _shouldReplaceLocalWithAuthoritative(String? source) =>
-      source?.trim() == 'codef';
 
   static Future<void> _replaceLocalWithRemote(List<Medicine> fromApi) async {
     await NhisMedicineCacheStore.saveMedicines(fromApi);

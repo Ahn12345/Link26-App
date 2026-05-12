@@ -626,4 +626,24 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get pillSearchNeedBffUrl =>
       '.env에 NHIS_BASE_URL을 BFF 주소로 넣고(예: 에뮬 http://10.0.2.2:8787), sync 후 BFF 실행·앱 재빌드하세요.';
+
+  @override
+  String get tilkoNhisLinkTitle => '국민건강보험 진료·투약 연동';
+
+  @override
+  String get tilkoNhisLinkBody =>
+      '틸코 간편인증 후 CODEF를 통해 건강보험 진료·투약 정보를 불러옵니다. 주민등록번호 13자리는 기기에 저장되지 않으며, 이번 조회에만 사용됩니다.';
+
+  @override
+  String get tilkoNhisLinkRrnLabel => '주민등록번호(숫자 13자리)';
+
+  @override
+  String get tilkoNhisLinkConfirm => '인증 후 조회';
+
+  @override
+  String get tilkoNhisLinkSkip => '나중에';
+
+  @override
+  String get tilkoNhisLinkRrnInvalid =>
+      '주민등록번호 13자리를 올바르게 입력해 주세요.';
 }

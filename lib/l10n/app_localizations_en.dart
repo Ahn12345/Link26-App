@@ -638,4 +638,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pillSearchNeedBffUrl =>
       'Set NHIS_BASE_URL in .env to your PC BFF (e.g. http://10.0.2.2:8787), run sync + BFF, then rebuild the app.';
+
+  @override
+  String get tilkoNhisLinkTitle => 'NHIS treatment & prescription link';
+
+  @override
+  String get tilkoNhisLinkBody =>
+      'We use Tilko easy auth, then CODEF to fetch NHIS treatment and prescription data. '
+      'Your resident ID is not stored on device and is used only for this request.';
+
+  @override
+  String get tilkoNhisLinkRrnLabel =>
+      'Resident registration number (13 digits)';
+
+  @override
+  String get tilkoNhisLinkConfirm => 'Authenticate & fetch';
+
+  @override
+  String get tilkoNhisLinkSkip => 'Not now';
+
+  @override
+  String get tilkoNhisLinkRrnInvalid =>
+      'Enter a valid 13-digit resident registration number.';
 }

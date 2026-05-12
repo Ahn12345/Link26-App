@@ -145,7 +145,13 @@ class _SignupPageState extends State<SignupPage> {
         );
       }
 
-      await HiraLinkService.afterRegistration();
+      await HiraLinkService.afterRegistration(
+        context: context,
+        displayName: _nameCtrl.text.trim(),
+        phoneDigits: phoneDigits,
+        gender: _gender!,
+        residentRegistrationDigits13: rrnDigits,
+      );
       await AuthSession.signIn(phoneDigits: phoneDigits);
       if (context.mounted) {
         await Navigator.of(context).pushNamedAndRemoveUntil(
