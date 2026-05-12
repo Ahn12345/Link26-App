@@ -34,6 +34,15 @@ Future<void> main() async {
     '  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health\n'
     '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-codef-treatment',
   );
+  final bootEnv = loadBffDotEnv();
+  final pSu = (bootEnv['NHIS_PROXY_SIGNUP_URL'] ?? '').trim();
+  final pLo = (bootEnv['NHIS_PROXY_LOGIN_URL'] ?? '').trim();
+  if (pSu.isNotEmpty || pLo.isNotEmpty) {
+    // ignore: avoid_print
+    stdout.writeln(
+      '  가입/로그인 프록시: signup=${pSu.isNotEmpty} login=${pLo.isNotEmpty} (.env NHIS_PROXY_*)',
+    );
+  }
 
   await for (final request in server) {
     unawaited(_handle(request));
@@ -118,6 +127,11 @@ Future<void> _handle(HttpRequest request) async {
         },
         'medicationsSource':
             codefMedicationsReady ? 'codef' : 'stub',
+        'authProxy': {
+          'signup':
+              (env['NHIS_PROXY_SIGNUP_URL'] ?? '').trim().isNotEmpty,
+          'login': (env['NHIS_PROXY_LOGIN_URL'] ?? '').trim().isNotEmpty,
+        },
       });
       return;
     }
@@ -193,21 +207,53 @@ Future<void> _handle(HttpRequest request) async {
     }
 
     if (method == 'POST' && path == '/v1/signup') {
-      await request.drain();
+      final bodyStr = await _readBody(request);
+      final env = loadBffDotEnv();
+      final proxy = (env['NHIS_PROXY_SIGNUP_URL'] ?? '').trim();
+      if (proxy.isNotEmpty) {
+        await _proxyPost(request, proxy, bodyStr);
+        return;
+      }
+      Object echo;
+      try {
+        echo = bodyStr.isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(bodyStr) as Object;
+      } catch (_) {
+        echo = {'_raw': bodyStr};
+      }
       await _json(request, 200, {
         'ok': true,
         'flow': 'signup',
         'receivedAt': DateTime.now().toUtc().toIso8601String(),
+        'gateway': 'stub',
+        'received': echo,
       });
       return;
     }
 
     if (method == 'POST' && path == '/v1/login') {
-      await request.drain();
+      final bodyStr = await _readBody(request);
+      final env = loadBffDotEnv();
+      final proxy = (env['NHIS_PROXY_LOGIN_URL'] ?? '').trim();
+      if (proxy.isNotEmpty) {
+        await _proxyPost(request, proxy, bodyStr);
+        return;
+      }
+      Object echo;
+      try {
+        echo = bodyStr.isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(bodyStr) as Object;
+      } catch (_) {
+        echo = {'_raw': bodyStr};
+      }
       await _json(request, 200, {
         'ok': true,
         'flow': 'login',
         'receivedAt': DateTime.now().toUtc().toIso8601String(),
+        'gateway': 'stub',
+        'received': echo,
       });
       return;
     }
@@ -298,6 +344,58 @@ Future<String> _readBody(HttpRequest request) async {
     chunks.addAll(chunk);
   }
   return utf8.decode(chunks);
+}
+
+/// [targetUrl] 로 동일 본문을 POST 하고, 응답 상태·본문을 그대로 클라이언트에 전달합니다.
+Future<void> _proxyPost(
+  HttpRequest request,
+  String targetUrl,
+  String bodyStr,
+) async {
+  Uri uri;
+  try {
+    uri = Uri.parse(targetUrl);
+  } catch (e) {
+    await _json(request, 500, {
+      'ok': false,
+      'detail': 'NHIS_PROXY_* URL 파싱 실패: $e',
+    });
+    return;
+  }
+  if (!uri.hasScheme || uri.host.isEmpty) {
+    await _json(request, 500, {
+      'ok': false,
+      'detail': 'NHIS_PROXY_* URL 에 scheme·호스트가 필요합니다.',
+    });
+    return;
+  }
+
+  final client = HttpClient();
+  try {
+    final ioReq = await client.postUrl(uri);
+    ioReq.headers.contentType = ContentType.json;
+    ioReq.headers.set(HttpHeaders.acceptHeader, 'application/json,*/*;q=0.8');
+    ioReq.write(bodyStr);
+    final ioRes = await ioReq.close().timeout(const Duration(seconds: 60));
+    final responseBody = await ioRes.transform(utf8.decoder).join();
+    request.response.statusCode = ioRes.statusCode;
+    final ct = ioRes.headers.contentType;
+    if (ct != null) {
+      request.response.headers.contentType = ct;
+    } else {
+      request.response.headers.contentType =
+          ContentType('application', 'json', charset: 'utf-8');
+    }
+    request.response.headers.add('X-Link26-Bff', 'dart-proxy');
+    request.response.write(responseBody);
+    await request.response.close();
+  } catch (e, st) {
+    // ignore: avoid_print
+    print('BFF proxy POST: $e\n$st');
+    await _json(request, 502, {'ok': false, 'detail': 'upstream proxy: $e'});
+  } finally {
+    client.close(force: true);
+  }
 }
 
 Future<void> _handleEasyDrug(HttpRequest request) async {
