@@ -48,7 +48,7 @@ if (-not $NoSubst) {
 }
 
 Write-Host ""
-Write-Host "[Link26] Starting BFF on port $Port (new window)..." -ForegroundColor Cyan
+Write-Host "[Link26] Preparing BFF on port $Port..." -ForegroundColor Cyan
 Write-Host "[Link26] App .env: NHIS_BASE_URL=http://10.0.2.2:$Port (emulator) or http://127.0.0.1:$Port (device/Chrome)" -ForegroundColor DarkGray
 if ($useSubst) {
   Write-Host "[Link26] Non-ASCII path: Flutter will run via tool/run_with_ascii_path.ps1 (SUBST)." -ForegroundColor DarkYellow
@@ -57,6 +57,39 @@ if ($useSubst) {
 }
 Write-Host ""
 
+$healthUrl = "http://127.0.0.1:$Port/health"
+function Get-BffHealthJson([string]$Url) {
+  try {
+    $r = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2
+    if ($r.StatusCode -ne 200) { return $null }
+    return $r.Content | ConvertFrom-Json
+  } catch {
+    return $null
+  }
+}
+
+$existing = Get-BffHealthJson $healthUrl
+$needStart = $true
+if ($existing -ne $null -and $existing.ok -eq $true) {
+  # 구버전 BFF(과거 스크립트)인지 구분: 최신은 publicData.serviceKeyFrom 를 내립니다.
+  $isModern = $false
+  try {
+    $isModern = ($null -ne $existing.publicData.serviceKeyFrom)
+  } catch { }
+  if ($isModern) {
+    Write-Host "[Link26] Existing BFF is already healthy on $Port - reusing it." -ForegroundColor DarkGray
+    $needStart = $false
+  } else {
+    Write-Host "[Link26] Existing BFF on $Port looks legacy - restarting for latest routes..." -ForegroundColor Yellow
+    $owners = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue |
+      Select-Object -ExpandProperty OwningProcess -Unique
+    foreach ($ownerPid in $owners) {
+      try { Stop-Process -Id $ownerPid -Force -ErrorAction Stop } catch {}
+    }
+    Start-Sleep -Milliseconds 500
+  }
+}
+
 $bffCmd = @"
 Set-Location -LiteralPath '$projectRoot'
 `$env:PORT = '$Port'
@@ -64,23 +97,23 @@ Write-Host '>>> link26_bff (PORT=' `$env:PORT ') <<<' -ForegroundColor Green
 dart run tool/link26_bff.dart
 "@
 
-Start-Process -FilePath "powershell.exe" -ArgumentList @(
-  "-NoProfile",
-  "-ExecutionPolicy", "Bypass",
-  "-NoExit",
-  "-Command", $bffCmd
-) | Out-Null
+if ($needStart) {
+  Write-Host "[Link26] Starting BFF on port $Port (new window)..." -ForegroundColor Cyan
+  Start-Process -FilePath "powershell.exe" -ArgumentList @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-NoExit",
+    "-Command", $bffCmd
+  ) | Out-Null
+}
 
-$healthUrl = "http://127.0.0.1:$Port/health"
 $ready = $false
 for ($i = 0; $i -lt 60; $i++) {
-  try {
-    $r = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 2
-    if ($r.StatusCode -eq 200) {
-      $ready = $true
-      break
-    }
-  } catch {
+  $h = Get-BffHealthJson $healthUrl
+  if ($h -ne $null -and $h.ok -eq $true) {
+    $ready = $true
+    break
+  } else {
     Start-Sleep -Milliseconds 400
   }
 }
