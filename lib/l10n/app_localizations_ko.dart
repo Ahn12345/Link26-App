@@ -589,4 +589,36 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get signupSubmitFailed =>
       '회원가입 처리 중 오류가 발생했습니다. 입력 내용을 확인하거나 앱을 다시 시작해 주세요.';
+
+  @override
+  String get healthLinkTitle => '건강iN 연동 (Tilko → CODEF)';
+
+  @override
+  String get healthLinkSubtitle =>
+      'BFF(NHIS_BASE_URL)에 틸코·CODEF 키를 두면 서버 경유로 호출합니다. '
+      'BFF가 없을 때만 앱 .env의 TILKO_API_KEY로 직접 요청합니다(개발용).';
+
+  @override
+  String get healthLinkFlowCta => '간편인증 후 CODEF 조회';
+
+  @override
+  String get healthLinkTilkoOnlyCta => '틸코 간편인증만';
+
+  @override
+  String get healthLinkBffHint =>
+      'NHIS_BASE_URL이 설정되고 목(mock)이 아니면 BFF로 요청합니다.';
+
+  @override
+  String get healthLinkDirectHint =>
+      'BFF를 쓰지 않을 때는 TILKO_API_KEY가 있어야 합니다.';
+
+  @override
+  String get healthLinkJsonLabel => 'CODEF 추가 JSON(객체)';
+
+  @override
+  String get pillSearchPublicDataTitle => '공공데이터 e약은요 (BFF)';
+
+  @override
+  String get pillSearchPublicDataEmpty =>
+      'BFF 연결 시 약 이름으로 식약처 요약을 불러옵니다.';
 }

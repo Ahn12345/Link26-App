@@ -601,4 +601,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get signupSubmitFailed =>
       'Sign-up failed. Check your input or restart the app.';
+
+  @override
+  String get healthLinkTitle => 'Health iN link (Tilko → CODEF)';
+
+  @override
+  String get healthLinkSubtitle =>
+      'With keys on the BFF (NHIS_BASE_URL), requests go through the server. '
+      'Without BFF, the app can call Tilko directly if TILKO_API_KEY is set (dev only).';
+
+  @override
+  String get healthLinkFlowCta => 'Easy auth + CODEF';
+
+  @override
+  String get healthLinkTilkoOnlyCta => 'Tilko easy auth only';
+
+  @override
+  String get healthLinkBffHint =>
+      'Uses BFF when NHIS_BASE_URL is set and NHIS_USE_MOCK is off.';
+
+  @override
+  String get healthLinkDirectHint =>
+      'Direct mode requires TILKO_API_KEY in .env.';
+
+  @override
+  String get healthLinkJsonLabel => 'Extra CODEF JSON object';
+
+  @override
+  String get pillSearchPublicDataTitle => 'Public e-약은요 (via BFF)';
+
+  @override
+  String get pillSearchPublicDataEmpty =>
+      'When BFF is configured, search loads MFDS drug summaries here.';
 }

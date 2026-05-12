@@ -12,6 +12,7 @@ import '../push_settings/push_settings_screen.dart';
 import '../search/search_screen.dart';
 import 'codef_connection_screen.dart';
 import 'emergency_contact_screen.dart';
+import 'health_link_screen.dart';
 import 'settings_screen.dart';
 import '../../core/constants/image_assets.dart';
 import '../../core/design/link26_design_catalog.dart';
@@ -44,6 +45,14 @@ class SettingsTabScreen extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context)
                     .pushNamed(EmergencyContactScreen.routeName),
+              ),
+              ListTile(
+                leading: const Icon(Icons.health_and_safety_outlined),
+                title: Text(l10n.healthLinkTitle),
+                subtitle: Text(l10n.healthLinkSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context)
+                    .pushNamed(HealthLinkScreen.routeName),
               ),
               ListTile(
                 leading: const Icon(Icons.link),

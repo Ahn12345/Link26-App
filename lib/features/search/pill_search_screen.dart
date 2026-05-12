@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import '../../core/constants/image_assets.dart';
@@ -26,11 +27,71 @@ class PillSearchScreen extends StatefulWidget {
 
 class _PillSearchScreenState extends State<PillSearchScreen> {
   final _ctrl = TextEditingController();
+  List<Map<String, String>> _publicRows = [];
+  bool _publicLoading = false;
+  String? _publicError;
 
   @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
+  }
+
+  List<Map<String, String>> _normalizeEasyDrug(dynamic root) {
+    if (root is! Map) return [];
+    final inner = (root['response'] is Map ? (root['response'] as Map)['body'] : null) ??
+        root['body'];
+    if (inner is! Map) return [];
+    var items = inner['items'];
+    if (items == null) return [];
+    final list = items is List ? items : [items];
+    return list.map((entry) {
+      if (entry is Map && entry['item'] is Map) {
+        return Map<String, String>.from(
+          (entry['item'] as Map).map((k, v) => MapEntry('$k', '$v')),
+        );
+      }
+      if (entry is Map) {
+        return Map<String, String>.from(
+          entry.map((k, v) => MapEntry('$k', '$v')),
+        );
+      }
+      return <String, String>{};
+    }).where((m) => m.isNotEmpty).toList();
+  }
+
+  Future<void> _searchPublic() async {
+    final q = _ctrl.text.trim();
+    if (q.isEmpty) return;
+    if (!Link26BffIntegrationsClient.canCall) {
+      setState(() {
+        _publicError = null;
+        _publicRows = [];
+      });
+      return;
+    }
+    setState(() {
+      _publicLoading = true;
+      _publicError = null;
+      _publicRows = [];
+    });
+    try {
+      final res = await Link26BffIntegrationsClient.searchEasyDrug(
+        itemName: q,
+        numOfRows: 15,
+      );
+      final data = res?['data'];
+      setState(() {
+        _publicRows = _normalizeEasyDrug(data);
+        if (_publicRows.isEmpty && res?['ok'] == true) {
+          _publicError = 'empty';
+        }
+      });
+    } catch (e) {
+      setState(() => _publicError = '$e');
+    } finally {
+      if (mounted) setState(() => _publicLoading = false);
+    }
   }
 
   Future<void> _add() async {
@@ -128,6 +189,75 @@ class _PillSearchScreenState extends State<PillSearchScreen> {
                         icon: const Icon(Icons.add),
                         label: Text(l10n.homeAddMedicine),
                       ),
+                      SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                      Text(
+                        l10n.pillSearchPublicDataTitle,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: Link26ResponsiveUi.body(w),
+                          color: Link26Surface.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                      Text(
+                        l10n.pillSearchPublicDataEmpty,
+                        style: TextStyle(
+                          fontSize: Link26ResponsiveUi.caption(w),
+                          color: Link26Surface.textSecondary,
+                        ),
+                      ),
+                      SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                      OutlinedButton.icon(
+                        onPressed: _publicLoading ? null : _searchPublic,
+                        icon: const Icon(Icons.search),
+                        label: Text(l10n.pillSearchTitle),
+                      ),
+                      if (_publicLoading)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: LinearProgressIndicator(),
+                        ),
+                      if (_publicError != null && _publicError != 'empty')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            _publicError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: Link26ResponsiveUi.caption(w),
+                            ),
+                          ),
+                        ),
+                      ..._publicRows.map((row) {
+                        final name = row['itemName'] ?? '';
+                        return ListTile(
+                          dense: true,
+                          title: Text(
+                            name.isEmpty ? '—' : name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: Link26ResponsiveUi.body(w),
+                            ),
+                          ),
+                          subtitle: row['efcyQesitm'] != null &&
+                                  row['efcyQesitm']!.isNotEmpty
+                              ? Text(
+                                  row['efcyQesitm']!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: Link26ResponsiveUi.caption(w),
+                                  ),
+                                )
+                              : null,
+                          trailing: const Icon(Icons.add_circle_outline),
+                          onTap: () async {
+                            if (name.isEmpty) return;
+                            _ctrl.text = name;
+                            await _add();
+                          },
+                        );
+                      }),
                     ],
                   ),
                 ),

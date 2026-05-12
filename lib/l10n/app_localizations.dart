@@ -224,6 +224,15 @@ abstract class AppLocalizations {
   String get authContinueSignupHint;
   String get authSessionInitFailed;
   String get signupSubmitFailed;
+  String get healthLinkTitle;
+  String get healthLinkSubtitle;
+  String get healthLinkFlowCta;
+  String get healthLinkTilkoOnlyCta;
+  String get healthLinkBffHint;
+  String get healthLinkDirectHint;
+  String get healthLinkJsonLabel;
+  String get pillSearchPublicDataTitle;
+  String get pillSearchPublicDataEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

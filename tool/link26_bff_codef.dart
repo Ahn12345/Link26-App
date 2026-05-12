@@ -33,7 +33,10 @@ Map<String, String> loadBffDotEnv() {
     final k = e.key;
     if (!k.startsWith('BFF_') &&
         !k.startsWith('CODEF_') &&
-        !k.startsWith('NHIS_')) {
+        !k.startsWith('NHIS_') &&
+        !k.startsWith('TILKO_') &&
+        !k.startsWith('PUBLIC_DATA_') &&
+        !k.startsWith('DATA_GO_KR_')) {
       continue;
     }
     final v = e.value.trim();
@@ -373,6 +376,16 @@ String _firstNonEmpty(Map<String, dynamic> m, List<String> keys) {
     if (s.isNotEmpty && s != 'null') return s;
   }
   return '';
+}
+
+/// BFF에서 CODEF Bearer 재사용 (캐시).
+Future<String> bffCodefBearer(Map<String, String> env) async {
+  final id = (env['CODEF_CLIENT_ID'] ?? '').trim();
+  final secret = (env['CODEF_CLIENT_SECRET'] ?? '').trim();
+  if (id.isEmpty || secret.isEmpty) {
+    throw StateError('CODEF_CLIENT_ID/SECRET 없음');
+  }
+  return _codefToken.token(clientId: id, clientSecret: secret);
 }
 
 /// 헬스용: 토큰 발급만 검증 (상품 호출 없음).

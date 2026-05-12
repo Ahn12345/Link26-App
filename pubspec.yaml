@@ -27,6 +27,8 @@ dependencies:
   image_picker: ^1.1.2
   path: ^1.9.1
   xml: ^6.6.1
+  encrypt: ^5.0.3
+  pointycastle: ^3.9.1
 
 dev_dependencies:
   flutter_test:

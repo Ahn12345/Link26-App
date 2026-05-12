@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
+
 import 'link26_bff_codef.dart';
 
 Future<void> main() async {
@@ -28,7 +30,10 @@ Future<void> main() async {
   // ignore: avoid_print
   stdout.writeln('');
   // ignore: avoid_print
-  stdout.writeln('  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health');
+  stdout.writeln(
+    '  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health\n'
+    '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-codef-treatment',
+  );
 
   await for (final request in server) {
     unawaited(_handle(request));
@@ -101,9 +106,89 @@ Future<void> _handle(HttpRequest request) async {
         'ok': true,
         'service': 'link26-bff-dart',
         'codef': probe,
+        'tilko': {
+          'configured': (env['TILKO_API_KEY'] ?? '').trim().isNotEmpty,
+        },
+        'publicData': {
+          'configured': (env['PUBLIC_DATA_SERVICE_KEY'] ??
+                  env['DATA_GO_KR_SERVICE_KEY'] ??
+                  '')
+              .trim()
+              .isNotEmpty,
+        },
         'medicationsSource':
             codefMedicationsReady ? 'codef' : 'stub',
       });
+      return;
+    }
+
+    if (method == 'GET' && path == '/v1/public/easy-drug') {
+      await _handleEasyDrug(request);
+      return;
+    }
+
+    if (method == 'POST' && path == '/v1/tilko/hira-simple-auth') {
+      final bodyStr = await _readBody(request);
+      final env = loadBffDotEnv();
+      try {
+        final map = jsonDecode(bodyStr) as Map<String, dynamic>;
+        final c = TilkoHiraSimpleAuthClient.fromBffEnv(env);
+        final res = await c.requestFromJsonMap(map);
+        await _json(request, 200, {'ok': true, 'tilko': res});
+      } catch (e, st) {
+        // ignore: avoid_print
+        print('BFF tilko: $e\n$st');
+        await _json(request, 502, {'ok': false, 'detail': '$e'});
+      }
+      return;
+    }
+
+    if (method == 'POST' && path == '/v1/flow/tilko-codef-treatment') {
+      final bodyStr = await _readBody(request);
+      final env = loadBffDotEnv();
+      try {
+        final map = jsonDecode(bodyStr) as Map<String, dynamic>;
+        final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
+        final codefExtra = map['codef_payload'] as Map<String, dynamic>? ?? {};
+        final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
+        final tilkoRes = await tilkoClient.requestFromJsonMap(tilkoMap);
+        final id = (env['CODEF_CLIENT_ID'] ?? '').trim();
+        final secret = (env['CODEF_CLIENT_SECRET'] ?? '').trim();
+        if (id.isEmpty || secret.isEmpty) {
+          await _json(request, 200, {
+            'ok': true,
+            'tilko': tilkoRes,
+            'codef': null,
+            'notice': 'CODEF 클라이언트 미설정 — CODEF 호출 생략',
+          });
+          return;
+        }
+        var productPath = (env['CODEF_NHIS_TREATMENT_PATH'] ??
+                '/v1/kr/public/pp/nhis-insurance-treatment-information')
+            .trim();
+        if (!productPath.startsWith('/')) productPath = '/$productPath';
+        final base =
+            (env['CODEF_BASE_URL'] ?? 'https://development.codef.io').trim();
+        final bearer = await bffCodefBearer(env);
+        final merged = Map<String, dynamic>.from(codefExtra)
+          ..['_tilkoSimpleAuth'] = tilkoRes;
+        final raw = await codefProductRaw(
+          baseUrl: base,
+          productPath: productPath,
+          bearer: bearer,
+          body: merged,
+        );
+        final codefDecoded = jsonDecode(raw) as Map<String, dynamic>;
+        await _json(request, 200, {
+          'ok': true,
+          'tilko': tilkoRes,
+          'codef': codefDecoded,
+        });
+      } catch (e, st) {
+        // ignore: avoid_print
+        print('BFF flow tilko-codef: $e\n$st');
+        await _json(request, 502, {'ok': false, 'detail': '$e'});
+      }
       return;
     }
 
@@ -205,4 +290,70 @@ Future<void> _json(HttpRequest request, int status, Object body) async {
   request.response.headers.add('X-Link26-Bff', 'dart');
   request.response.write(jsonEncode(body));
   await request.response.close();
+}
+
+Future<String> _readBody(HttpRequest request) async {
+  final chunks = <int>[];
+  await for (final chunk in request) {
+    chunks.addAll(chunk);
+  }
+  return utf8.decode(chunks);
+}
+
+Future<void> _handleEasyDrug(HttpRequest request) async {
+  final q = request.uri.queryParameters;
+  final itemName = (q['itemName'] ?? '').trim();
+  if (itemName.isEmpty) {
+    await _json(request, 400, {'ok': false, 'detail': 'itemName required'});
+    return;
+  }
+  final env = loadBffDotEnv();
+  var key = (env['PUBLIC_DATA_SERVICE_KEY'] ?? env['DATA_GO_KR_SERVICE_KEY'] ?? '')
+      .trim();
+  if (key.isEmpty) {
+    await _json(request, 503, {
+      'ok': false,
+      'detail':
+          'PUBLIC_DATA_SERVICE_KEY (또는 DATA_GO_KR_SERVICE_KEY) 가 BFF .env 에 없습니다.',
+    });
+    return;
+  }
+  try {
+    key = Uri.decodeQueryComponent(key);
+  } catch (_) {}
+
+  final uri = Uri.https(
+    'apis.data.go.kr',
+    '/1471000/DrbEasyDrugInfo/getDrbEasyDrugList',
+    {
+      'serviceKey': key,
+      'pageNo': q['pageNo'] ?? '1',
+      'numOfRows': q['numOfRows'] ?? '20',
+      'type': 'json',
+      'itemName': itemName,
+    },
+  );
+
+  final client = HttpClient();
+  try {
+    final req = await client.getUrl(uri);
+    final res = await req.close();
+    final raw = await res.transform(utf8.decoder).join();
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      await _json(request, 502, {
+        'ok': false,
+        'detail': '공공데이터 HTTP ${res.statusCode}',
+        'body': raw.length > 2000 ? raw.substring(0, 2000) : raw,
+      });
+      return;
+    }
+    try {
+      final data = jsonDecode(raw);
+      await _json(request, 200, {'ok': true, 'data': data});
+    } catch (_) {
+      await _json(request, 200, {'ok': true, 'raw': raw});
+    }
+  } finally {
+    client.close(force: true);
+  }
 }
