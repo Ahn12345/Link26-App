@@ -65,48 +65,11 @@ abstract final class HiraLinkService {
     }
 
     final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
     final submitted = await showDialog<String>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text(l10n.tilkoNhisLinkTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.tilkoNhisLinkBody,
-                style: const TextStyle(fontWeight: FontWeight.w600, height: 1.35),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                maxLength: 13,
-                decoration: InputDecoration(
-                  labelText: l10n.tilkoNhisLinkRrnLabel,
-                  counterText: '',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.tilkoNhisLinkSkip),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, controller.text),
-              child: Text(l10n.tilkoNhisLinkConfirm),
-            ),
-          ],
-        );
-      },
+      builder: (ctx) => _TilkoNhisRrnDialog(l10n: l10n),
     );
-    controller.dispose();
 
     if (submitted == null || submitted.trim().isEmpty) {
       return;
@@ -146,5 +109,70 @@ abstract final class HiraLinkService {
 
   static Future<void> afterMonthlyEasyAuth() async {
     debugPrint('HIRA: monthly easy-auth token refresh (stub)');
+  }
+}
+
+/// [TextEditingController] 를 다이얼로그가 소유해, pop 직후 dispose 레이스를 피합니다.
+class _TilkoNhisRrnDialog extends StatefulWidget {
+  const _TilkoNhisRrnDialog({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  State<_TilkoNhisRrnDialog> createState() => _TilkoNhisRrnDialogState();
+}
+
+class _TilkoNhisRrnDialogState extends State<_TilkoNhisRrnDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return AlertDialog(
+      title: Text(l10n.tilkoNhisLinkTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.tilkoNhisLinkBody,
+            style: const TextStyle(fontWeight: FontWeight.w600, height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            obscureText: true,
+            maxLength: 13,
+            decoration: InputDecoration(
+              labelText: l10n.tilkoNhisLinkRrnLabel,
+              counterText: '',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.tilkoNhisLinkSkip),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: Text(l10n.tilkoNhisLinkConfirm),
+        ),
+      ],
+    );
   }
 }
