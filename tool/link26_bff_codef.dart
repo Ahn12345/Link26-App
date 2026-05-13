@@ -209,7 +209,8 @@ Uri codefJoinedProductUri(String baseUrl, String productPath) {
 }
 
 /// BFF 502 JSON `hint_ko`·스낵바용 — CODEF 상품 URL 404·CF-00404.
-String? bffCodefFailureHintKo(Object e) {
+String? bffCodefFailureHintKo(Object? e) {
+  if (e == null) return null;
   final s = e.toString();
   if (s.contains('CF-00404') ||
       s.contains('CODEF HTTP 404') ||
@@ -612,6 +613,17 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
       );
     }
     final pathLower = path.toLowerCase();
+    /// 문서상 진료·투약 상품은 connectedId·전화만으로는 부족하고 loginType 조합이 필요한 경우가 많습니다.
+    if (pathLower.contains('nhis-insurance-treatment')) {
+      body.putIfAbsent(
+        'loginType',
+        () => (env['CODEF_NHIS_LOGINTYPE'] ?? '5').trim(),
+      );
+      body.putIfAbsent(
+        'loginTypeLevel',
+        () => (env['CODEF_NHIS_LOGINTYPE_LEVEL'] ?? '1').trim(),
+      );
+    }
     if (pathLower.contains('connectedid-list') ||
         pathLower.contains('/v1/account/')) {
       throw StateError(
@@ -676,12 +688,14 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
           lastErr = e;
           if (!codefErrorLooksLikeWrongProductUrl(e)) {
             stderr.writeln('CODEF medications 오류: $e');
+            final hint = bffCodefFailureHintKo(e);
             return {
               'items': <Map<String, dynamic>>[],
               'meta': {
                 'source': 'codef_error',
                 'phone': phoneDigits,
                 'error': '$e',
+                if (hint != null && hint.isNotEmpty) 'note': hint,
               },
             };
           }
@@ -689,22 +703,26 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
       }
     }
     stderr.writeln('CODEF medications: base·path 후보 실패: $lastErr');
+    final hintAll = bffCodefFailureHintKo(lastErr);
     return {
       'items': <Map<String, dynamic>>[],
       'meta': {
         'source': 'codef_error',
         'phone': phoneDigits,
         'error': '$lastErr',
+        if (hintAll != null && hintAll.isNotEmpty) 'note': hintAll,
       },
     };
   } catch (e, st) {
     stderr.writeln('CODEF medications 오류: $e\n$st');
+    final hint = bffCodefFailureHintKo(e);
     return {
       'items': <Map<String, dynamic>>[],
       'meta': {
         'source': 'codef_error',
         'phone': phoneDigits,
         'error': '$e',
+        if (hint != null && hint.isNotEmpty) 'note': hint,
       },
     };
   }

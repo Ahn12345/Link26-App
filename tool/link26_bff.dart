@@ -158,8 +158,8 @@ Future<void> _handle(HttpRequest request) async {
       final probe = await codefHealthProbe(env);
       final codefMedicationsReady = bffMedicationsCodefConfigured(env);
       final useCodefMeds = bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']);
-      final medPathOk =
-          bffResolvedMedicationProductPath(env).trim().isNotEmpty;
+      final resolvedMedPath = bffResolvedMedicationProductPath(env);
+      final medPathOk = resolvedMedPath.trim().isNotEmpty;
       await _json(request, 200, {
         'ok': true,
         'service': 'link26-bff-dart',
@@ -175,7 +175,8 @@ Future<void> _handle(HttpRequest request) async {
             codefMedicationsReady ? 'codef' : 'stub',
         'medicationsConfig': {
           'bffUseCodefForMedications': useCodefMeds,
-          'resolvedProductPath': medPathOk,
+          'resolvedProductPath': resolvedMedPath,
+          'productPathConfigured': medPathOk,
         },
         'authProxy': {
           'signup':
@@ -269,6 +270,7 @@ Future<void> _handle(HttpRequest request) async {
         final echoCid = (extractedCid != null && extractedCid.isNotEmpty)
             ? extractedCid
             : (sentCid.isNotEmpty ? sentCid : null);
+        final emptyParsed = items.isEmpty;
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoRes,
@@ -280,6 +282,11 @@ Future<void> _handle(HttpRequest request) async {
             'codefResultCode': cfCode,
             'codefResultMessage': cfMsg,
             if (echoCid != null && echoCid.isNotEmpty) 'connectedId': echoCid,
+            if (emptyParsed)
+              'note':
+                  'CODEF 응답은 정상(CF-00000)이나 앱이 인식한 복약 항목이 0건입니다. '
+                  '실제 처방이 없거나, 응답 data 구조가 달라 약품명 필드를 찾지 못한 경우일 수 있습니다. '
+                  'BFF 로그의 codef JSON을 확인하세요.',
           },
         });
       } catch (e, st) {

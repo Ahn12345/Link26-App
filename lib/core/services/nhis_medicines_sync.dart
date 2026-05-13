@@ -87,6 +87,8 @@ class NhisMedicinesSyncOutcome {
         return detail ?? '복약 목록을 가져오지 못했습니다.';
       case NhisMedicinesSyncResult.success:
         if (isCodefError) {
+          final n = (metaNote ?? '').trim();
+          if (n.isNotEmpty) return n;
           return detail ?? '연동 서버(CODEF) 오류입니다. BFF 로그를 확인하세요.';
         }
         if (isMissingConnectedId) {

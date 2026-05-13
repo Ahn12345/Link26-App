@@ -134,12 +134,14 @@ abstract final class NhisTilkoCodefFlowSync {
         }
       }
 
+      final metaNoteRaw = metaMap?['note'] ?? metaMap?['notice'];
+      final metaNoteStr = metaNoteRaw is String ? metaNoteRaw.trim() : '';
       return NhisMedicinesSync.applyRemoteMedicines(
         medicines: medicines,
         metaSource: source,
         codefResultCode: metaMap?['codefResultCode'] as String?,
         codefResultMessage: metaMap?['codefResultMessage'] as String?,
-        metaNote: metaMap?['notice'] as String?,
+        metaNote: metaNoteStr.isEmpty ? null : metaNoteStr,
       );
     } catch (e, st) {
       if (link26ErrorLooksLikeUnreachableHost(e)) {
