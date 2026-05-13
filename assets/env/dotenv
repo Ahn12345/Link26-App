@@ -14,3 +14,7 @@ PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6
 # 틸코 간편인증 — 비우면 /v1/tilko/* 사용 불가
 TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_HOST=https://dev.tilko.net
+
+# CODEF — codef.io 콘솔 키는 보통 운영 호스트(api.codef.io). 비우면 BFF가 development.codef.io 를 써서 CF-00404(404)가 날 수 있음.
+CODEF_BASE_URL=https://api.codef.io
+CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/pp/nhis-insurance-treatment-information

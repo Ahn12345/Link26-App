@@ -19,6 +19,22 @@ try {
 } catch { }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
+function Clear-BrokenGradleUserHome {
+  $gh = $env:GRADLE_USER_HOME
+  if ([string]::IsNullOrWhiteSpace($gh)) { return }
+  try {
+    $root = [System.IO.Path]::GetPathRoot($gh.Trim())
+    if ([string]::IsNullOrWhiteSpace($root)) { return }
+    $drive = $root.TrimEnd('\', '/')
+    if ($drive.Length -eq 2 -and $drive[1] -eq ':') {
+      if (-not (Test-Path "${drive}\")) {
+        Remove-Item Env:GRADLE_USER_HOME -ErrorAction SilentlyContinue
+      }
+    }
+  } catch {}
+}
+Clear-BrokenGradleUserHome
+
 & (Join-Path $PSScriptRoot "sync_dotenv_asset.ps1") -ProjectRoot $projectRoot
 
 function Test-ContainsNonAscii([string]$s) {
@@ -34,6 +50,19 @@ if (-not (Test-ContainsNonAscii $projectRoot)) {
   & flutter @FlutterArgs
   exit $LASTEXITCODE
 }
+
+# 이전에 끊긴 실행으로 SUBST만 남으면 Gradle이 사라진 드라이브를 참조할 수 있음.
+# 이 저장소 루트에 pubspec.yaml 이 보이는 드라이브 매핑만 먼저 해제합니다.
+foreach ($c in 76..90) {
+  $letter = [string][char]$c
+  if (-not (Test-Path "${letter}:\")) { continue }
+  $pub = Join-Path "${letter}:\" "pubspec.yaml"
+  if (Test-Path -LiteralPath $pub) {
+    Write-Host "[Link26] Clearing stale SUBST ${letter}: (same repo)" -ForegroundColor DarkGray
+    cmd /c "subst ${letter}: /d" 2>$null | Out-Null
+  }
+}
+Start-Sleep -Milliseconds 400
 
 $drive = $null
 foreach ($c in 76..90) {
