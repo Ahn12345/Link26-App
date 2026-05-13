@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
-import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_client.dart';
@@ -32,9 +31,9 @@ abstract final class NhisChatContext {
         });
       }
 
-      var phone = await AuthSession.activePhoneDigits();
-      phone ??= await UserLocalRepository.singleUserPhoneDigits();
-      if (phone == null || phone.length < 10) {
+      final user = await UserLocalRepository.loadSignedInUserRecord();
+      final phone = user?.phoneDigits.replaceAll(RegExp(r'\D'), '') ?? '';
+      if (phone.length < 10) {
         final cached = await NhisMedicineCacheStore.loadMedicines();
         if (cached.isEmpty) {
           return '(로그인 전화번호 없음 · 건보 API 호출 생략)';
@@ -45,7 +44,6 @@ abstract final class NhisChatContext {
         });
       }
 
-      final user = await UserLocalRepository.findUserByPhone(phone);
       var cid = user?.codefConnectedId?.trim();
       if (cid == null || cid.isEmpty) {
         cid = NhisRuntimeConfig.codefConnectedIdForMedications;

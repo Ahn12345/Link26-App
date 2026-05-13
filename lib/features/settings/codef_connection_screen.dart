@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
-import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 /// CODEF `connectedId` 저장 — BFF `/v1/medications` 쿼리로 전달됩니다.
@@ -25,21 +24,19 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen> {
   }
 
   Future<void> _load() async {
-    final phone = await AuthSession.activePhoneDigits();
+    final user = await UserLocalRepository.loadSignedInUserRecord();
     if (!mounted) return;
-    if (phone == null || phone.length < 10) {
+    if (user == null || user.phoneDigits.length < 10) {
       setState(() {
         _loading = false;
-        _phoneDigits = phone;
+        _phoneDigits = user?.phoneDigits;
       });
       return;
     }
-    final user = await UserLocalRepository.findUserByPhone(phone);
-    if (!mounted) return;
-    _controller.text = user?.codefConnectedId ?? '';
+    _controller.text = user.codefConnectedId ?? '';
     setState(() {
       _loading = false;
-      _phoneDigits = phone;
+      _phoneDigits = user.phoneDigits;
     });
   }
 

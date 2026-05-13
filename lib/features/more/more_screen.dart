@@ -107,12 +107,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
     try {
       session = await AuthSession.isSignedIn();
       if (session) {
-        var phone = await AuthSession.activePhoneDigits();
-        phone ??= await UserLocalRepository.singleUserPhoneDigits();
-        if (phone != null && phone.isNotEmpty) {
-          loaded = await UserLocalRepository.findUserByPhone(phone);
-        }
-        loaded ??= await UserLocalRepository.findSingleLocalUserIfExactlyOne();
+        loaded = await UserLocalRepository.loadSignedInUserRecord();
       }
     } finally {
       if (mounted) {

@@ -100,8 +100,9 @@ class _SignupPageState extends State<SignupPage> {
         );
         return;
       }
+      int newUserId = 0;
       try {
-        await UserLocalRepository.register(
+        newUserId = await UserLocalRepository.register(
           displayName: _nameCtrl.text.trim(),
           phone: SignupValidators.digitsOnly(_phoneCtrl.text),
           gender: _gender!,
@@ -152,7 +153,10 @@ class _SignupPageState extends State<SignupPage> {
         gender: _gender!,
         residentRegistrationDigits13: rrnDigits,
       );
-      await AuthSession.signIn(phoneDigits: phoneDigits);
+      await AuthSession.signIn(
+        phoneDigits: phoneDigits,
+        localUserId: newUserId > 0 ? newUserId : null,
+      );
       if (context.mounted) {
         await Navigator.of(context).pushNamedAndRemoveUntil(
           MainShell.routeName,

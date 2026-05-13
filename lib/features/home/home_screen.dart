@@ -181,13 +181,18 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     if (mounted) await _refreshBellBadge();
   }
 
-  /// 세션 전화가 없어도, 로그인 상태이고 로컬 사용자가 한 명이면 DB 전화로 BFF 동기화.
+  /// 세션 사용자 기준 전화(숫자) — BFF·복약 동기화.
   Future<String> _phoneForNhisSync() async {
-    final session = await AuthSession.activePhoneDigits();
-    if (session != null && session.isNotEmpty) return session;
     if (!await AuthSession.isSignedIn()) return '';
-    final single = await UserLocalRepository.singleUserPhoneDigits();
-    return single ?? '';
+    final u = await UserLocalRepository.loadSignedInUserRecord();
+    if (u != null && u.phoneDigits.length >= 10) {
+      return u.phoneDigits.replaceAll(RegExp(r'\D'), '');
+    }
+    final session = await AuthSession.activePhoneDigits();
+    if (session != null && session.isNotEmpty) {
+      return session.replaceAll(RegExp(r'\D'), '');
+    }
+    return await UserLocalRepository.singleUserPhoneDigits() ?? '';
   }
 
   Future<void> _bootstrapMedicines() async {

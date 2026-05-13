@@ -153,9 +153,22 @@ abstract final class NhisMedicinesSync {
       );
     }
 
-    final user = phoneDigits.isNotEmpty
-        ? await UserLocalRepository.findUserByPhone(phoneDigits)
-        : null;
+    var resolvedPhone = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    LocalUserRecord? user;
+    if (resolvedPhone.length >= 10) {
+      user = await UserLocalRepository.findUserByPhone(resolvedPhone);
+    } else {
+      user = await UserLocalRepository.loadSignedInUserRecord();
+      resolvedPhone = user?.phoneDigits.replaceAll(RegExp(r'\D'), '') ?? '';
+    }
+    if (resolvedPhone.length < 10) {
+      if (kDebugMode) {
+        debugPrint('NHIS medications: 유효 전화 없음 — skipped');
+      }
+      return const NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.skipped,
+      );
+    }
 
     var connectedId = user?.codefConnectedId?.trim();
     if (connectedId == null || connectedId.isEmpty) {
@@ -164,7 +177,7 @@ abstract final class NhisMedicinesSync {
 
     final client = NhisMedicationsClient();
     final result = await client.fetchMedicationsRaw(
-      phoneDigits: phoneDigits,
+      phoneDigits: resolvedPhone,
       displayName: user?.displayName,
       gender: user?.gender,
       connectedId: connectedId,
