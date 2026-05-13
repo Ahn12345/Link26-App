@@ -188,6 +188,34 @@ class CodefTokenCache {
 
 final _codefToken = CodefTokenCache();
 
+/// [baseUrl] 끝·[productPath] 앞 슬래시를 정리해 `//v1/...` 로 인한 CODEF 404 를 방지합니다.
+Uri codefJoinedProductUri(String baseUrl, String productPath) {
+  var b = baseUrl.trim();
+  while (b.endsWith('/')) {
+    b = b.substring(0, b.length - 1);
+  }
+  var p = productPath.trim();
+  if (!p.startsWith('/')) p = '/$p';
+  return Uri.parse('$b$p');
+}
+
+/// BFF 502 JSON `hint_ko`·스낵바용 — CODEF 상품 URL 404·CF-00404.
+String? bffCodefFailureHintKo(Object e) {
+  final s = e.toString();
+  if (s.contains('CF-00404') ||
+      s.contains('CODEF HTTP 404') ||
+      s.contains('"code":"CF-00404"') ||
+      s.contains('NOT_FOUND 404')) {
+    return 'CODEF에서 상품 주소를 찾지 못했습니다(CF-00404). '
+        'BFF .env의 CODEF_BASE_URL이 키 종류와 맞는지(개발: https://development.codef.io, '
+        '운영: https://api.codef.io, 샌드박스: https://sandbox.codef.io) 확인하고, '
+        'CODEF_NHIS_TREATMENT_PATH(또는 CODEF_MEDICATION_PATH)가 developer.codef.io '
+        '해당 상품 문서의 «요청 URL» 경로와 동일한지 확인하세요. '
+        'codef.io 콘솔에서 해당 공공 상품 이용 권한이 있는지도 확인하세요.';
+  }
+  return null;
+}
+
 /// CODEF 상품 POST (codef-node httpSender 와 동일).
 Future<String> codefProductRaw({
   required String baseUrl,
@@ -195,7 +223,7 @@ Future<String> codefProductRaw({
   required String bearer,
   required Map<String, dynamic> body,
 }) async {
-  final uri = Uri.parse(baseUrl + productPath);
+  final uri = codefJoinedProductUri(baseUrl, productPath);
   final client = HttpClient();
   try {
     final req = await client.postUrl(uri);
@@ -206,7 +234,13 @@ Future<String> codefProductRaw({
     final res = await req.close();
     final raw = await res.transform(utf8.decoder).join();
     if (res.statusCode != 200) {
-      throw StateError('CODEF HTTP ${res.statusCode}: $raw');
+      final loc = 'POST $uri';
+      final hint404 = res.statusCode == 404 ||
+              raw.contains('CF-00404') ||
+              raw.contains('NOT_FOUND 404')
+          ? ' CODEF 문서의 «요청 URL»과 경로가 같은지, 개발 키면 CODEF_BASE_URL=https://development.codef.io·운영 키면 https://api.codef.io 인지 확인하세요.'
+          : '';
+      throw StateError('CODEF HTTP ${res.statusCode} ($loc)$hint404: $raw');
     }
     try {
       return Uri.decodeQueryComponent(raw);

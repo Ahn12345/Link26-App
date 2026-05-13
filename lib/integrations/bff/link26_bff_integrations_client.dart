@@ -70,7 +70,17 @@ abstract final class Link26BffIntegrationsClient {
       }),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw StateError('flow HTTP ${res.statusCode}: ${res.body}');
+      var detail = res.body;
+      try {
+        final m = jsonDecode(res.body);
+        if (m is Map) {
+          final h = m['hint_ko'];
+          if (h is String && h.trim().isNotEmpty) {
+            detail = h.trim();
+          }
+        }
+      } catch (_) {}
+      throw StateError('flow HTTP ${res.statusCode}: $detail');
     }
     return jsonDecode(res.body) as Map<String, dynamic>;
   }

@@ -257,7 +257,13 @@ Future<void> _handle(HttpRequest request) async {
       } catch (e, st) {
         // ignore: avoid_print
         print('BFF flow tilko-codef: $e\n$st');
-        await _json(request, 502, {'ok': false, 'detail': '$e'});
+        final hint = bffCodefFailureHintKo(e);
+        final errBody = <String, dynamic>{
+          'ok': false,
+          'detail': '$e',
+        };
+        if (hint != null) errBody['hint_ko'] = hint;
+        await _json(request, 502, errBody);
       }
       return;
     }
