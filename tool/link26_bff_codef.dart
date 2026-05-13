@@ -10,6 +10,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:path/path.dart' as p;
 
 /// 프로젝트 루트 환경을 읽습니다.
@@ -637,6 +638,10 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
     };
   }
 }
+
+/// CODEF 본문에서 `connectedId` 후보 — [parseConnectedIdFromCodefRootMap] 위임.
+String? bffExtractConnectedIdFromCodefRoot(Map<String, dynamic> root) =>
+    parseConnectedIdFromCodefRootMap(root);
 
 /// CODEF 건강iN/건보 진료·투약 JSON 루트에서 앱/BFF 공통 약 행 목록을 뽑습니다.
 List<Map<String, dynamic>> bffMapCodefRootToMedicationItems(Map<String, dynamic> root) {

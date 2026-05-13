@@ -148,6 +148,9 @@ class _NhisSyncChecklistCard extends StatelessWidget {
     final envCid = (dotenvConnectedId ?? '').trim();
     final fieldCid = fieldConnectedId.trim();
     final cidOk = envCid.isNotEmpty || fieldCid.isNotEmpty;
+    final cidLine = cidOk
+        ? 'connectedId: 설정됨 (앱 저장값 또는 빌드 .env)'
+        : 'connectedId: 없음 — CODEF 본인조회에 필요 (아래 입력 후 저장, 또는 .env의 CODEF_CONNECTED_ID)';
 
     return Container(
       width: double.infinity,
@@ -167,7 +170,7 @@ class _NhisSyncChecklistCard extends StatelessWidget {
           const SizedBox(height: 10),
           _line(!useMock, 'NHIS_USE_MOCK 꺼짐 (실연동)'),
           _line(baseOk, 'NHIS_BASE_URL 설정됨: ${baseOk ? _short(baseUrl, 48) : '비어 있음'}'),
-          _line(cidOk, 'connectedId: 앱 입력·또는 .env 중 하나 있음'),
+          _line(cidOk, cidLine),
           if (useMock)
             const Padding(
               padding: EdgeInsets.only(top: 8),

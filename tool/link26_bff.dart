@@ -256,15 +256,22 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
         final items = bffMapCodefRootToMedicationItems(codefDecoded);
+        final extractedCid = bffExtractConnectedIdFromCodefRoot(codefDecoded);
+        final sentCid = '${merged['connectedId'] ?? ''}'.trim();
+        final echoCid = (extractedCid != null && extractedCid.isNotEmpty)
+            ? extractedCid
+            : (sentCid.isNotEmpty ? sentCid : null);
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoRes,
           'codef': codefDecoded,
           'items': items,
+          if (echoCid != null && echoCid.isNotEmpty) 'connectedId': echoCid,
           'meta': {
             'source': 'tilko_codef_nhis',
             'codefResultCode': cfCode,
             'codefResultMessage': cfMsg,
+            if (echoCid != null && echoCid.isNotEmpty) 'connectedId': echoCid,
           },
         });
       } catch (e, st) {

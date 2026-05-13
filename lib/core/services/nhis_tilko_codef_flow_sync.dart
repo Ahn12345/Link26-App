@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'package:link26_app/core/database/user_local_repository.dart';
+import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
@@ -101,6 +103,8 @@ abstract final class NhisTilkoCodefFlowSync {
         );
       }
 
+      await _persistConnectedIdFromFlowResponse(phoneDigits, res);
+
       Map<String, dynamic>? metaMap;
       final meta = res['meta'];
       if (meta is Map) {
@@ -186,5 +190,19 @@ abstract final class NhisTilkoCodefFlowSync {
       return second;
     }
     return first;
+  }
+
+  static Future<void> _persistConnectedIdFromFlowResponse(
+    String phoneDigits,
+    Map<String, dynamic> res,
+  ) async {
+    final p = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    if (p.length < 10) return;
+    final id = parseConnectedIdFromBffFlowResponse(res);
+    if (id == null || id.isEmpty) return;
+    await UserLocalRepository.updateCodefConnectedId(p, connectedId: id);
+    if (kDebugMode) {
+      debugPrint('Tilko→NHIS: connectedId를 로컬 DB에 저장했습니다.');
+    }
   }
 }
