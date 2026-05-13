@@ -327,22 +327,29 @@ Map<String, dynamic> mergeCodefNhisTilkoTreatmentBody({
     () => orgEnv.isNotEmpty ? orgEnv : codefNhisOrganizationDefault,
   );
 
-  merged.putIfAbsent(
-    'loginType',
-    () => (env['CODEF_NHIS_LOGINTYPE'] ?? '5').trim(),
-  );
+  /// 틸코 간편인증 결과가 있을 때 루트 `loginType` 등과 이중 지정되면 CODEF가 CF-00003 을 줄 수 있어
+  /// 기본은 생략합니다. 문서상 필수면 `CODEF_NHIS_INCLUDE_LOGINTYPE_WITH_TILKO=true`.
+  final tilkoAuthPresent = tilkoRes.isNotEmpty;
+  final forceLoginType =
+      _truthy(env['CODEF_NHIS_INCLUDE_LOGINTYPE_WITH_TILKO']);
+  if (forceLoginType || !tilkoAuthPresent) {
+    merged.putIfAbsent(
+      'loginType',
+      () => (env['CODEF_NHIS_LOGINTYPE'] ?? '5').trim(),
+    );
 
-  final pat =
-      '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? ''}'
-          .trim()
-          .toUpperCase();
-  final levelEnv = (env['CODEF_NHIS_LOGINTYPE_LEVEL'] ?? '').trim();
-  merged.putIfAbsent(
-    'loginTypeLevel',
-    () => levelEnv.isNotEmpty
-        ? levelEnv
-        : codefLoginTypeLevelFromPrivateAuth(pat),
-  );
+    final pat =
+        '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? ''}'
+            .trim()
+            .toUpperCase();
+    final levelEnv = (env['CODEF_NHIS_LOGINTYPE_LEVEL'] ?? '').trim();
+    merged.putIfAbsent(
+      'loginTypeLevel',
+      () => levelEnv.isNotEmpty
+          ? levelEnv
+          : codefLoginTypeLevelFromPrivateAuth(pat),
+    );
+  }
 
   final envCid = (env['CODEF_CONNECTED_ID'] ?? '').trim();
   if (envCid.isNotEmpty) {
