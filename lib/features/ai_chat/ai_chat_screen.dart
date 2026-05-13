@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -15,6 +16,7 @@ import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
@@ -353,9 +355,10 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final embedded = widget.embeddedInShell;
-    // 하단 탭: 내비 높이 + 제스처. 입력 카드가 탭에 너무 붙지 않게 하되, 과한 빈 공간은 줄임.
+    // 하단 탭: [extendBody] 이라 본문이 내비 뒤까지 깔림. bottom padding 이 클수록 입력 카드가 **위로** 올라감
+    // (padding 을 줄이면 오히려 탭바 쪽으로 내려감 — 이전 68 은 방향이 반대였음).
     final shellNavPad = embedded
-        ? MediaQuery.viewPaddingOf(context).bottom + 68.0
+        ? MediaQuery.viewPaddingOf(context).bottom + 118.0
         : 0.0;
     final keyboardLift = MediaQuery.viewInsetsOf(context).bottom;
     final inputEnabled = !AiChatOutgoingBusy.instance.value &&
@@ -508,15 +511,24 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   text: l10n.aiChatDisclaimerShort,
                                   layoutWidth: w,
                                 ),
+                                if (kDebugMode) ...[
+                                  SizedBox(height: Link26ResponsiveUi.gapXs(w)),
+                                  Text(
+                                    '빌드 $kAppBuildNumber · $kAppBuildTag',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Link26Surface.textSecondary,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ],
                                 SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                                 Transform.translate(
                                   offset: Offset(
                                     0,
-                                    -(embedded
-                                            ? 22.0 +
-                                                Link26ResponsiveUi.gapXs(w)
-                                                    .clamp(0.0, 8.0)
-                                            : 14.0),
+                                    embedded ? -10.0 : -6.0,
                                   ),
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
