@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import 'package:link26_app/core/constants/image_assets.dart';
-import 'package:link26_app/core/design/link26_design_catalog.dart';
-import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
-import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_auth_brand_logo.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/widgets/link26_standard_frame.dart';
@@ -41,8 +38,7 @@ class AuthWelcomeScreen extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, c) {
               final w = c.maxWidth;
-              final logoH = Link26ResponsiveImageHeights.authWelcome(w);
-              final logoW = Link26ResponsiveImageHeights.authWelcomeDisplayWidth(w);
+              final inner = Link26Layout.innerWidth(w);
               final authPadV = Link26ResponsiveUi.authCardPadVertical(w);
               final authPadH = Link26ResponsiveUi.authCardPadHorizontal(w);
               final welcomeTop = Link26ResponsiveUi.welcomeTopInset(w);
@@ -62,19 +58,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                             padding: EdgeInsets.symmetric(vertical: authPadV, horizontal: authPadH),
                             child: Column(
                               children: [
-                                Center(
-                                  child: SizedBox(
-                                    width: logoW,
-                                    height: logoH,
-                                    child: DecodedAssetImage(
-                                      Link26DesignCatalog.heroAssetPath(
-                                          'logo', ImageAssets.logo),
-                                      width: logoW,
-                                      height: logoH,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ),
+                                Link26AuthBrandLogo(maxWidth: inner),
                                 SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
                                 Text(
                                   l10n.appTitle,

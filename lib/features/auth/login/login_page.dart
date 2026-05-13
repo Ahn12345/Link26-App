@@ -5,13 +5,10 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
-import 'package:link26_app/core/constants/image_assets.dart';
-import 'package:link26_app/core/design/link26_design_catalog.dart';
-import 'package:link26_app/core/layout/link26_responsive_image_tokens.g.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
-import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_auth_brand_logo.dart';
 import 'package:link26_app/core/widgets/link26_brand_backdrop.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/widgets/link26_standard_frame.dart';
@@ -186,7 +183,6 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
     final w = MediaQuery.sizeOf(context).width;
-    final heroH = Link26ResponsiveImageHeights.login(w);
     final nameOk = _nameCtrl.text.trim().isNotEmpty;
     final phoneOk = SignupValidators.isPhoneKr(_phoneCtrl.text);
     final canLocalLogin = nameOk && phoneOk;
@@ -217,8 +213,6 @@ class _LoginPageState extends State<LoginPage> {
                 child: LayoutBuilder(
                   builder: (context, c) {
                   final contentW = c.maxWidth;
-                  final heroW = Link26ResponsiveImageHeights.loginDisplayWidth(w)
-                      .clamp(0.0, contentW);
                   return Link26FramedPageCard(
                     padding: EdgeInsets.symmetric(
                       vertical: Link26ResponsiveUi.authCardPadVertical(w),
@@ -228,21 +222,9 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Center(
-                          child: SizedBox(
-                            width: heroW,
-                            height: heroH,
-                            child: DecodedAssetImage(
-                              Link26DesignCatalog.heroAssetPath(
-                                  'login', ImageAssets.login),
-                              width: heroW,
-                              height: heroH,
-                              fit: BoxFit.contain,
-                              borderRadius: BorderRadius.circular(
-                                Link26Surface.radiusInput,
-                              ),
-                            ),
-                          ),
+                        Link26AuthBrandLogo(
+                          maxWidth: contentW,
+                          compact: true,
                         ),
                         SizedBox(
                             height: Link26ResponsiveUi.heroArtToContent(w)),
