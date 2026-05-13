@@ -15,6 +15,7 @@ import 'package:link26_app/features/settings/display_setting_screen.dart';
 import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/notification_setting_screen.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
+import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
@@ -252,7 +253,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             icon: Icons.notifications_active_outlined,
             title: '푸시 복용 알림',
             subtitle:
-                '${_pushTime.format(context)} · 홈 상단 알림에 표시',
+                '${_pushTime.format(context)} · 홈 「오늘의 알림」에만 표시 · 시스템 푸시(상태바) 없음',
             value: _pushOn,
             onChanged: (v) async {
               await ReminderChannelPrefs.setPushEnabled(v);
@@ -265,7 +266,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             icon: Icons.phone_in_talk_outlined,
             title: '전화 알림',
             subtitle: _phoneOn
-                ? '$_phoneTimeHm · 안내 멘트·음성 입력'
+                ? '$_phoneTimeHm · 홈에 전화형 카드만 · 착신 통화 없음'
                 : '꺼짐 · 눌러서 설정',
             value: _phoneOn,
             onChanged: (v) async {
@@ -285,6 +286,22 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
               if (mounted) await _loadReminderPrefs();
             },
             timeHint: '시각·멘트',
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              top: 4,
+              bottom: Link26ResponsiveUi.gapSm(w),
+            ),
+            child: Text(
+              '※ 위 알림은 앱을 열었을 때 홈·알림 화면에서만 확인할 수 있습니다. '
+              '문자·전화·OS 알림은 아직 연결되어 있지 않습니다.',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: Link26Surface.textMuted,
+              ),
+            ),
           ),
           SizedBox(height: Link26ResponsiveUi.gapLg(w)),
           const Link26SectionHeader(title: '메뉴'),
@@ -333,6 +350,29 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
               MaterialPageRoute<void>(builder: (_) => const GuideScreen()),
             ),
           ),
+          if (_sessionActive) ...[
+            SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  await AuthSession.signOut();
+                  if (!context.mounted) return;
+                  await Navigator.of(context).pushNamedAndRemoveUntil(
+                    AuthWelcomeScreen.routeName,
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.logout_rounded),
+                label: Text(l10n.signOut),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Link26Surface.textSecondary,
+                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+              ),
+            ),
+          ],
           SizedBox(height: Link26ResponsiveUi.gapLg(w)),
           Center(
             child: Text(
