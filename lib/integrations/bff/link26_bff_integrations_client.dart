@@ -4,7 +4,19 @@ import 'package:http/http.dart' as http;
 
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
+final _codfRedirectRe = RegExp(r'CODEF HTTP (301|302|303|307|308)');
+
+String _codfRedirectHintKo() =>
+    'CODEF가 HTTP 리다이렉트(301·302·303·307·308)로 응답했습니다. '
+    'BFF를 최신 코드로 재시작했는지·콘솔에 `CODEF: HTTP … Location=` 로그가 있는지 확인하고, '
+    'CODEF_BASE_URL·키 종류(샌드박스·개발·운영)와 CODEF_NHIS_TREATMENT_PATH를 '
+    'developer.codef.io 기준으로 맞추세요.';
+
 String _flowHttpErrorDetail(int statusCode, String body) {
+  final flat = body.trim();
+  if (flat.isNotEmpty && _codfRedirectRe.hasMatch(flat)) {
+    return _codfRedirectHintKo();
+  }
   try {
     final decoded = jsonDecode(body);
     if (decoded is Map) {
@@ -15,11 +27,8 @@ String _flowHttpErrorDetail(int statusCode, String body) {
       final detail = decoded['detail'];
       if (detail is String && detail.trim().isNotEmpty) {
         final d = detail.trim();
-        if (RegExp(r'CODEF HTTP (301|302|303|307|308)').hasMatch(d)) {
-          return 'CODEF가 HTTP 리다이렉트(301·302·303·307·308)로 응답했습니다. '
-              'BFF를 최신 코드로 재시작했는지·콘솔에 `CODEF: HTTP … Location=` 로그가 있는지 확인하고, '
-              'CODEF_BASE_URL·키 종류(샌드박스·개발·운영)와 CODEF_NHIS_TREATMENT_PATH를 '
-              'developer.codef.io 기준으로 맞추세요.';
+        if (_codfRedirectRe.hasMatch(d)) {
+          return _codfRedirectHintKo();
         }
         if (d.contains('CODEF HTTP')) {
           return 'CODEF 연동 오류입니다. BFF .env의 CODEF 클라이언트·호스트·상품 경로를 '
@@ -33,12 +42,15 @@ String _flowHttpErrorDetail(int statusCode, String body) {
   return 'HTTP $statusCode';
 }
 
-/// NHIS/BFF(`NHIS_BASE_URL`)에 붙는 연동 API — 틸코·공공데이터·CODEF 플로우.
+/// 이 레포의 **Dart BFF**(`dart run tool/link26_bff.dart`)에만 붙입니다.
 ///
-/// 키는 BFF `.env`에 두고 앱은 URL만 알면 됩니다.
+/// `NHIS_BASE_URL`은 위 BFF의 베이스(예: `http://10.0.2.2:8787`)여야 하며,
+/// 다른 백엔드(FastAPI 등) URL을 넣으면 경로·오류 형식이 맞지 않을 수 있습니다.
+///
+/// 틸코·CODEF 비밀키는 BFF 루트 `.env`에 두고, 앱은 URL만 알면 됩니다.
 ///
 /// [NhisRuntimeConfig.useMock] 은 가입·로그인·복약 동기화용 목 데이터에만 쓰이고,
-/// 여기 BFF 프록시( e약은요·틸코·플로우 )는 막지 않습니다.
+/// 여기 BFF 프록시(e약은요·틸코·플로우)는 막지 않습니다.
 abstract final class Link26BffIntegrationsClient {
   static String get _base {
     final b = NhisRuntimeConfig.baseUrl.trim();
@@ -79,7 +91,8 @@ abstract final class Link26BffIntegrationsClient {
       body: jsonEncode(body),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw StateError('tilko HTTP ${res.statusCode}: ${res.body}');
+      final detail = _flowHttpErrorDetail(res.statusCode, res.body);
+      throw StateError('tilko HTTP ${res.statusCode}: $detail');
     }
     return jsonDecode(res.body) as Map<String, dynamic>;
   }

@@ -203,7 +203,19 @@ Future<void> _handle(HttpRequest request) async {
       } catch (e, st) {
         // ignore: avoid_print
         print('BFF tilko: $e\n$st');
-        await _json(request, 502, {'ok': false, 'detail': '$e'});
+        var detail = '$e';
+        if (e is StateError) {
+          final m = e.toString();
+          const p = 'Bad state: ';
+          if (m.startsWith(p)) detail = m.substring(p.length);
+        }
+        await _json(request, 200, {
+          'ok': false,
+          'detail': detail,
+          'hint_ko':
+              '틸코 간편인증 요청에 실패했습니다. 이 PC에서 띄운 Dart BFF의 `.env`에 '
+              'TILKO_API_KEY·TILKO_API_HOST(예: https://dev.tilko.net)가 맞는지 확인하세요.',
+        });
       }
       return;
     }
