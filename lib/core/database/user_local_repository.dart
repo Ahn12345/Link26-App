@@ -7,6 +7,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:link26_app/core/services/auth_session.dart';
+
 /// 로컬 SQLite `users` 행 — 로그인 세션·NHIS 연동용.
 class LocalUserRecord {
   const LocalUserRecord({
@@ -311,7 +313,7 @@ abstract final class UserLocalRepository {
     return p.isEmpty ? null : p;
   }
 
-  static Future<void> register({
+  static Future<int> register({
     required String displayName,
     required String phone,
     required String gender,
@@ -321,7 +323,7 @@ abstract final class UserLocalRepository {
     final p = phone.replaceAll(RegExp(r'\D'), '');
     final email = _syntheticEmailFromPhone(p);
     final db = await _open();
-    await db.insert(
+    final id = await db.insert(
       'users',
       {
         'email': email,
@@ -336,6 +338,7 @@ abstract final class UserLocalRepository {
       },
       conflictAlgorithm: ConflictAlgorithm.abort,
     );
+    return id;
   }
 
   static LocalUserRecord? _mapRowToUser(Map<String, Object?> row) {
@@ -346,17 +349,20 @@ abstract final class UserLocalRepository {
       final displayName = normalizeDisplayName(
         '${row['display_name'] ?? ''}',
       );
-      final phone = row['phone'] as String?;
+      final rawPhone = row['phone'];
+      final phoneDigits = rawPhone == null
+          ? ''
+          : '$rawPhone'.replaceAll(RegExp(r'\D'), '');
       final gender = (row['gender'] as String?)?.trim() ?? '';
       final rrn = row['resident_registration_hash'] as String?;
       final privacy = _intFromSql(row['privacy_consent']) == 1;
       final codefId = (row['codef_connected_id'] as String?)?.trim();
-      if (phone == null || phone.isEmpty) return null;
+      if (phoneDigits.length < 10) return null;
       return LocalUserRecord(
         id: id,
         email: email,
         displayName: displayName,
-        phoneDigits: phone,
+        phoneDigits: phoneDigits,
         gender: gender,
         residentRegistrationHash: rrn,
         privacyConsent: privacy,
@@ -366,6 +372,72 @@ abstract final class UserLocalRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  /// `users` 행이 정확히 1명일 때만 — 세션 전화 조회 실패 시 더보기 프로필 폴백용.
+  static Future<LocalUserRecord?> findSingleLocalUserIfExactlyOne() async {
+    final db = await _open();
+    final cntRows = await db.rawQuery('SELECT COUNT(*) AS c FROM users');
+    if (_intFromSql(cntRows.first['c']) != 1) return null;
+    final rows = await db.query('users', orderBy: 'id DESC', limit: 1);
+    if (rows.isEmpty) return null;
+    return _mapRowToUser(rows.first);
+  }
+
+  static String formatPhoneDigitsForDisplay(String phoneDigits) {
+    final d = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    if (d.length == 11 && d.startsWith('010')) {
+      return '${d.substring(0, 3)}-${d.substring(3, 7)}-${d.substring(7)}';
+    }
+    if (d.length == 10 && d.startsWith('02')) {
+      return '${d.substring(0, 2)}-${d.substring(2, 6)}-${d.substring(6)}';
+    }
+    return d;
+  }
+
+  /// 더보기 등 — 로컬 전용 이메일(`@link26.local`)은 휴대폰 표기로 바꿉니다.
+  static String profileEmailLabel(LocalUserRecord u) {
+    final e = u.email.trim().toLowerCase();
+    if (e.endsWith('@link26.local')) {
+      return '${formatPhoneDigitsForDisplay(u.phoneDigits)} · 휴대폰 계정';
+    }
+    return u.email.trim();
+  }
+
+  /// 로컬 `users.id` 로 조회.
+  static Future<LocalUserRecord?> findUserById(int id) async {
+    if (id <= 0) return null;
+    final db = await _open();
+    final rows = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _mapRowToUser(rows.first);
+  }
+
+  /// 로그인 세션에 묶인 사용자 — 저장된 [users] PK 우선, 다음 전화·단일 행 폴백.
+  static Future<LocalUserRecord?> loadSignedInUserRecord() async {
+    if (!await AuthSession.isSignedIn()) return null;
+    final uid = await AuthSession.activeLocalUserId();
+    if (uid != null && uid > 0) {
+      final byId = await findUserById(uid);
+      if (byId != null) return byId;
+    }
+    var phone = await AuthSession.activePhoneDigits();
+    phone = phone?.replaceAll(RegExp(r'\D'), '');
+    if (phone != null && phone.length >= 10) {
+      final u = await findUserByPhone(phone);
+      if (u != null) return u;
+    }
+    final singlePh = await singleUserPhoneDigits();
+    if (singlePh != null && singlePh.length >= 10) {
+      final u = await findUserByPhone(singlePh);
+      if (u != null) return u;
+    }
+    return findSingleLocalUserIfExactlyOne();
   }
 
   /// 표시 이름과 전화번호가 같은 행에 일치할 때만 사용자를 반환합니다.

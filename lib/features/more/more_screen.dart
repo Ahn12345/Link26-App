@@ -13,6 +13,8 @@ import 'package:link26_app/features/more/guide_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
 import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/notification_setting_screen.dart';
+import 'package:link26_app/core/services/reminder_channel_prefs.dart';
+import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -43,15 +45,60 @@ class _MoreBody extends StatefulWidget {
   State<_MoreBody> createState() => _MoreBodyState();
 }
 
-class _MoreBodyState extends State<_MoreBody> {
+class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
   LocalUserRecord? _user;
   bool _loading = true;
   bool _sessionActive = false;
 
+  bool _pushOn = true;
+  TimeOfDay _pushTime = const TimeOfDay(hour: 9, minute: 0);
+  bool _phoneOn = false;
+  String _phoneTimeHm = '10:00';
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadProfile();
+    _loadReminderPrefs();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      _loadProfile();
+      _loadReminderPrefs();
+    }
+  }
+
+  Future<void> _loadReminderPrefs() async {
+    final po = await ReminderChannelPrefs.pushEnabled();
+    final pt = await ReminderChannelPrefs.pushTime();
+    final pho = await ReminderChannelPrefs.phoneEnabled();
+    final phm = await ReminderChannelPrefs.phoneTimeHm();
+    if (!mounted) return;
+    setState(() {
+      _pushOn = po;
+      _pushTime = pt;
+      _phoneOn = pho;
+      _phoneTimeHm = phm;
+    });
+  }
+
+  Future<void> _pickPushTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _pushTime,
+    );
+    if (picked == null) return;
+    await ReminderChannelPrefs.setPushTime(picked);
+    if (mounted) setState(() => _pushTime = picked);
   }
 
   Future<void> _loadProfile() async {
@@ -65,6 +112,7 @@ class _MoreBodyState extends State<_MoreBody> {
         if (phone != null && phone.isNotEmpty) {
           loaded = await UserLocalRepository.findUserByPhone(phone);
         }
+        loaded ??= await UserLocalRepository.findSingleLocalUserIfExactlyOne();
       }
     } finally {
       if (mounted) {
@@ -93,7 +141,8 @@ class _MoreBodyState extends State<_MoreBody> {
     final displayName = UserLocalRepository.normalizeDisplayName(
       _user?.displayName ?? '',
     );
-    final email = (_user?.email ?? '').trim();
+    final emailRaw = _user == null ? '' : UserLocalRepository.profileEmailLabel(_user!);
+    final email = emailRaw.trim();
 
     final showName = displayName.isNotEmpty
         ? displayName
@@ -104,7 +153,7 @@ class _MoreBodyState extends State<_MoreBody> {
         ? email
         : (_loading
             ? ''
-            : (_sessionActive ? '이메일 없음' : '가입 시 입력한 이메일이 여기에 표시됩니다'));
+            : (_sessionActive ? '연락처 정보 없음' : '가입 시 입력한 이메일이 여기에 표시됩니다'));
     final initial = displayName.isNotEmpty
         ? _initialFromName(displayName)
         : '?';
@@ -197,6 +246,48 @@ class _MoreBodyState extends State<_MoreBody> {
             ),
           ),
           SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+          const Link26SectionHeader(title: '복용 알림'),
+          SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+          _ReminderChannelCard(
+            w: w,
+            icon: Icons.notifications_active_outlined,
+            title: '푸시 복용 알림',
+            subtitle:
+                '${_pushTime.format(context)} · 홈 상단 알림에 표시',
+            value: _pushOn,
+            onChanged: (v) async {
+              await ReminderChannelPrefs.setPushEnabled(v);
+              if (mounted) setState(() => _pushOn = v);
+            },
+            onPickTime: _pickPushTime,
+          ),
+          _ReminderChannelCard(
+            w: w,
+            icon: Icons.phone_in_talk_outlined,
+            title: '전화 알림',
+            subtitle: _phoneOn
+                ? '$_phoneTimeHm · 안내 멘트·음성 입력'
+                : '꺼짐 · 눌러서 설정',
+            value: _phoneOn,
+            onChanged: (v) async {
+              await ReminderChannelPrefs.setPhoneEnabled(v);
+              if (mounted) {
+                setState(() => _phoneOn = v);
+                await _loadReminderPrefs();
+              }
+            },
+            onPickTime: () async {
+              await Navigator.push<void>(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const PhoneReminderSettingsScreen(),
+                ),
+              );
+              if (mounted) await _loadReminderPrefs();
+            },
+            timeHint: '시각·멘트',
+          ),
+          SizedBox(height: Link26ResponsiveUi.gapLg(w)),
           const Link26SectionHeader(title: '메뉴'),
           SizedBox(height: Link26ResponsiveUi.gapSm(w)),
           _MenuTile(
@@ -211,7 +302,7 @@ class _MoreBodyState extends State<_MoreBody> {
           _MenuTile(
             icon: Icons.notifications_none,
             title: '알림 설정',
-            subtitle: '전화/푸시 알림 설정',
+            subtitle: '메시지·가족·공지 등 세부 항목',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const NotificationSettingScreen()),
@@ -244,6 +335,101 @@ class _MoreBodyState extends State<_MoreBody> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReminderChannelCard extends StatelessWidget {
+  const _ReminderChannelCard({
+    required this.w,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    required this.onPickTime,
+    this.timeHint,
+  });
+
+  final double w;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final VoidCallback onPickTime;
+  final String? timeHint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: Link26ResponsiveUi.menuTileBottomGap(w)),
+      child: Link26ElevatedCard(
+        padding: EdgeInsets.symmetric(
+          horizontal: Link26ResponsiveUi.menuTileHPadding(w),
+          vertical: Link26ResponsiveUi.menuTileVPadding(w) * 0.85,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Link26Surface.chipTint,
+                  child: Icon(icon, color: Link26Surface.accent),
+                ),
+                SizedBox(width: Link26ResponsiveUi.gapMd(w)),
+                Expanded(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onPickTime,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: Link26Surface.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: TextStyle(
+                                fontSize: Link26ResponsiveUi.menuTileSubtitle(w),
+                                color: Link26Surface.accent,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  activeThumbColor: Link26Surface.accent,
+                ),
+              ],
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: onPickTime,
+                child: Text(timeHint ?? '시각 변경'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

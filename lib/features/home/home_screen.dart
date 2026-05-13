@@ -17,6 +17,7 @@ import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
+import 'package:link26_app/core/services/reminder_channel_prefs.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -68,6 +69,46 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
           ),
         )
         .toList();
+  }
+
+  Future<List<AlarmItem>> _composeDoseAlarms(
+    List<Medicine> meds,
+    Set<String> completedNorms,
+  ) async {
+    final base = _buildDoseAlarms(meds, completedNorms);
+    final dateStr = _doseAlarmDateLabel();
+    final prefix = <AlarmItem>[];
+    if (await ReminderChannelPrefs.pushEnabled()) {
+      final t = await ReminderChannelPrefs.pushTimeHm();
+      const name = '푸시 복용 알림';
+      prefix.add(
+        AlarmItem(
+          date: dateStr,
+          time: t,
+          medicineName: name,
+          dose: '앱 알림',
+          type: AlarmType.app,
+          completed: completedNorms.contains(_normMedName(name)),
+        ),
+      );
+    }
+    final suffix = <AlarmItem>[];
+    if (await ReminderChannelPrefs.phoneEnabled()) {
+      final t = await ReminderChannelPrefs.phoneTimeHm();
+      final msg = (await ReminderChannelPrefs.phoneMessage()).trim();
+      final name = msg.isEmpty ? '전화 복용 알림' : msg;
+      suffix.add(
+        AlarmItem(
+          date: dateStr,
+          time: t,
+          medicineName: name,
+          dose: '전화 안내',
+          type: AlarmType.call,
+          completed: completedNorms.contains(_normMedName(name)),
+        ),
+      );
+    }
+    return [...prefix, ...base, ...suffix];
   }
 
   String _alarmTimeFromMedicine(Medicine m) {
@@ -223,9 +264,11 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       ..sort((a, b) => a.name.compareTo(b.name));
     final completed = await DoseReminderCompletionStore.completedNormsToday();
     if (!mounted) return;
+    final composed = await _composeDoseAlarms(merged, completed);
+    if (!mounted) return;
     setState(() {
       medicines = merged;
-      _doseAlarms = _buildDoseAlarms(merged, completed);
+      _doseAlarms = composed;
     });
   }
 
@@ -295,10 +338,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       onDone: () async {
         await DoseReminderCompletionStore.markCompleted(item.medicineName);
         if (!mounted) return;
-        final c = await DoseReminderCompletionStore.completedNormsToday();
-        setState(() {
-          _doseAlarms = _buildDoseAlarms(medicines, c);
-        });
+        await _reloadMedicinesFromStores();
         unawaited(_refreshBellBadge());
       },
     );
