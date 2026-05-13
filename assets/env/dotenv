@@ -17,4 +17,4 @@ TILKO_API_HOST=https://dev.tilko.net
 
 # CODEF — codef.io 콘솔 키는 보통 운영 호스트(api.codef.io). 비우면 BFF가 development.codef.io 를 써서 CF-00404(404)가 날 수 있음.
 CODEF_BASE_URL=https://api.codef.io
-CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/pp/nhis-insurance-treatment-information
+CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/each/pp/nhis-insurance-treatment-information

@@ -219,32 +219,43 @@ Future<void> _handle(HttpRequest request) async {
           });
           return;
         }
-        var productPath = (env['CODEF_NHIS_TREATMENT_PATH'] ??
-                '/v1/kr/public/pp/nhis-insurance-treatment-information')
-            .trim();
-        if (!productPath.startsWith('/')) productPath = '/$productPath';
-        final base =
-            (env['CODEF_BASE_URL'] ?? 'https://development.codef.io').trim();
         final bearer = await bffCodefBearer(env);
-        final merged = Map<String, dynamic>.from(codefExtra)
-          ..['_tilkoSimpleAuth'] = tilkoRes;
-        // ignore: avoid_print
-        print('BFF flow CODEF POST ${codefJoinedProductUri(base, productPath)}');
-        final raw = await codefProductRaw(
-          baseUrl: base,
-          productPath: productPath,
+        final merged = mergeCodefNhisTilkoTreatmentBody(
+          env: env,
+          codefExtra: codefExtra,
+          tilkoMap: tilkoMap,
+          tilkoRes: tilkoRes,
+        );
+        final raw = await codefNhisTreatmentProductRaw(
+          env: env,
           bearer: bearer,
           body: merged,
         );
         final codefDecoded = jsonDecode(raw) as Map<String, dynamic>;
-        final items = bffMapCodefRootToMedicationItems(codefDecoded);
         String? cfCode;
         String? cfMsg;
         final resObj = codefDecoded['result'];
         if (resObj is Map) {
-          cfCode = '${resObj['code'] ?? ''}';
-          cfMsg = '${resObj['message'] ?? ''}';
+          cfCode = '${resObj['code'] ?? ''}'.trim();
+          cfMsg = '${resObj['message'] ?? ''}'.trim();
         }
+        final cfBusinessOk =
+            cfCode == null || cfCode.isEmpty || cfCode == 'CF-00000';
+        if (!cfBusinessOk) {
+          final msgOut = (cfMsg ?? '').trim();
+          final detailOut = msgOut.isNotEmpty ? msgOut : cfCode;
+          final hint = bffCodefNhisTreatResultHintKo(cfCode, cfMsg) ??
+              'CODEF 건보 진료·투약 조회에 실패했습니다.';
+          await _json(request, 200, {
+            'ok': false,
+            'detail': detailOut,
+            'hint_ko': hint,
+            'tilko': tilkoRes,
+            'codef': codefDecoded,
+          });
+          return;
+        }
+        final items = bffMapCodefRootToMedicationItems(codefDecoded);
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoRes,
@@ -260,12 +271,19 @@ Future<void> _handle(HttpRequest request) async {
         // ignore: avoid_print
         print('BFF flow tilko-codef: $e\n$st');
         final hint = bffCodefFailureHintKo(e);
+        var detail = '$e';
+        if (e is StateError) {
+          final m = e.toString();
+          const p = 'Bad state: ';
+          if (m.startsWith(p)) detail = m.substring(p.length);
+        }
         final errBody = <String, dynamic>{
           'ok': false,
-          'detail': '$e',
+          'detail': detail,
         };
         if (hint != null) errBody['hint_ko'] = hint;
-        await _json(request, 502, errBody);
+        // HTTP 200 — 앱이 `flow HTTP 502` 형태의 StateError 대신 본문 ok/hint 만 처리하도록.
+        await _json(request, 200, errBody);
       }
       return;
     }

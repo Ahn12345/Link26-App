@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
+import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
@@ -23,21 +25,90 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = showScaffold ? Link26UnifiedPage.background : Colors.transparent;
-    final body = ColoredBox(color: bg, child: _MoreBody(l10n: AppLocalizations.of(context)));
+    final body = ColoredBox(
+      color: bg,
+      child: _MoreBody(l10n: AppLocalizations.of(context)),
+    );
     if (!showScaffold) return body;
     return Scaffold(backgroundColor: bg, body: body);
   }
 }
 
-class _MoreBody extends StatelessWidget {
+class _MoreBody extends StatefulWidget {
   const _MoreBody({required this.l10n});
 
   final AppLocalizations l10n;
 
   @override
+  State<_MoreBody> createState() => _MoreBodyState();
+}
+
+class _MoreBodyState extends State<_MoreBody> {
+  LocalUserRecord? _user;
+  bool _loading = true;
+  bool _sessionActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    LocalUserRecord? loaded;
+    var session = false;
+    try {
+      session = await AuthSession.isSignedIn();
+      if (session) {
+        var phone = await AuthSession.activePhoneDigits();
+        phone ??= await UserLocalRepository.singleUserPhoneDigits();
+        if (phone != null && phone.isNotEmpty) {
+          loaded = await UserLocalRepository.findUserByPhone(phone);
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sessionActive = session;
+          _user = loaded;
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  String _initialFromName(String name) {
+    final t = UserLocalRepository.normalizeDisplayName(name);
+    if (t.isEmpty) return '?';
+    final first = t.runes.first;
+    return String.fromCharCode(first);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = widget.l10n;
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
     final w = MediaQuery.sizeOf(context).width;
+
+    final displayName = UserLocalRepository.normalizeDisplayName(
+      _user?.displayName ?? '',
+    );
+    final email = (_user?.email ?? '').trim();
+
+    final showName = displayName.isNotEmpty
+        ? displayName
+        : (_loading
+            ? '…'
+            : (_sessionActive ? '이름 없음' : '로그인 후 표시'));
+    final showEmail = email.isNotEmpty
+        ? email
+        : (_loading
+            ? ''
+            : (_sessionActive ? '이메일 없음' : '가입 시 입력한 이메일이 여기에 표시됩니다'));
+    final initial = displayName.isNotEmpty
+        ? _initialFromName(displayName)
+        : '?';
+
     return SafeArea(
       child: Link26ResponsiveList(
         bottomInset: bottomPad + 4,
@@ -90,7 +161,7 @@ class _MoreBody extends StatelessWidget {
                   radius: Link26ResponsiveUi.profileAvatarRadius(w),
                   backgroundColor: Link26Surface.chipTint,
                   child: Text(
-                    '김',
+                    initial,
                     style: TextStyle(
                       color: Link26Surface.accent,
                       fontSize: Link26ResponsiveUi.menuProfileInitial(w),
@@ -104,7 +175,7 @@ class _MoreBody extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '김건강',
+                        showName,
                         style: TextStyle(
                           fontSize: Link26ResponsiveUi.menuProfileName(w),
                           fontWeight: FontWeight.w900,
@@ -113,7 +184,7 @@ class _MoreBody extends StatelessWidget {
                       ),
                       SizedBox(height: Link26ResponsiveUi.gapXs(w)),
                       Text(
-                        'kimhealth@example.com',
+                        showEmail,
                         style: TextStyle(
                           color: Link26Surface.textSecondary,
                           fontSize: Link26ResponsiveUi.menuProfileEmail(w),

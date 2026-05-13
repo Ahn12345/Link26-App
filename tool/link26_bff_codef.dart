@@ -214,7 +214,187 @@ String? bffCodefFailureHintKo(Object e) {
         'codef.io 콘솔에서 해당 공공 상품 이용 권한이 있는지도 확인하세요. '
         '데모·테스트용 클라이언트면 운영 대신 sandbox.codef.io 조합이 필요할 수 있습니다.';
   }
+  if (s.contains('CF-00003') || s.contains('"code":"CF-00003"')) {
+    return 'CODEF에서 해당 상품 구독·권한을 찾지 못했습니다(CF-00003). '
+        'codef.io 콘솔에서 건보 진료·투약(nhis-insurance-treatment-information) '
+        '상품 사용 권한이 있는지 확인하고, CODEF_BASE_URL·CODEF_NHIS_TREATMENT_PATH가 '
+        'developer.codef.io 문서의 요청 URL·키 유형(개발·운영·샌드박스)과 일치하는지 확인하세요. '
+        '문서상 필수인 경우 CODEF_HW_ORGANIZATION·connectedId를 .env 또는 codef_payload에 넣어 주세요.';
+  }
   return null;
+}
+
+/// HTTP 200 본문의 `result.code` 가 비정상일 때 앱 `hint_ko` 용.
+String? bffCodefNhisTreatResultHintKo(String? code, String? message) {
+  final c = (code ?? '').trim();
+  if (c.isEmpty || c == 'CF-00000') return null;
+  if (c == 'CF-00003') {
+    return 'CODEF에서 해당 상품 구독·권한을 찾지 못했습니다(CF-00003). '
+        'codef.io 콘솔에서 「국민건강보험 진료·투약」상품 이용 권한을 확인하고, '
+        'BFF .env의 CODEF_BASE_URL·CODEF_NHIS_TREATMENT_PATH를 문서와 맞추세요. '
+        '필수 필드가 있으면 CODEF_HW_ORGANIZATION·CODEF_CONNECTED_ID(또는 앱 codef_payload)를 설정하세요.';
+  }
+  final m = (message ?? '').trim();
+  if (m.isNotEmpty) {
+    return 'CODEF 상품 응답: $c — $m. developer.codef.io 해당 상품의 요청 필드·구독을 확인하세요.';
+  }
+  return 'CODEF 상품 응답 코드가 정상이 아닙니다($c). developer.codef.io 문서·콘솔 구독을 확인하세요.';
+}
+
+/// CODEF 공공 건보 샘플(이지코드에프 README) 기준 국민건강보험공단 기관코드.
+const String codefNhisOrganizationDefault = '0002';
+
+/// 생년월일 등에서 숫자만 남겨 앞 8자리 `yyyyMMdd` (CODEF `identity` 등).
+String? codefNormIdentityYmd8(String raw) {
+  final d = raw.replaceAll(RegExp(r'\D'), '');
+  if (d.length < 8) return null;
+  return d.substring(0, 8);
+}
+
+/// 틸코 `PrivateAuthType` → CODEF 간편인증 `loginTypeLevel` (`loginType` 이 `5` 일 때).
+/// 샘플: 1=카카오, 2=페이코, 3=삼성패스, 4=KB, 5=통신사 PASS, 6=네이버, 7=신한, 8=토스.
+String codefLoginTypeLevelFromPrivateAuth(String privateAuthTypeUpper) {
+  switch (privateAuthTypeUpper.trim().toUpperCase()) {
+    case 'KAKAO':
+      return '1';
+    case 'PAYCO':
+      return '2';
+    case 'SAMSUNG':
+    case 'SAMSUNGPASS':
+      return '3';
+    case 'KB':
+    case 'KBMOBILE':
+      return '4';
+    case 'PASS':
+    case 'TELCO':
+    case 'PHONE':
+      return '5';
+    case 'NAVER':
+      return '6';
+    case 'SHINHAN':
+      return '7';
+    case 'TOSS':
+      return '8';
+    default:
+      return '1';
+  }
+}
+
+/// 토큰·URL 검증용 최소 본문(샘플 필드). 실제 본인 조회는 틸코 플로우·실명 값 필요.
+Map<String, dynamic> codefNhisTreatmentProbeBody(Map<String, String> env) {
+  final orgEnv =
+      (env['CODEF_HW_ORGANIZATION'] ?? env['CODEF_ORGANIZATION'] ?? '').trim();
+  final org =
+      orgEnv.isNotEmpty ? orgEnv : codefNhisOrganizationDefault;
+  final phone = (env['CODEF_VERIFY_PLACEHOLDER_PHONE'] ?? '01000000000')
+      .replaceAll(RegExp(r'\D'), '');
+  final phoneOk = phone.length >= 10 ? phone : '01000000000';
+  final ident = codefNormIdentityYmd8(
+        env['CODEF_VERIFY_PLACEHOLDER_IDENTITY'] ?? '19900101',
+      ) ??
+      '19900101';
+  final body = <String, dynamic>{
+    'organization': org,
+    'loginType': (env['CODEF_NHIS_LOGINTYPE'] ?? '5').trim(),
+    'loginTypeLevel': (env['CODEF_NHIS_LOGINTYPE_LEVEL'] ?? '1').trim(),
+    'userName': (env['CODEF_VERIFY_PLACEHOLDER_NAME'] ?? '홍길동').trim(),
+    'phoneNo': phoneOk,
+    'identity': ident,
+  };
+  final cid = (env['CODEF_CONNECTED_ID'] ?? '').trim();
+  if (cid.isNotEmpty) {
+    body['connectedId'] = cid;
+  }
+  return body;
+}
+
+/// 틸코→CODEF 건보 진료·투약 POST 본문에 공통 필드를 채웁니다.
+/// [codefExtra]는 앱 `codef_payload`, [tilkoMap]은 틸코 요청 입력, [tilkoRes]는 `_tilkoSimpleAuth` 로 실립니다.
+Map<String, dynamic> mergeCodefNhisTilkoTreatmentBody({
+  required Map<String, String> env,
+  required Map<String, dynamic> codefExtra,
+  required Map<String, dynamic> tilkoMap,
+  required Map<String, dynamic> tilkoRes,
+}) {
+  final merged = Map<String, dynamic>.from(codefExtra)
+    ..['_tilkoSimpleAuth'] = tilkoRes;
+
+  final orgEnv =
+      (env['CODEF_HW_ORGANIZATION'] ?? env['CODEF_ORGANIZATION'] ?? '').trim();
+  merged.putIfAbsent(
+    'organization',
+    () => orgEnv.isNotEmpty ? orgEnv : codefNhisOrganizationDefault,
+  );
+
+  merged.putIfAbsent(
+    'loginType',
+    () => (env['CODEF_NHIS_LOGINTYPE'] ?? '5').trim(),
+  );
+
+  final pat =
+      '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? ''}'
+          .trim()
+          .toUpperCase();
+  final levelEnv = (env['CODEF_NHIS_LOGINTYPE_LEVEL'] ?? '').trim();
+  merged.putIfAbsent(
+    'loginTypeLevel',
+    () => levelEnv.isNotEmpty
+        ? levelEnv
+        : codefLoginTypeLevelFromPrivateAuth(pat),
+  );
+
+  final envCid = (env['CODEF_CONNECTED_ID'] ?? '').trim();
+  if (envCid.isNotEmpty) {
+    merged.putIfAbsent('connectedId', () => envCid);
+  }
+
+  String digits(String raw) => raw.replaceAll(RegExp(r'\D'), '');
+
+  final phoneRaw =
+      '${tilkoMap['UserCellphoneNumber'] ?? tilkoMap['userCellphoneNumber'] ?? ''}';
+  final phone = digits(phoneRaw);
+  if (phone.length >= 10) {
+    merged.putIfAbsent('phoneNo', () => phone);
+    merged.putIfAbsent('id', () => phone);
+  }
+
+  final uname =
+      '${tilkoMap['UserName'] ?? tilkoMap['userName'] ?? ''}'.trim();
+  if (uname.isNotEmpty) {
+    merged.putIfAbsent('userName', () => uname);
+    merged.putIfAbsent('name', () => uname);
+    merged.putIfAbsent('displayName', () => uname);
+  }
+
+  final birthRaw =
+      '${tilkoMap['BirthDate'] ?? tilkoMap['birthDate'] ?? ''}'.trim();
+  final ident = codefNormIdentityYmd8(birthRaw);
+  if (ident != null) {
+    merged.putIfAbsent('identity', () => ident);
+    merged.putIfAbsent('birthYmd', () => ident);
+  }
+  if (birthRaw.isNotEmpty) {
+    merged.putIfAbsent('birthDate', () => birthRaw);
+    if (ident == null) {
+      merged.putIfAbsent('birthYmd', () => birthRaw);
+    }
+  }
+
+  final extraJson = (env['CODEF_REQUEST_JSON'] ?? '').trim();
+  if (extraJson.isNotEmpty) {
+    try {
+      final decoded = jsonDecode(extraJson);
+      if (decoded is Map) {
+        for (final e in _stringKeyMap(decoded).entries) {
+          merged.putIfAbsent(e.key, () => e.value);
+        }
+      }
+    } catch (_) {
+      stderr.writeln('CODEF_REQUEST_JSON 파싱 실패 — 무시');
+    }
+  }
+
+  return merged;
 }
 
 /// CODEF 상품 POST (codef-node httpSender 와 동일).
@@ -251,6 +431,97 @@ Future<String> codefProductRaw({
   } finally {
     client.close(force: true);
   }
+}
+
+/// CF-00404·HTTP 404 등 «상품 URL/호스트 불일치» 로 보일 때만 다른 후보를 시도합니다.
+bool codefErrorLooksLikeWrongProductUrl(Object e) {
+  final s = e.toString();
+  return s.contains('CF-00404') ||
+      s.contains('CODEF HTTP 404') ||
+      s.contains('NOT_FOUND 404');
+}
+
+/// 국민건강보험 진료·투약(CODEF): 문서상 `/public/each/pp/` 와 구 `/public/pp/` 가 섞여 있고,
+/// 호스트(api·development·sandbox) 조합에 따라 404가 나는 경우가 있어 후보를 순서대로 시도합니다.
+Future<String> codefNhisTreatmentProductRaw({
+  required Map<String, String> env,
+  required String bearer,
+  required Map<String, dynamic> body,
+}) async {
+  const defaultPath =
+      '/v1/kr/public/each/pp/nhis-insurance-treatment-information';
+  final fromEnv = (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim();
+  final primary = fromEnv.isNotEmpty ? fromEnv : defaultPath;
+  final normalized =
+      primary.startsWith('/') ? primary : '/$primary';
+
+  final pathCandidates = <String>[];
+  void addPath(String p) {
+    final q = p.trim().startsWith('/') ? p.trim() : '/${p.trim()}';
+    if (!pathCandidates.contains(q)) pathCandidates.add(q);
+  }
+
+  addPath(normalized);
+  final hasEach = normalized.contains('/public/each/pp/');
+  final hasLegacy =
+      normalized.contains('/public/pp/') && !hasEach;
+  if (hasLegacy) {
+    addPath(normalized.replaceAll('/public/pp/', '/public/each/pp/'));
+  }
+  if (hasEach) {
+    addPath(normalized.replaceAll('/public/each/pp/', '/public/pp/'));
+  }
+
+  final userBase = (env['CODEF_BASE_URL'] ?? '').trim();
+  final baseCandidates = <String>[];
+  void addBase(String b) {
+    final t = b.trim();
+    if (t.isEmpty) return;
+    if (!baseCandidates.contains(t)) baseCandidates.add(t);
+  }
+
+  addBase(userBase);
+  addBase('https://api.codef.io');
+  addBase('https://development.codef.io');
+  addBase('https://sandbox.codef.io');
+  if (baseCandidates.isEmpty) {
+    baseCandidates.add('https://api.codef.io');
+  }
+
+  Object? lastErr;
+  for (final base in baseCandidates) {
+    for (final path in pathCandidates) {
+      try {
+        final out = await codefProductRaw(
+          baseUrl: base,
+          productPath: path,
+          bearer: bearer,
+          body: body,
+        );
+        try {
+          final map = jsonDecode(out) as Map<String, dynamic>;
+          final res = map['result'];
+          if (res is Map) {
+            final c = '${res['code'] ?? ''}'.trim();
+            if (c == 'CF-00404') {
+              lastErr = StateError('CODEF HTTP 200 result CF-00404: $out');
+              continue;
+            }
+          }
+        } catch (_) {
+          // JSON 아님 등은 그대로 성공 처리
+        }
+        // ignore: avoid_print
+        print('CODEF NHIS treatment OK: $base$path');
+        return out;
+      } catch (e) {
+        lastErr = e;
+        if (!codefErrorLooksLikeWrongProductUrl(e)) rethrow;
+      }
+    }
+  }
+  throw lastErr ??
+      StateError('CODEF NHIS 진료·투약: base·path 후보에서 CF-00404/404');
 }
 
 /// `/v1/medications` 용: `.env` 에 `BFF_USE_CODEF_FOR_MEDICATIONS=true` 이고

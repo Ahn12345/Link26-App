@@ -88,9 +88,16 @@ abstract final class NhisTilkoCodefFlowSync {
 
       final ok = res['ok'] == true;
       if (!ok) {
+        final hint = res['hint_ko'];
+        final detail = res['detail'];
+        final msg = (hint is String && hint.trim().isNotEmpty)
+            ? hint.trim()
+            : (detail is String && detail.trim().isNotEmpty)
+                ? detail.trim()
+                : 'BFF 틸코·건보 플로우 실패';
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
-          detail: '${res['detail'] ?? 'BFF 틸코·건보 플로우 실패'}',
+          detail: msg,
         );
       }
 
