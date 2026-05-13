@@ -20,7 +20,7 @@ import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 /// 배포·스토어 앱과 소스 트리가 같은지 확인용(더보기 하단에 표시).
-const int kMoreScreenLayoutRevision = 2;
+const int kMoreScreenLayoutRevision = 3;
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.showScaffold = true});
@@ -377,7 +377,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
           Center(
             child: Text(
               kDebugMode
-                  ? 'DEBUG · 더보기 UI #$kMoreScreenLayoutRevision (복용 알림·세션 id)'
+                  ? 'DEBUG · 더보기 UI #$kMoreScreenLayoutRevision · 로그아웃·알림문구·가족실계정'
                   : '더보기 UI #$kMoreScreenLayoutRevision',
               textAlign: TextAlign.center,
               style: TextStyle(

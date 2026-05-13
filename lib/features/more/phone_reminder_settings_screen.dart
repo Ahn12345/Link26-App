@@ -138,8 +138,8 @@ class _PhoneReminderSettingsScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              '홈 「오늘의 알림」에 전화형 복용 안내로 표시됩니다. 실제 전화 발신은 '
-              '통신사·백엔드 연동 시 별도로 구성할 수 있습니다.',
+              '홈 「오늘의 알림」에만 전화형 카드로 표시됩니다. 착신 전화·문자는 오지 않으며, '
+              '실제 발신은 통신사·백엔드 연동 시 별도 구성입니다.',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
