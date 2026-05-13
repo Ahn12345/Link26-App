@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
+import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
 import 'package:path/path.dart' as p;
 
 /// 프로젝트 루트 환경을 읽습니다.
@@ -733,34 +734,9 @@ String? bffExtractConnectedIdFromCodefRoot(Map<String, dynamic> root) =>
     parseConnectedIdFromCodefRootMap(root);
 
 /// CODEF 건강iN/건보 진료·투약 JSON 루트에서 앱/BFF 공통 약 행 목록을 뽑습니다.
-List<Map<String, dynamic>> bffMapCodefRootToMedicationItems(Map<String, dynamic> root) {
-  final rows = _extractDataRows(root['data']);
-  final out = <Map<String, dynamic>>[];
-  for (final r in rows) {
-    final name = _firstNonEmpty(r, const [
-      'name',
-      'drugName',
-      'medicineName',
-      'itemName',
-      'resDrugName',
-      'resDrugNm',
-      'drugNm',
-      'mediNm',
-      'mediName',
-      'drugNameKr',
-      '약품명',
-      '품명',
-    ]);
-    if (name.isEmpty) continue;
-    out.add({
-      'name': name,
-      'dose': _firstNonEmpty(r, const ['dose', 'dosage', 'resDosage', '일투']),
-      'frequency': _firstNonEmpty(r, const ['frequency', 'resFrequency', '복약']),
-      'time': _firstNonEmpty(r, const ['time', 'resTime', '투약시각']),
-    });
-  }
-  return out;
-}
+/// 구현은 [codefRootToMedicationItems] (중첩·한글 필드명·문자열 JSON data 대응).
+List<Map<String, dynamic>> bffMapCodefRootToMedicationItems(Map<String, dynamic> root) =>
+    codefRootToMedicationItems(root);
 
 Map<String, dynamic> _stringKeyMap(Map raw) {
   final out = <String, dynamic>{};
@@ -768,60 +744,6 @@ Map<String, dynamic> _stringKeyMap(Map raw) {
     out['${e.key}'] = e.value;
   }
   return out;
-}
-
-List<Map<String, dynamic>> _extractDataRows(dynamic data) {
-  if (data == null) return [];
-  if (data is String) {
-    final s = data.trim();
-    if (s.isEmpty) return [];
-    try {
-      return _extractDataRows(jsonDecode(s));
-    } catch (_) {
-      return [];
-    }
-  }
-  if (data is List) {
-    return data
-        .whereType<Map>()
-        .map((e) => _stringKeyMap(e))
-        .toList();
-  }
-  if (data is Map) {
-    final m = _stringKeyMap(data);
-    for (final key in [
-      'list',
-      'resList',
-      'drugList',
-      'medicationList',
-      'medicineList',
-      'items',
-      'resTreatmentList',
-      'treatmentList',
-      'prescriptionList',
-      'medicationTakingList',
-      'takingList',
-    ]) {
-      final v = m[key];
-      if (v is List) {
-        return v
-            .whereType<Map>()
-            .map((e) => _stringKeyMap(e))
-            .toList();
-      }
-    }
-  }
-  return [];
-}
-
-String _firstNonEmpty(Map<String, dynamic> m, List<String> keys) {
-  for (final k in keys) {
-    final v = m[k];
-    if (v == null) continue;
-    final s = '$v'.trim();
-    if (s.isNotEmpty && s != 'null') return s;
-  }
-  return '';
 }
 
 /// BFF에서 CODEF Bearer 재사용 (캐시).
