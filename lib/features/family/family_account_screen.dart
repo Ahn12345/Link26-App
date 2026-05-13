@@ -184,6 +184,32 @@ class _FamilyAccountScreenState extends State<FamilyAccountScreen> {
             ),
             const SizedBox(height: 20),
             Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Text(
+                '가족 연동은 어떻게 할 예정인가요?\n\n'
+                '1단계(백엔드): 초대 링크·초대 코드로 가족을 앱에 초대하고, '
+                '서버에서 가족 그룹·권한(열람/알림)을 관리합니다.\n'
+                '2단계(인증): 본인·가족 각자 휴대폰 인증과 건강정보 열람 동의를 받습니다.\n'
+                '3단계(공단·기관): CODEF·공단 등과 연계해 허용된 범위의 복약·진료 요약만 '
+                '가족 계정에 공유합니다(법적·정책 검토 필요).\n\n'
+                '현재 앱 버전은 UI·로컬 계정만 지원하며, 위 단계는 서버·계약·심사가 갖춰지면 '
+                '순서대로 붙일 수 있습니다.',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                  color: Color(0xFF475569),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,

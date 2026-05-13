@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -11,16 +13,18 @@ import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/home/home_notification_center_screen.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
+import 'package:link26_app/features/settings/codef_connection_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
 import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/notification_setting_screen.dart';
+import 'package:link26_app/core/services/dose_reminder_notifications.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 /// 배포·스토어 앱과 소스 트리가 같은지 확인용(더보기 하단에 표시).
-const int kMoreScreenLayoutRevision = 3;
+const int kMoreScreenLayoutRevision = 4;
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.showScaffold = true});
@@ -103,6 +107,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
     );
     if (picked == null) return;
     await ReminderChannelPrefs.setPushTime(picked);
+    unawaited(DoseReminderNotifications.rescheduleFromPrefs());
     if (mounted) setState(() => _pushTime = picked);
   }
 
@@ -253,10 +258,11 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             icon: Icons.notifications_active_outlined,
             title: '푸시 복용 알림',
             subtitle:
-                '${_pushTime.format(context)} · 홈 「오늘의 알림」에만 표시 · 시스템 푸시(상태바) 없음',
+                '${_pushTime.format(context)} · 홈 카드 + 매일 같은 시각 기기 알림(앱 종료 후에도)',
             value: _pushOn,
             onChanged: (v) async {
               await ReminderChannelPrefs.setPushEnabled(v);
+              unawaited(DoseReminderNotifications.rescheduleFromPrefs());
               if (mounted) setState(() => _pushOn = v);
             },
             onPickTime: _pickPushTime,
@@ -266,11 +272,12 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             icon: Icons.phone_in_talk_outlined,
             title: '전화 알림',
             subtitle: _phoneOn
-                ? '$_phoneTimeHm · 홈에 전화형 카드만 · 착신 통화 없음'
+                ? '$_phoneTimeHm · 홈 카드 + 강조 기기 알림 (실제 전화·착신 아님)'
                 : '꺼짐 · 눌러서 설정',
             value: _phoneOn,
             onChanged: (v) async {
               await ReminderChannelPrefs.setPhoneEnabled(v);
+              unawaited(DoseReminderNotifications.rescheduleFromPrefs());
               if (mounted) {
                 setState(() => _phoneOn = v);
                 await _loadReminderPrefs();
@@ -293,8 +300,8 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
               bottom: Link26ResponsiveUi.gapSm(w),
             ),
             child: Text(
-              '※ 위 알림은 앱을 열었을 때 홈·알림 화면에서만 확인할 수 있습니다. '
-              '문자·전화·OS 알림은 아직 연결되어 있지 않습니다.',
+              '※ 복용 알림: 매일 설정 시각에 로컬 알림(상태바)을 보냅니다. 알림 권한을 허용해 주세요. '
+              '실제 전화를 걸거나 받는 기능은 통신사·콜 API·백엔드가 있어야 하며, 지금 앱은 알림으로만 안내합니다.',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -322,6 +329,14 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const NotificationSettingScreen()),
+            ),
+          ),
+          _MenuTile(
+            icon: Icons.link,
+            title: l10n.settingsCodefConnectionTitle,
+            subtitle: '공단 복약 동기화 · connectedId · 점검 목록',
+            onTap: () => Navigator.of(context).pushNamed(
+              CodefConnectionScreen.routeName,
             ),
           ),
           _MenuTile(
@@ -355,7 +370,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: OutlinedButton.icon(
+              child: FilledButton.icon(
                 onPressed: () async {
                   await AuthSession.signOut();
                   if (!context.mounted) return;
@@ -366,9 +381,9 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
                 },
                 icon: const Icon(Icons.logout_rounded),
                 label: Text(l10n.signOut),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Link26Surface.textSecondary,
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  foregroundColor: Colors.white,
                 ),
               ),
             ),
@@ -377,7 +392,7 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
           Center(
             child: Text(
               kDebugMode
-                  ? 'DEBUG · 더보기 UI #$kMoreScreenLayoutRevision · 로그아웃·알림문구·가족실계정'
+                  ? 'DEBUG · 더보기 UI #$kMoreScreenLayoutRevision · 로컬알림·알림설정저장·로그아웃'
                   : '더보기 UI #$kMoreScreenLayoutRevision',
               textAlign: TextAlign.center,
               style: TextStyle(

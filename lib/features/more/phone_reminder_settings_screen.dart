@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+import 'package:link26_app/core/services/dose_reminder_notifications.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 
@@ -69,6 +72,7 @@ class _PhoneReminderSettingsScreenState
     }
     if (_listening) {
       await _speech.stop();
+      unawaited(_persistMessageAndReschedule());
       if (mounted) setState(() => _listening = false);
       return;
     }
@@ -96,11 +100,17 @@ class _PhoneReminderSettingsScreenState
     );
     if (picked == null) return;
     await ReminderChannelPrefs.setPhoneTime(picked);
+    unawaited(DoseReminderNotifications.rescheduleFromPrefs());
     if (mounted) setState(() => _phoneTime = picked);
   }
 
-  Future<void> _persistMessage() async {
+  Future<void> _saveMessageOnly() async {
     await ReminderChannelPrefs.setPhoneMessage(_msgCtrl.text);
+  }
+
+  Future<void> _persistMessageAndReschedule() async {
+    await ReminderChannelPrefs.setPhoneMessage(_msgCtrl.text);
+    unawaited(DoseReminderNotifications.rescheduleFromPrefs());
   }
 
   @override
@@ -138,8 +148,9 @@ class _PhoneReminderSettingsScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              '홈 「오늘의 알림」에만 전화형 카드로 표시됩니다. 착신 전화·문자는 오지 않으며, '
-              '실제 발신은 통신사·백엔드 연동 시 별도 구성입니다.',
+              '홈 「오늘의 알림」에 전화형 카드가 뜨고, 같은 시각에 소리·헤드업이 나는 '
+              '기기 알림도 예약됩니다. 착신 전화는 오지 않으며, 실제 발신은 '
+              '통신사·백엔드 연동 시 별도 구성입니다.',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -160,11 +171,14 @@ class _PhoneReminderSettingsScreenState
                   '전화 알림 사용',
                   style: TextStyle(fontWeight: FontWeight.w900),
                 ),
-                subtitle: const Text('설정한 시각에 전화형 알림 카드가 추가됩니다.'),
+                subtitle: const Text(
+                  '설정한 시각에 홈 카드 + 매일 로컬 알림(앱 종료 후에도).',
+                ),
                 value: _phoneOn,
                 activeThumbColor: Link26Surface.accent,
                 onChanged: (v) async {
                   await ReminderChannelPrefs.setPhoneEnabled(v);
+                  unawaited(DoseReminderNotifications.rescheduleFromPrefs());
                   setState(() => _phoneOn = v);
                 },
               ),
@@ -215,8 +229,8 @@ class _PhoneReminderSettingsScreenState
                     ),
                   ),
                 ),
-                onChanged: (_) => _persistMessage(),
-                onEditingComplete: _persistMessage,
+                onChanged: (_) => unawaited(_saveMessageOnly()),
+                onEditingComplete: _persistMessageAndReschedule,
               ),
               const SizedBox(height: 12),
               Text(
