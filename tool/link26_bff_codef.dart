@@ -448,36 +448,65 @@ Map<String, dynamic> mergeCodefNhisTilkoTreatmentBody({
 }
 
 /// CODEF 상품 POST (codef-node httpSender 와 동일).
+///
+/// CODEF·게이트웨이가 **301·302·307·308** 으로 최종 URL을 안내하는 경우가 있어,
+/// Dart [HttpClient] 가 POST 리다이렉트를 따라가지 않아 302만 보이는 문제를 막기 위해
+/// [Location] 헤더를 수동으로 따라갑니다(최대 [maxRedirects]회).
 Future<String> codefProductRaw({
   required String baseUrl,
   required String productPath,
   required String bearer,
   required Map<String, dynamic> body,
+  int maxRedirects = 6,
 }) async {
-  final uri = codefJoinedProductUri(baseUrl, productPath);
+  var uri = codefJoinedProductUri(baseUrl, productPath);
   final client = HttpClient();
+  final encoded = Uri.encodeQueryComponent(jsonEncode(body));
   try {
-    final req = await client.postUrl(uri);
-    req.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $bearer');
-    final encoded = Uri.encodeQueryComponent(jsonEncode(body));
-    req.write(encoded);
-    final res = await req.close();
-    final raw = await res.transform(utf8.decoder).join();
-    if (res.statusCode != 200) {
-      final loc = 'POST $uri';
-      final hint404 = res.statusCode == 404 ||
-              raw.contains('CF-00404') ||
-              raw.contains('NOT_FOUND 404')
-          ? ' CODEF 문서의 «요청 URL»과 경로가 같은지, 개발 키면 CODEF_BASE_URL=https://development.codef.io·운영 키면 https://api.codef.io 인지 확인하세요.'
-          : '';
-      throw StateError('CODEF HTTP ${res.statusCode} ($loc)$hint404: $raw');
+    for (var hop = 0; hop <= maxRedirects; hop++) {
+      final req = await client.postUrl(uri);
+      req.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+      req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $bearer');
+      req.write(encoded);
+      final res = await req.close();
+      final raw = await res.transform(utf8.decoder).join();
+      final code = res.statusCode;
+
+      if (code == HttpStatus.movedPermanently ||
+          code == HttpStatus.found ||
+          code == HttpStatus.temporaryRedirect ||
+          code == HttpStatus.permanentRedirect) {
+        final location = res.headers.value(HttpHeaders.locationHeader);
+        if (location == null || location.trim().isEmpty) {
+          throw StateError(
+            'CODEF HTTP $code (POST $uri) without Location: $raw',
+          );
+        }
+        if (hop == maxRedirects) {
+          throw StateError(
+            'CODEF redirect limit ($maxRedirects) POST $uri → $location',
+          );
+        }
+        uri = uri.resolve(location.trim());
+        continue;
+      }
+
+      if (code != HttpStatus.ok) {
+        final loc = 'POST $uri';
+        final hint404 = code == 404 ||
+                raw.contains('CF-00404') ||
+                raw.contains('NOT_FOUND 404')
+            ? ' CODEF 문서의 «요청 URL»과 경로가 같은지, 개발 키면 CODEF_BASE_URL=https://development.codef.io·운영 키면 https://api.codef.io 인지 확인하세요.'
+            : '';
+        throw StateError('CODEF HTTP $code ($loc)$hint404: $raw');
+      }
+      try {
+        return Uri.decodeQueryComponent(raw);
+      } catch (_) {
+        return raw;
+      }
     }
-    try {
-      return Uri.decodeQueryComponent(raw);
-    } catch (_) {
-      return raw;
-    }
+    throw StateError('CODEF POST $uri: unexpected redirect loop exit');
   } finally {
     client.close(force: true);
   }

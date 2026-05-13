@@ -4,6 +4,35 @@ import 'package:http/http.dart' as http;
 
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
+String _flowHttpErrorDetail(int statusCode, String body) {
+  try {
+    final decoded = jsonDecode(body);
+    if (decoded is Map) {
+      final hint = decoded['hint_ko'];
+      if (hint is String && hint.trim().isNotEmpty) {
+        return hint.trim();
+      }
+      final detail = decoded['detail'];
+      if (detail is String && detail.trim().isNotEmpty) {
+        final d = detail.trim();
+        if (d.contains('CODEF HTTP 302') || d.contains('CODEF HTTP 301')) {
+          return 'CODEF 상품 URL이 맞지 않아 리다이렉트(302·301)가 났습니다. '
+              'BFF 설정의 CODEF_BASE_URL(샌드박스·개발·운영 키와 짝이 맞는지)과 '
+              'CODEF_NHIS_TREATMENT_PATH(문서의 요청 URL, /public/each/pp/ 포함 여부)를 '
+              'developer.codef.io 기준으로 확인하세요.';
+        }
+        if (d.contains('CODEF HTTP')) {
+          return 'CODEF 연동 오류입니다. BFF .env의 CODEF 클라이언트·호스트·상품 경로를 '
+              '확인하거나 PC에서 BFF 로그를 확인하세요.\n($d)';
+        }
+        return d;
+      }
+    }
+  } catch (_) {}
+  if (body.trim().isNotEmpty) return body.trim();
+  return 'HTTP $statusCode';
+}
+
 /// NHIS/BFF(`NHIS_BASE_URL`)에 붙는 연동 API — 틸코·공공데이터·CODEF 플로우.
 ///
 /// 키는 BFF `.env`에 두고 앱은 URL만 알면 됩니다.
@@ -70,16 +99,7 @@ abstract final class Link26BffIntegrationsClient {
       }),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      var detail = res.body;
-      try {
-        final m = jsonDecode(res.body);
-        if (m is Map) {
-          final h = m['hint_ko'];
-          if (h is String && h.trim().isNotEmpty) {
-            detail = h.trim();
-          }
-        }
-      } catch (_) {}
+      final detail = _flowHttpErrorDetail(res.statusCode, res.body);
       throw StateError('flow HTTP ${res.statusCode}: $detail');
     }
     return jsonDecode(res.body) as Map<String, dynamic>;
