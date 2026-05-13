@@ -229,10 +229,11 @@ String? bffCodefNhisTreatResultHintKo(String? code, String? message) {
   final c = (code ?? '').trim();
   if (c.isEmpty || c == 'CF-00000') return null;
   if (c == 'CF-00003') {
-    return 'CODEF에서 해당 상품 구독·권한을 찾지 못했습니다(CF-00003). '
+    return 'CODEF에서 해당 상품 구독·권한을 찾지 못했거나(CF-00003), '
+        '요청 본문이 상품 스펙과 맞지 않을 때도 같은 코드가 날 수 있습니다. '
         'codef.io 콘솔에서 「국민건강보험 진료·투약」상품 이용 권한을 확인하고, '
-        'BFF .env의 CODEF_BASE_URL·CODEF_NHIS_TREATMENT_PATH를 문서와 맞추세요. '
-        '필수 필드가 있으면 CODEF_HW_ORGANIZATION·CODEF_CONNECTED_ID(또는 앱 codef_payload)를 설정하세요.';
+        'BFF가 넣는 organization(기본 0002)·loginType·loginTypeLevel·identity·_tilkoSimpleAuth 를 '
+        'developer.codef.io 문서와 맞추세요.';
   }
   final m = (message ?? '').trim();
   if (m.isNotEmpty) {
