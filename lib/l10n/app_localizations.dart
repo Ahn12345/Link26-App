@@ -217,6 +217,7 @@ abstract class AppLocalizations {
   String get privacyConsentDocumentTitle;
   String get privacyConsentOpenFailed;
   String get guidePrivacyConsentSubtitle;
+  String get moreMenuLanguageSubtitle;
   String get signupNameRequired;
   String get signupRequiredIncomplete;
   String get socialLoginComingSoon;

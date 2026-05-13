@@ -567,6 +567,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get guidePrivacyConsentSubtitle => '앱에 포함된 전문(PDF)';
 
   @override
+  String get moreMenuLanguageSubtitle => '기본: 한국어 · English';
+
+  @override
   String get signupNameRequired => '이름을 입력하세요.';
 
   @override

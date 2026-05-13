@@ -578,6 +578,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guidePrivacyConsentSubtitle => 'Full text bundled in the app (PDF)';
 
   @override
+  String get moreMenuLanguageSubtitle => 'Default: Korean · English';
+
+  @override
   String get signupNameRequired => 'Please enter your name.';
 
   @override

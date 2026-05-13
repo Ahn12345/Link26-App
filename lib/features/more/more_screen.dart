@@ -22,9 +22,10 @@ import 'package:link26_app/core/services/reminder_channel_prefs.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
+import 'package:link26_app/app.dart';
 
 /// 배포·스토어 앱과 소스 트리가 같은지 확인용(더보기 하단에 표시).
-const int kMoreScreenLayoutRevision = 5;
+const int kMoreScreenLayoutRevision = 6;
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.showScaffold = true});
@@ -109,6 +110,93 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
     await ReminderChannelPrefs.setPushTime(picked);
     unawaited(DoseReminderNotifications.rescheduleFromPrefs());
     if (mounted) setState(() => _pushTime = picked);
+  }
+
+  Future<void> _showLanguagePicker() async {
+    final l10n = AppLocalizations.of(context);
+    final app = Link26App.maybeOf(context);
+    if (app == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.authSessionInitFailed)),
+      );
+      return;
+    }
+
+    final raw = Localizations.localeOf(context).languageCode;
+    final effective = raw == 'en' ? 'en' : 'ko';
+    final sheetW = MediaQuery.sizeOf(context).width;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text(
+                  l10n.language,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: Link26ResponsiveUi.body(sheetW) + 2,
+                    color: Link26Surface.textPrimary,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.language,
+                  color: effective == 'ko'
+                      ? Link26Surface.accent
+                      : Link26Surface.textSecondary,
+                ),
+                title: Text(
+                  l10n.languageKorean,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: effective == 'ko'
+                    ? Icon(Icons.check_circle, color: Link26Surface.accent)
+                    : null,
+                onTap: () {
+                  unawaited(() async {
+                    await app.setLocaleOverride(const Locale('ko'));
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                  }());
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.language,
+                  color: effective == 'en'
+                      ? Link26Surface.accent
+                      : Link26Surface.textSecondary,
+                ),
+                title: Text(
+                  l10n.languageEnglish,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: effective == 'en'
+                    ? Icon(Icons.check_circle, color: Link26Surface.accent)
+                    : null,
+                onTap: () {
+                  unawaited(() async {
+                    await app.setLocaleOverride(const Locale('en'));
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                  }());
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _loadProfile() async {
@@ -347,6 +435,12 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
               context,
               MaterialPageRoute<void>(builder: (_) => const DisplaySettingScreen()),
             ),
+          ),
+          _MenuTile(
+            icon: Icons.language,
+            title: l10n.language,
+            subtitle: l10n.moreMenuLanguageSubtitle,
+            onTap: () => unawaited(_showLanguagePicker()),
           ),
           _MenuTile(
             icon: Icons.help_outline,
