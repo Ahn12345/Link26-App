@@ -33,6 +33,24 @@ try {
 } catch { }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
+function Clear-BrokenSubstEnvPaths {
+  foreach ($name in @('GRADLE_USER_HOME', 'TMP', 'TEMP')) {
+    $gh = [Environment]::GetEnvironmentVariable($name, 'Process')
+    if ([string]::IsNullOrWhiteSpace($gh)) { continue }
+    try {
+      $root = [System.IO.Path]::GetPathRoot($gh.Trim())
+      if ([string]::IsNullOrWhiteSpace($root)) { continue }
+      $drive = $root.TrimEnd('\', '/')
+      if ($drive.Length -eq 2 -and $drive[1] -eq ':') {
+        if (-not (Test-Path "${drive}\")) {
+          Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+        }
+      }
+    } catch {}
+  }
+}
+Clear-BrokenSubstEnvPaths
+
 function Test-ContainsNonAscii([string]$s) {
   foreach ($ch in $s.ToCharArray()) {
     if ([int][char]$ch -gt 127) { return $true }
