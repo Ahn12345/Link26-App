@@ -153,7 +153,7 @@ abstract final class NhisTilkoCodefFlowSync {
       debugPrint('Tilko→NHIS: $e\n$st');
       return NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.failed,
-        detail: '$e',
+        detail: Link26BffIntegrationsClient.sanitizeIntegrationErrorMessage('$e'),
       );
     }
   }

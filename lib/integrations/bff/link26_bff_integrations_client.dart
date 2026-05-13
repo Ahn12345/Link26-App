@@ -12,8 +12,16 @@ String _codfRedirectHintKo() =>
     'CODEF_BASE_URL·키 종류(샌드박스·개발·운영)와 CODEF_NHIS_TREATMENT_PATH를 '
     'developer.codef.io 기준으로 맞추세요.';
 
+String _stripBom(String s) {
+  var t = s.trim();
+  if (t.startsWith('\uFEFF')) {
+    t = t.substring(1).trim();
+  }
+  return t;
+}
+
 String _flowHttpErrorDetail(int statusCode, String body) {
-  final flat = body.trim();
+  final flat = _stripBom(body);
   if (flat.isNotEmpty && _codfRedirectRe.hasMatch(flat)) {
     return _codfRedirectHintKo();
   }
@@ -52,6 +60,25 @@ String _flowHttpErrorDetail(int statusCode, String body) {
 /// [NhisRuntimeConfig.useMock] 은 가입·로그인·복약 동기화용 목 데이터에만 쓰이고,
 /// 여기 BFF 프록시(e약은요·틸코·플로우)는 막지 않습니다.
 abstract final class Link26BffIntegrationsClient {
+  /// [NhisTilkoCodefFlowSync] 등 catch 블록에서 `StateError` 전체 문자열을 넣을 때 —
+  /// `flow HTTP 502: {"detail":"…CODEF HTTP 302…"}` 형태를 스낵바용 한글로 줄입니다.
+  static String sanitizeIntegrationErrorMessage(String raw) {
+    final t = _stripBom(raw);
+    if (t.isEmpty) return '건강 연동에 실패했습니다.';
+    if (_codfRedirectRe.hasMatch(t)) return _codfRedirectHintKo();
+
+    final flowHead = RegExp(r'flow HTTP (\d+):\s*', caseSensitive: false);
+    final m = flowHead.firstMatch(t);
+    if (m != null) {
+      final code = int.tryParse(m.group(1) ?? '') ?? 0;
+      final rest = t.substring(m.end).trim();
+      if (rest.startsWith('{')) {
+        return _flowHttpErrorDetail(code, rest);
+      }
+    }
+    return t.length > 420 ? '${t.substring(0, 420)}…' : t;
+  }
+
   static String get _base {
     final b = NhisRuntimeConfig.baseUrl.trim();
     if (b.isEmpty) return '';
