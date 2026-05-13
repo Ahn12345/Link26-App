@@ -115,6 +115,7 @@ class AiChatScreen extends StatelessWidget {
     }
     return Scaffold(
       backgroundColor: Link26UnifiedPage.background,
+      resizeToAvoidBottomInset: true,
       body: body,
     );
   }
@@ -354,12 +355,13 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final embedded = widget.embeddedInShell;
-    // 하단 탭: [extendBody] 이라 본문이 내비 뒤까지 깔림. bottom padding 이 클수록 입력 카드가 **위로** 올라감
-    // (padding 을 줄이면 오히려 탭바 쪽으로 내려감 — 이전 68 은 방향이 반대였음).
-    final shellNavPad = embedded
-        ? MediaQuery.viewPaddingOf(context).bottom + 118.0
-        : 0.0;
     final keyboardLift = MediaQuery.viewInsetsOf(context).bottom;
+    // 하단 탭: [extendBody] 이라 본문이 내비 뒤까지 깔림. bottom padding 이 클수록 입력 카드가 **위로** 올라감.
+    // 키보드가 올라오면 아래에 `keyboardLift` 를 또 더하므로, 탭바용 패딩은 줄여 Column 오버플로를 막습니다.
+    final shellNavPad = embedded
+        ? MediaQuery.viewPaddingOf(context).bottom +
+            (keyboardLift > 0 ? 56.0 : 118.0)
+        : 0.0;
     final inputEnabled = !AiChatOutgoingBusy.instance.value &&
         AiChatConversationCache.dailyUsed < _dailyLimit;
 
@@ -527,7 +529,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                 Transform.translate(
                                   offset: Offset(
                                     0,
-                                    embedded ? -10.0 : -6.0,
+                                    keyboardLift > 0
+                                        ? -2.0
+                                        : (embedded ? -10.0 : -6.0),
                                   ),
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
@@ -1041,7 +1045,8 @@ class _InputBar extends StatelessWidget {
               controller: controller,
               enabled: canAct,
               minLines: 1,
-              maxLines: null,
+              maxLines: 5,
+              scrollPhysics: const BouncingScrollPhysics(),
               style: TextStyle(
                 fontSize: Link26ResponsiveUi.body(w),
                 color: Link26Surface.textPrimary,
