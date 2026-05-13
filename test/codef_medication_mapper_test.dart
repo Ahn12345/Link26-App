@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
 
 void main() {
