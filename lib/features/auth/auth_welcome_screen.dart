@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -85,8 +86,20 @@ class AuthWelcomeScreen extends StatelessWidget {
                                   height: Link26ResponsiveUi.gapLg(w) +
                                       Link26ResponsiveUi.gapMd(w) +
                                       Link26ResponsiveUi.gapMd(w) +
-                                      32,
+                                      16,
                                 ),
+                                Text(
+                                  '빌드 $kAppBuildNumber · $kAppBuildTag\n'
+                                  '이 문구가 보이면 이 소스에서 만든 최신 APK입니다.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.35,
+                                    color: Link26Surface.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                               ],
                             ),
                           ),

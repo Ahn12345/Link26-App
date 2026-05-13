@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/services/auth_session.dart';
@@ -392,8 +393,8 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
           Center(
             child: Text(
               kDebugMode
-                  ? 'DEBUG · 더보기 UI #$kMoreScreenLayoutRevision · 로컬알림·알림설정저장·로그아웃'
-                  : '더보기 UI #$kMoreScreenLayoutRevision',
+                  ? 'DEBUG · 빌드$kAppBuildNumber #$kAppBuildTag · 더보기#$kMoreScreenLayoutRevision'
+                  : '빌드 $kAppBuildNumber · 더보기 UI #$kMoreScreenLayoutRevision',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
