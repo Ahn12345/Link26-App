@@ -14,13 +14,12 @@ PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6
 # 틸코 간편인증 — 비우면 /v1/tilko/* 사용 불가
 TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_HOST=https://dev.tilko.net
-# 앱만 사용: BFF로 보내는 틸코 요청의 PrivateAuthType (KAKAO, NAVER, PASS 등)
+# 앱: 간편인증 채널(KAKAO, NAVER, PASS 등). BFF 틸코 요청 PrivateAuthType
 TILKO_PRIVATE_AUTH_TYPE=KAKAO
 
 # CODEF — codef.io 콘솔 키는 보통 운영 호스트(api.codef.io). 비우면 BFF가 development.codef.io 를 써서 CF-00404(404)가 날 수 있음.
 CODEF_BASE_URL=https://api.codef.io
 CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/each/pp/nhis-insurance-treatment-information
-# true: BFF /v1/medications 가 CODEF 실조회. CODEF_MEDICATION_PATH 비우면 위 NHIS_TREATMENT_PATH 사용.
+# true: BFF /v1/medications 가 CODEF 실조회. CODEF_MEDICATION_PATH 비우면 NHIS_TREATMENT_PATH 사용.
 BFF_USE_CODEF_FOR_MEDICATIONS=true
-# 기관 연동 후 발급 connectedId — 비우면 앱 「건강·복약 연동」저장값·틸코 플로우 응답에 의존
 # CODEF_CONNECTED_ID=
