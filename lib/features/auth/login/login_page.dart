@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
+import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
@@ -225,6 +226,7 @@ class _LoginPageState extends State<LoginPage> {
                         Link26AuthBrandLogo(
                           maxWidth: contentW,
                           compact: true,
+                          assetPath: ImageAssets.logoKo,
                         ),
                         SizedBox(
                             height: Link26ResponsiveUi.heroArtToContent(w)),

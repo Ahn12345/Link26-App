@@ -8,6 +8,8 @@ abstract final class ImageAssets {
   static const manifestXml = 'assets/images/link26_image_assets.xml';
 
   static const applogo = 'assets/images/applogo.png';
+  /// 로그인·회원가입 히어로 — 파일명 그대로(`로고.png`).
+  static const logoKo = 'assets/images/로고.png';
   static const logo = 'assets/images/logo.png';
   static const login = 'assets/images/login.png';
   static const signup = 'assets/images/signup.png';

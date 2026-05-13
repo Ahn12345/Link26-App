@@ -59,6 +59,20 @@ void main() {
     test('없으면 null', () {
       expect(parseConnectedIdFromBffFlowResponse({'ok': true, 'items': []}), isNull);
     });
+
+    test('GET /v1/medications 형태: meta.connectedId', () {
+      expect(
+        parseConnectedIdFromBffFlowResponse({
+          'items': <Map<String, dynamic>>[],
+          'meta': {
+            'source': 'codef',
+            'phone': '01012345678',
+            'connectedId': 'cid-from-bff-meta',
+          },
+        }),
+        'cid-from-bff-meta',
+      );
+    });
   });
 
   group('parseConnectedIdFromCodefRootMap (BFF와 동일)', () {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
@@ -221,6 +222,7 @@ class _SignupPageState extends State<SignupPage> {
                         Link26AuthBrandLogo(
                           maxWidth: contentW,
                           compact: true,
+                          assetPath: ImageAssets.logoKo,
                         ),
                         SizedBox(
                             height: Link26ResponsiveUi.heroArtToContent(w)),

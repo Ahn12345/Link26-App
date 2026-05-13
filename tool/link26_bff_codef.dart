@@ -615,12 +615,17 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
       message = '${result['message'] ?? ''}';
     }
 
+    final extractedId = parseConnectedIdFromCodefRootMap(map);
+    final cidOut = (extractedId != null && extractedId.trim().isNotEmpty)
+        ? extractedId.trim()
+        : (connectedId.isEmpty ? null : connectedId);
+
     return {
       'items': items,
       'meta': {
         'source': 'codef',
         'phone': phoneDigits,
-        'connectedId': connectedId.isEmpty ? null : connectedId,
+        'connectedId': cidOut,
         'productPath': path,
         'codefResultCode': code,
         'codefResultMessage': message,

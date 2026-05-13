@@ -14,7 +14,8 @@ class CodefConnectionScreen extends StatefulWidget {
   State<CodefConnectionScreen> createState() => _CodefConnectionScreenState();
 }
 
-class _CodefConnectionScreenState extends State<CodefConnectionScreen> {
+class _CodefConnectionScreenState extends State<CodefConnectionScreen>
+    with WidgetsBindingObserver {
   final _controller = TextEditingController();
   bool _loading = true;
   String? _phoneDigits;
@@ -22,7 +23,20 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _controller.addListener(_onConnectedIdEdited);
     _load();
+  }
+
+  void _onConnectedIdEdited() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -44,6 +58,8 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_onConnectedIdEdited);
     _controller.dispose();
     super.dispose();
   }

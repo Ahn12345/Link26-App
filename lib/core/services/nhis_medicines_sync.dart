@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
+import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
@@ -200,6 +201,7 @@ abstract final class NhisMedicinesSync {
 
     final body = (result as Success<String>).data;
     final meta = _parseResponseMeta(body);
+    await _maybePersistConnectedIdFromMedicationsBody(body, resolvedPhone);
     final fromApi = NhisMedicationsParser.parseResponseBody(body);
     final src = meta?['source'] as String?;
     if (isAuthoritativeMedicationsMetaSource(src)) {
@@ -247,6 +249,24 @@ abstract final class NhisMedicinesSync {
   static bool isAuthoritativeMedicationsMetaSource(String? source) {
     final s = source?.trim() ?? '';
     return s == 'codef' || s == 'tilko_codef_nhis';
+  }
+
+  static Future<void> _maybePersistConnectedIdFromMedicationsBody(
+    String raw,
+    String phoneDigits,
+  ) async {
+    final p = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    if (p.length < 10) return;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return;
+      final root = Map<String, dynamic>.from(
+        decoded.map((k, v) => MapEntry('$k', v)),
+      );
+      final id = parseConnectedIdFromBffFlowResponse(root);
+      if (id == null || id.isEmpty) return;
+      await UserLocalRepository.updateCodefConnectedId(p, connectedId: id);
+    } catch (_) {}
   }
 
   static Map<String, dynamic>? _parseResponseMeta(String raw) {
