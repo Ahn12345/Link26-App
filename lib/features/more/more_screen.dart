@@ -14,7 +14,6 @@ import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/home/home_notification_center_screen.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
-import 'package:link26_app/features/settings/codef_connection_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
 import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/notification_setting_screen.dart';
@@ -330,14 +329,6 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const NotificationSettingScreen()),
-            ),
-          ),
-          _MenuTile(
-            icon: Icons.link,
-            title: l10n.settingsCodefConnectionTitle,
-            subtitle: '공단 복약 동기화 · connectedId · 점검 목록',
-            onTap: () => Navigator.of(context).pushNamed(
-              CodefConnectionScreen.routeName,
             ),
           ),
           _MenuTile(
