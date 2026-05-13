@@ -118,6 +118,10 @@ bool bffEnvTruthy(String? s) => _truthy(s);
 
 /// `.env` 오타 등으로 `.../public/cach/pp/...` 가 들어오면 CODEF가 302 등으로 응답할 수 있어
 /// 문서 경로인 `/public/each/pp/` 로 보정합니다.
+///
+/// 건보 진료·투약 상품 슬러그 `nhis-insurance-treatment-information` 이 복붙 과정에서
+/// `nhis insurance-treatment-information` 처럼 하이픈이 공백으로 바뀌는 경우가 있어
+/// CODEF가 302·잘못된 엔드포인트로 응답할 수 있습니다.
 String bffNormalizeCodefProductPathTypos(String path) {
   var p = path.trim();
   if (p.contains('/public/cach/pp/')) {
@@ -125,6 +129,22 @@ String bffNormalizeCodefProductPathTypos(String path) {
       'CODEF: 경로에 /public/cach/pp/ 오타 감지 — /public/each/pp/ 로 보정했습니다.',
     );
     p = p.replaceAll('/public/cach/pp/', '/public/each/pp/');
+  }
+  final beforeSlugFix = p;
+  p = p
+      .replaceAll(
+        RegExp(r'nhis\s+insurance-treatment-information'),
+        'nhis-insurance-treatment-information',
+      )
+      .replaceAll(
+        RegExp(r'nhis-insurance\s+treatment-information'),
+        'nhis-insurance-treatment-information',
+      );
+  if (p != beforeSlugFix) {
+    stderr.writeln(
+      'CODEF: 경로에 건보 진료·투약 슬러그 공백 오타 감지 — '
+      'nhis-insurance-treatment-information 으로 보정했습니다.',
+    );
   }
   return p;
 }
