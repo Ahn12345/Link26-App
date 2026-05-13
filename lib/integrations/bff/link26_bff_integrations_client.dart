@@ -63,7 +63,11 @@ abstract final class Link26BffIntegrationsClient {
   /// [NhisTilkoCodefFlowSync] 등 catch 블록에서 `StateError` 전체 문자열을 넣을 때 —
   /// `flow HTTP 502: {"detail":"…CODEF HTTP 302…"}` 형태를 스낵바용 한글로 줄입니다.
   static String sanitizeIntegrationErrorMessage(String raw) {
-    final t = _stripBom(raw);
+    var t = _stripBom(raw);
+    const badState = 'Bad state: ';
+    if (t.startsWith(badState)) {
+      t = t.substring(badState.length).trim();
+    }
     if (t.isEmpty) return '건강 연동에 실패했습니다.';
     if (_codfRedirectRe.hasMatch(t)) return _codfRedirectHintKo();
 
@@ -74,6 +78,9 @@ abstract final class Link26BffIntegrationsClient {
       final rest = t.substring(m.end).trim();
       if (rest.startsWith('{')) {
         return _flowHttpErrorDetail(code, rest);
+      }
+      if (rest.isNotEmpty) {
+        return rest;
       }
     }
     return t.length > 420 ? '${t.substring(0, 420)}…' : t;
