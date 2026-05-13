@@ -116,12 +116,27 @@ bool _truthy(String? s) {
 /// link26_bff.dart 헬스 응답용.
 bool bffEnvTruthy(String? s) => _truthy(s);
 
+/// `.env` 오타 등으로 `.../public/cach/pp/...` 가 들어오면 CODEF가 302 등으로 응답할 수 있어
+/// 문서 경로인 `/public/each/pp/` 로 보정합니다.
+String bffNormalizeCodefProductPathTypos(String path) {
+  var p = path.trim();
+  if (p.contains('/public/cach/pp/')) {
+    stderr.writeln(
+      'CODEF: 경로에 /public/cach/pp/ 오타 감지 — /public/each/pp/ 로 보정했습니다.',
+    );
+    p = p.replaceAll('/public/cach/pp/', '/public/each/pp/');
+  }
+  return p;
+}
+
 /// `CODEF_MEDICATION_PATH` 우선, 비어 있으면 틸코·건보 플로우와 동일한
 /// `CODEF_NHIS_TREATMENT_PATH` 를 씁니다(같은 건보 진료·투약 상품 URL인 경우).
 String bffResolvedMedicationProductPath(Map<String, String> env) {
   final a = (env['CODEF_MEDICATION_PATH'] ?? '').trim();
-  if (a.isNotEmpty) return a;
-  return (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim();
+  if (a.isNotEmpty) return bffNormalizeCodefProductPathTypos(a);
+  return bffNormalizeCodefProductPathTypos(
+    (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim(),
+  );
 }
 
 /// `/v1/medications` 에서 CODEF 상품 호출에 필요한 클라이언트 설정이 모두 있는지.
@@ -229,6 +244,11 @@ String? bffCodefFailureHintKo(Object? e) {
     return 'CODEF 클라이언트 종류와 호스트가 맞지 않습니다(CF-00017). '
         '샌드박스 클라이언트면 CODEF_BASE_URL=https://sandbox.codef.io, '
         '개발(데모) 키면 https://development.codef.io, 운영이면 https://api.codef.io 를 콘솔·키 유형과 맞추세요.';
+  }
+  if (s.contains('CODEF HTTP 302') || s.contains('CODEF HTTP 301')) {
+    return 'CODEF 상품 URL이 잘못되어 리다이렉트(302/301)가 났습니다. '
+        'CODEF_NHIS_TREATMENT_PATH에 /public/each/pp/ 가 맞는지 확인하세요. '
+        '(/public/cach/pp/ 등 오타면 /public/each/pp/ 로 고치세요.)';
   }
   if (s.contains('CF-00003') || s.contains('"code":"CF-00003"')) {
     return 'CODEF에서 해당 상품 구독·권한을 찾지 못했습니다(CF-00003). '
@@ -558,7 +578,9 @@ Future<String> codefNhisTreatmentProductRaw({
 }) async {
   const defaultPath =
       '/v1/kr/public/each/pp/nhis-insurance-treatment-information';
-  final fromEnv = (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim();
+  final fromEnv = bffNormalizeCodefProductPathTypos(
+    (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim(),
+  );
   final primary = fromEnv.isNotEmpty ? fromEnv : defaultPath;
   final pathCandidates = bffCodefNhisPathCandidatesFromPrimary(primary);
   final baseCandidates = bffCodefBaseUrlCandidates(env);
