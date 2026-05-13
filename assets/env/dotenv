@@ -1,5 +1,6 @@
-CODEF_CLIENT_ID=06921fe6-d9d0-4624-bfd8-e841495201ff
-CODEF_CLIENT_SECRET=ca67893b-f668-4d34-9b57-53e4978040d1
+# 샌드박스 클라이언트. public_key 는 콘솔 전체 복사로 교체 권장.
+CODEF_CLIENT_ID=ef27cfaa-10c1-4470-adac-60ba476273f9
+CODEF_CLIENT_SECRET=83160c33-9045-4915-86d8-809473cdf5c3
 CODEF_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjlFcTaZzIPppqO1w2YfP2nzms//hCYRBpKCOD1VYEI4Bfv4Gl7qov5gEoE1aEOAmx0wD/ffYCJagEAYwoPCNZuCfKs9lhLKaYWju17qnNIPDm5RrjvDcT/ZKs6g4PelioYFb6bLmcKvRbf7c3r3HT+gacL7zl5+cW55GzjAUH9+AObWkxnNhHKfQUtNDUMsBXNuKcArcK0zcRkK3G3teToxodnZDJYdOqLFkyAgHLnIFFa7+qalpZHY/N4sU2IEaGVhU+gQ7GMA+tur7bz0a+taKZZ4qEBxLgwjny76fFoQhr7iy9S4IUso/L1CLrU8AUyRUTwsYUkw+XjBzivCZswIDAQAB-----END PUBLIC KEY-----"
 GEMINI_API_KEY="AIzaSyAH91tPYhoabPC7ffMl0CjY5O9PCk8Ge_g"
 GEMINI_MODEL_ID=gemini-2.5-flash
@@ -14,12 +15,13 @@ PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6
 # 틸코 간편인증 — 비우면 /v1/tilko/* 사용 불가
 TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_HOST=https://dev.tilko.net
-# 앱: 간편인증 채널(KAKAO, NAVER, PASS 등). BFF 틸코 요청 PrivateAuthType
+# 앱만 사용: BFF로 보내는 틸코 요청의 PrivateAuthType (KAKAO, NAVER, PASS 등)
 TILKO_PRIVATE_AUTH_TYPE=KAKAO
 
-# CODEF — codef.io 콘솔 키는 보통 운영 호스트(api.codef.io). 비우면 BFF가 development.codef.io 를 써서 CF-00404(404)가 날 수 있음.
-CODEF_BASE_URL=https://api.codef.io
+# CODEF — 샌드박스 클라이언트는 보통 sandbox.codef.io
+CODEF_BASE_URL=https://sandbox.codef.io
 CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/each/pp/nhis-insurance-treatment-information
-# true: BFF /v1/medications 가 CODEF 실조회. CODEF_MEDICATION_PATH 비우면 NHIS_TREATMENT_PATH 사용.
+# true: BFF /v1/medications 가 CODEF 실조회. CODEF_MEDICATION_PATH 비우면 위 NHIS_TREATMENT_PATH 사용.
 BFF_USE_CODEF_FOR_MEDICATIONS=true
+# 기관 연동 후 발급 connectedId — 비우면 앱 「건강·복약 연동」저장값·틸코 플로우 응답에 의존
 # CODEF_CONNECTED_ID=

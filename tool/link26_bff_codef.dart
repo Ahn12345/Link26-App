@@ -225,6 +225,11 @@ String? bffCodefFailureHintKo(Object? e) {
         'codef.io 콘솔에서 해당 공공 상품 이용 권한이 있는지도 확인하세요. '
         '데모·테스트용 클라이언트면 운영 대신 sandbox.codef.io 조합이 필요할 수 있습니다.';
   }
+  if (s.contains('CF-00017') || s.contains('"code":"CF-00017"')) {
+    return 'CODEF 클라이언트 종류와 호스트가 맞지 않습니다(CF-00017). '
+        '샌드박스 클라이언트면 CODEF_BASE_URL=https://sandbox.codef.io, '
+        '개발(데모) 키면 https://development.codef.io, 운영이면 https://api.codef.io 를 콘솔·키 유형과 맞추세요.';
+  }
   if (s.contains('CF-00003') || s.contains('"code":"CF-00003"')) {
     return 'CODEF에서 해당 상품 구독·권한을 찾지 못했습니다(CF-00003). '
         'codef.io 콘솔에서 건보 진료·투약(nhis-insurance-treatment-information) '
@@ -239,6 +244,11 @@ String? bffCodefFailureHintKo(Object? e) {
 String? bffCodefNhisTreatResultHintKo(String? code, String? message) {
   final c = (code ?? '').trim();
   if (c.isEmpty || c == 'CF-00000') return null;
+  if (c == 'CF-00017') {
+    return 'CODEF 클라이언트와 호스트가 짝이 아닙니다(CF-00017). '
+        '샌드박스 클라이언트는 CODEF_BASE_URL=https://sandbox.codef.io, '
+        '개발(데모)은 https://development.codef.io, 운영은 https://api.codef.io 를 콘솔 안내와 맞추세요.';
+  }
   if (c == 'CF-00003') {
     return 'CODEF에서 해당 상품 구독·권한을 찾지 못했거나(CF-00003), '
         '요청 본문이 상품 스펙과 맞지 않을 때도 같은 코드가 날 수 있습니다. '
