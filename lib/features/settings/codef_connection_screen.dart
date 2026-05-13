@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
+import 'package:link26_app/core/navigation/link26_route_observer.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
@@ -15,7 +16,7 @@ class CodefConnectionScreen extends StatefulWidget {
 }
 
 class _CodefConnectionScreenState extends State<CodefConnectionScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RouteAware {
   final _controller = TextEditingController();
   bool _loading = true;
   String? _phoneDigits;
@@ -28,6 +29,15 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<void>) {
+      link26RouteObserver.subscribe(this, route);
+    }
+  }
+
   void _onConnectedIdEdited() {
     if (mounted) setState(() {});
   }
@@ -37,6 +47,12 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
     if (state == AppLifecycleState.resumed) {
       _load();
     }
+  }
+
+  /// 다른 화면을 push했다가 pop으로 돌아올 때 (앱은 계속 포그라운드일 수 있음).
+  @override
+  void didPopNext() {
+    _load();
   }
 
   Future<void> _load() async {
@@ -58,6 +74,7 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
 
   @override
   void dispose() {
+    link26RouteObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onConnectedIdEdited);
     _controller.dispose();
@@ -78,6 +95,7 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
       connectedId: _controller.text.trim().isEmpty ? null : _controller.text,
     );
     if (!mounted) return;
+    setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.settingsCodefConnectionSaved)),
     );

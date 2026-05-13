@@ -3,6 +3,7 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:link26_app/core/constants/storage_keys.dart';
+import 'package:link26_app/core/navigation/link26_route_observer.dart';
 import 'package:link26_app/core/theme/app_theme.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_screen.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
@@ -96,6 +97,7 @@ class Link26AppState extends State<Link26App> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [link26RouteObserver],
       locale: _localeOverride,
       title: 'Link App',
       theme: AppTheme.light,
