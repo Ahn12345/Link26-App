@@ -69,21 +69,33 @@ class ChatMessage {
   final String? cardTitle;
   final String? cardSubtitle;
 
+  /// 사용자 첨부 사진 — 로컬 DB에는 base64 로 저장합니다.
+  final String? imageBase64;
+  final String? imageMime;
+
   const ChatMessage({
     required this.text,
     required this.isUser,
     required this.time,
     this.cardTitle,
     this.cardSubtitle,
+    this.imageBase64,
+    this.imageMime,
   });
 
-  Map<String, dynamic> toJson() => {
-        'text': text,
-        'isUser': isUser,
-        'time': time,
-        if (cardTitle != null) 'cardTitle': cardTitle,
-        if (cardSubtitle != null) 'cardSubtitle': cardSubtitle,
-      };
+  Map<String, dynamic> toJson() {
+    final img = imageBase64?.trim();
+    final mime = imageMime?.trim();
+    return {
+      'text': text,
+      'isUser': isUser,
+      'time': time,
+      if (cardTitle != null) 'cardTitle': cardTitle,
+      if (cardSubtitle != null) 'cardSubtitle': cardSubtitle,
+      if (img != null && img.isNotEmpty) 'imageBase64': img,
+      if (mime != null && mime.isNotEmpty) 'imageMime': mime,
+    };
+  }
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
         text: json['text'] as String? ?? '',
@@ -91,5 +103,7 @@ class ChatMessage {
         time: json['time'] as String? ?? '',
         cardTitle: json['cardTitle'] as String?,
         cardSubtitle: json['cardSubtitle'] as String?,
+        imageBase64: json['imageBase64'] as String?,
+        imageMime: json['imageMime'] as String?,
       );
 }

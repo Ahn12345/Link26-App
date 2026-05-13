@@ -21,7 +21,7 @@ abstract final class AiChatMessageRepository {
     final dbPath = p.join(dir.path, 'link26_ai_chat.db');
     _db = await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE ai_chat_messages (
@@ -30,9 +30,21 @@ abstract final class AiChatMessageRepository {
             is_user INTEGER NOT NULL,
             time_label TEXT NOT NULL,
             card_title TEXT,
-            card_subtitle TEXT
+            card_subtitle TEXT,
+            image_b64 TEXT,
+            image_mime TEXT
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE ai_chat_messages ADD COLUMN image_b64 TEXT',
+          );
+          await db.execute(
+            'ALTER TABLE ai_chat_messages ADD COLUMN image_mime TEXT',
+          );
+        }
       },
     );
     return _db!;
@@ -45,6 +57,8 @@ abstract final class AiChatMessageRepository {
       time: row['time_label'] as String? ?? '',
       cardTitle: row['card_title'] as String?,
       cardSubtitle: row['card_subtitle'] as String?,
+      imageBase64: row['image_b64'] as String?,
+      imageMime: row['image_mime'] as String?,
     );
   }
 
@@ -79,6 +93,8 @@ abstract final class AiChatMessageRepository {
             'time_label': m.time,
             'card_title': m.cardTitle,
             'card_subtitle': m.cardSubtitle,
+            'image_b64': m.imageBase64,
+            'image_mime': m.imageMime,
           });
         }
       });
@@ -109,6 +125,8 @@ abstract final class AiChatMessageRepository {
           'time_label': m.time,
           'card_title': m.cardTitle,
           'card_subtitle': m.cardSubtitle,
+          'image_b64': m.imageBase64,
+          'image_mime': m.imageMime,
         });
       }
     });

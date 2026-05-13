@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
@@ -21,6 +23,33 @@ import 'package:link26_app/core/constants/image_assets.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/models/link_models.dart';
+
+typedef _BytesMime = ({Uint8List bytes, String mime});
+
+/// 로컬 DB에 base64 로 넣기 전에 용량을 줄입니다(초대형 사진 폭주 방지).
+_BytesMime _prepareImageForChatHistory(Uint8List raw, String mime) {
+  const maxBytes = 260000;
+  final m = mime.trim().isNotEmpty ? mime.trim() : 'image/jpeg';
+  if (raw.length <= maxBytes) {
+    return (bytes: raw, mime: m);
+  }
+  try {
+    final decoded = img.decodeImage(raw);
+    if (decoded == null) {
+      return (bytes: raw, mime: m);
+    }
+    var scaled =
+        decoded.width > 960 ? img.copyResize(decoded, width: 960) : decoded;
+    var out = Uint8List.fromList(img.encodeJpg(scaled, quality: 82));
+    if (out.length > maxBytes) {
+      scaled = img.copyResize(scaled, width: 640);
+      out = Uint8List.fromList(img.encodeJpg(scaled, quality: 76));
+    }
+    return (bytes: out, mime: 'image/jpeg');
+  } catch (_) {
+    return (bytes: raw, mime: m);
+  }
+}
 
 Future<void> _finalizeAiChatSuccess({
   required bool hasPendingImage,
@@ -235,19 +264,32 @@ class _AiChatBodyState extends State<_AiChatBody> {
       return;
     }
 
-    final userBubbleText = hasPendingImage
-        ? '${l10n.aiChatImageUserCaption}\n\n$text'
-        : text;
-
     final homeAlertTitle = l10n.homeAiChatImageReplyTitle;
     final analyzingLabel = l10n.aiChatImageAnalyzing;
     final replyError = GeminiRuntimeConfig.isConfigured
         ? l10n.aiChatReplyError
         : l10n.aiChatGeminiKeyMissing;
 
+    String? userImageB64;
+    String? userImageMime;
+    if (hasPendingImage && pendingBytes.isNotEmpty) {
+      final packed = _prepareImageForChatHistory(
+        pendingBytes,
+        pendingMime ?? 'image/jpeg',
+      );
+      userImageB64 = base64Encode(packed.bytes);
+      userImageMime = packed.mime;
+    }
+
     setState(() {
       AiChatConversationCache.messages.add(
-        ChatMessage(isUser: true, time: _nowLabel(), text: userBubbleText),
+        ChatMessage(
+          isUser: true,
+          time: _nowLabel(),
+          text: text,
+          imageBase64: userImageB64,
+          imageMime: userImageMime,
+        ),
       );
       if (hasPendingImage) {
         AiChatConversationCache.messages.add(
@@ -1121,6 +1163,69 @@ class _InputBar extends StatelessWidget {
   }
 }
 
+/// 말풍선에 저장된 base64 이미지 — [build] 마다 디코드하지 않도록 한 번만 풉니다.
+class _BubbleInlineImage extends StatefulWidget {
+  const _BubbleInlineImage({
+    required this.base64,
+    required this.maxWidth,
+  });
+
+  final String base64;
+  final double maxWidth;
+
+  @override
+  State<_BubbleInlineImage> createState() => _BubbleInlineImageState();
+}
+
+class _BubbleInlineImageState extends State<_BubbleInlineImage> {
+  Uint8List? _bytes;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _bytes = base64Decode(widget.base64);
+    } catch (_) {
+      _bytes = null;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _BubbleInlineImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.base64 != widget.base64) {
+      try {
+        _bytes = base64Decode(widget.base64);
+      } catch (_) {
+        _bytes = null;
+      }
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final b = _bytes;
+    if (b == null || b.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: widget.maxWidth.clamp(40, 900),
+          maxHeight: 260,
+        ),
+        child: Image.memory(
+          b,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+        ),
+      ),
+    );
+  }
+}
+
 class _ChatBubble extends StatelessWidget {
   const _ChatBubble({
     required this.message,
@@ -1141,6 +1246,8 @@ class _ChatBubble extends StatelessWidget {
     final bodyPx = Link26ResponsiveUi.body(w);
     final pad = Link26ResponsiveUi.gapMd(w).clamp(12.0, 18.0);
     final radius = (14.0 + w / 800).clamp(14.0, 20.0);
+    final inlineImageB64 = message.imageBase64?.trim() ?? '';
+    final hasInlineImage = inlineImageB64.isNotEmpty;
 
     return Align(
       alignment: align,
@@ -1157,14 +1264,23 @@ class _ChatBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                fontSize: bodyPx,
-                height: 1.5,
-                color: Link26Surface.textPrimary,
+            if (hasInlineImage) ...[
+              _BubbleInlineImage(
+                base64: inlineImageB64,
+                maxWidth: maxBubbleWidth - pad * 2,
               ),
-            ),
+              if (message.text.trim().isNotEmpty)
+                SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+            ],
+            if (message.text.trim().isNotEmpty)
+              Text(
+                message.text,
+                style: TextStyle(
+                  fontSize: bodyPx,
+                  height: 1.5,
+                  color: Link26Surface.textPrimary,
+                ),
+              ),
             if (message.cardTitle != null) ...[
               SizedBox(height: Link26ResponsiveUi.gapSm(w)),
               Container(
