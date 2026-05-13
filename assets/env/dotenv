@@ -1,9 +1,9 @@
-# --- CODEF (콘솔 샌드박스) ---
-CODEF_CLIENT_ID=ef27cfaa-10c1-4470-adac-60ba476273f9
-CODEF_CLIENT_SECRET=83160c33-9045-4915-86d8-809473cdf5c3
+# --- CODEF (콘솔 데모버전 NEW + development.codef.io) ---
+CODEF_CLIENT_ID=d864d0e4-4f15-4894-bce0-25fdc0062965
+CODEF_CLIENT_SECRET=649d9385-ce4e-4cd4-8a31-17b501b267c1
 CODEF_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjlFcTaZzIPppqO1w2YfP2nzms//hCYRBpKCOD1VYEI4Bfv4Gl7qov5gEoE1aEOAmx0wD/ffYCJagEAYwoPCNZuCfKs9lhLKaYWju17qnNIPDm5RrjvDcT/ZKs6g4PelioYFb6bLmcKvRbf7c3r3HT+gacL7zl5+cW55GzjAUH9+AObWkxnNhHKfQUtNDUMsBXNuKcArcK0zcRkK3G3teToxodnZDJYdOqLFkyAgHLnIFFa7+qalpZHY/N4sU2IEaGVhU+gQ7GMA+tur7bz0a+taKZZ4qEBxLgwjny76fFoQhr7iy9S4IUso/L1CLrU8AUyRUTwsYUkw+XjBzivCZswIDAQAB-----END PUBLIC KEY-----"
-CODEF_API_HOST=https://api.codef.io
-CODEF_BASE_URL=https://sandbox.codef.io
+CODEF_API_HOST=https://development.codef.io
+CODEF_BASE_URL=https://development.codef.io
 CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/each/pp/nhis-insurance-treatment-information
 BFF_USE_CODEF_FOR_MEDICATIONS=true
 # CODEF_CONNECTED_ID=
