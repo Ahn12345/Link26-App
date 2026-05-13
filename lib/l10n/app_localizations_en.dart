@@ -564,6 +564,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupPrivacyRequired => 'You must agree to personal data processing.';
 
   @override
+  String get signupPrivacyDetailLink => '[Details]';
+
+  @override
+  String get privacyConsentDocumentTitle =>
+      'Privacy collection & use consent';
+
+  @override
+  String get privacyConsentOpenFailed =>
+      'Could not load the consent PDF. Please restart the app and try again.';
+
+  @override
+  String get guidePrivacyConsentSubtitle => 'Full text bundled in the app (PDF)';
+
+  @override
   String get signupNameRequired => 'Please enter your name.';
 
   @override

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:link26_app/features/more/privacy_consent_pdf_screen.dart';
+import 'package:link26_app/l10n/app_localizations.dart';
 
 class GuideScreen extends StatelessWidget {
   const GuideScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final items = <(String, String)>[
       ('계정 및 프로필 설정', '프로필 정보를 확인하고 가족 구성원을 추가하여 편리하게 관리할 수 있습니다.'),
       ('가족 구성원 추가', '가족 구성원을 추가하면 연락처와 알림을 공유할 수 있습니다.'),
@@ -38,6 +41,23 @@ class GuideScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: Text(
+                l10n.privacyConsentDocumentTitle,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              subtitle: Text(l10n.guidePrivacyConsentSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PrivacyConsentPdfScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(height: 1),
             ...items.map(
               (e) => ListTile(
                 title: Text(e.$1, style: const TextStyle(fontWeight: FontWeight.w900)),

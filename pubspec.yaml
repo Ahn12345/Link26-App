@@ -36,6 +36,7 @@ dependencies:
   timezone: ^0.11.0
   flutter_timezone: ^5.0.2
   image: ^4.5.4
+  pdfx: ^2.9.2
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +61,7 @@ flutter:
     - assets/design/png/
     - assets/design/screens/
     - assets/images/
+    - assets/legal/privacy_consent.pdf
     # AI 채팅 DUR 로컬 검색 (용량 큼 — 릴리즈 시 모듈/다운로드로 옮길 수 있음)
     - lib/data/DUR1/
     - lib/data/DUR2/

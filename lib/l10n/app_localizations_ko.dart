@@ -554,6 +554,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signupPrivacyRequired => '개인정보 동의는 필수입니다.';
 
   @override
+  String get signupPrivacyDetailLink => '[상세정보]';
+
+  @override
+  String get privacyConsentDocumentTitle => '개인정보 수집·이용 동의서';
+
+  @override
+  String get privacyConsentOpenFailed =>
+      '동의서 PDF를 불러오지 못했습니다. 앱을 다시 시작한 뒤 다시 시도해 주세요.';
+
+  @override
+  String get guidePrivacyConsentSubtitle => '앱에 포함된 전문(PDF)';
+
+  @override
   String get signupNameRequired => '이름을 입력하세요.';
 
   @override

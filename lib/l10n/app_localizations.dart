@@ -213,6 +213,10 @@ abstract class AppLocalizations {
   String get signupRrnInvalid;
   String get signupPrivacyAgree;
   String get signupPrivacyRequired;
+  String get signupPrivacyDetailLink;
+  String get privacyConsentDocumentTitle;
+  String get privacyConsentOpenFailed;
+  String get guidePrivacyConsentSubtitle;
   String get signupNameRequired;
   String get signupRequiredIncomplete;
   String get socialLoginComingSoon;

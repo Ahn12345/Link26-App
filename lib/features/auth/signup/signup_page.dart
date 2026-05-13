@@ -16,6 +16,7 @@ import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/features/auth/services/nhis_signup_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
+import 'package:link26_app/features/more/privacy_consent_pdf_screen.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
@@ -397,6 +398,31 @@ class _SignupPageState extends State<SignupPage> {
                               fontSize: Link26ResponsiveUi.bodySmall(w),
                               color: Link26Surface.textPrimary,
                               height: 1.35,
+                            ),
+                          ),
+                          secondary: TextButton(
+                            style: TextButton.styleFrom(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).push<void>(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      const PrivacyConsentPdfScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              l10n.signupPrivacyDetailLink,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: Link26ResponsiveUi.bodySmall(w),
+                                color: Link26Surface.accent,
+                              ),
                             ),
                           ),
                           activeColor: Link26Surface.accent,

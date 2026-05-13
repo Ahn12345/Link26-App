@@ -90,6 +90,7 @@ Future<void> _finalizeAiChatFailure({
   required String analyzingLabel,
   required String replyError,
   required String homeAlertTitle,
+  required int dailyLimit,
 }) async {
   if (hasPendingImage && AiChatConversationCache.messages.isNotEmpty) {
     final last = AiChatConversationCache.messages.last;
@@ -104,6 +105,9 @@ Future<void> _finalizeAiChatFailure({
       text: replyError,
     ),
   );
+  if (AiChatConversationCache.dailyUsed < dailyLimit) {
+    AiChatConversationCache.dailyUsed++;
+  }
   await AiChatConversationCache.persist();
   if (hasPendingImage) {
     await AiChatHomeAlertNotifier.instance.onNewAiChatImageReply(
@@ -327,6 +331,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
         analyzingLabel: analyzingLabel,
         replyError: replyError,
         homeAlertTitle: homeAlertTitle,
+        dailyLimit: _dailyLimit,
       );
     } finally {
       AiChatOutgoingBusy.instance.value = false;
@@ -402,7 +407,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
     // 키보드가 올라오면 아래에 `keyboardLift` 를 또 더하므로, 탭바용 패딩은 줄여 Column 오버플로를 막습니다.
     final shellNavPad = embedded
         ? MediaQuery.viewPaddingOf(context).bottom +
-            (keyboardLift > 0 ? 56.0 : 118.0)
+            (keyboardLift > 0 ? 40.0 : 118.0)
         : 0.0;
     final inputEnabled = !AiChatOutgoingBusy.instance.value &&
         AiChatConversationCache.dailyUsed < _dailyLimit;
@@ -541,15 +546,24 @@ class _AiChatBodyState extends State<_AiChatBody> {
                             ),
                           ),
                         ),
-                        Center(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: Link26Layout.innerWidth(w),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
+                        Flexible(
+                          fit: FlexFit.loose,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: SingleChildScrollView(
+                              clipBehavior: Clip.none,
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.manual,
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: Link26Layout.innerWidth(w),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
                                 _DisclaimerBanner(
                                   text: l10n.aiChatDisclaimerShort,
                                   layoutWidth: w,
@@ -572,7 +586,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                   offset: Offset(
                                     0,
                                     keyboardLift > 0
-                                        ? -2.0
+                                        ? 0.0
                                         : (embedded ? -10.0 : -6.0),
                                   ),
                                   child: DecoratedBox(
@@ -612,6 +626,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                               child: _PendingAttachmentChip(
                                                 label: l10n
                                                     .aiChatImagePendingHint,
+                                                compact: keyboardLift > 0,
                                                 previewBytes:
                                                     AiChatPendingAttachmentStore
                                                         .instance.bytes,
@@ -647,6 +662,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                  ),
                       ],
                     ),
                   ),
@@ -945,22 +963,27 @@ class _PendingAttachmentChip extends StatelessWidget {
     required this.label,
     required this.onRemove,
     this.previewBytes,
+    this.compact = false,
   });
 
   final String label;
   final VoidCallback? onRemove;
   final Uint8List? previewBytes;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final softOutline = Link26Surface.outline.withValues(alpha: 0.45);
     final hasPreview = previewBytes != null && previewBytes!.isNotEmpty;
+    final thumb = compact ? 40.0 : 52.0;
+    final hPad = compact ? 8.0 : 12.0;
+    final vPad = compact ? 6.0 : 8.0;
     return Material(
       color: Colors.white,
       elevation: 0,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: softOutline),
@@ -972,24 +995,28 @@ class _PendingAttachmentChip extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: Image.memory(
                   previewBytes!,
-                  width: 52,
-                  height: 52,
+                  width: thumb,
+                  height: thumb,
                   fit: BoxFit.cover,
                   filterQuality: FilterQuality.medium,
                   errorBuilder: (context, error, stackTrace) =>
                       DecodedAssetImage(
                         ImageAssets.applogo,
-                        width: 52,
-                        height: 52,
+                        width: thumb,
+                        height: thumb,
                         fit: BoxFit.cover,
                         borderRadius: BorderRadius.circular(8),
                       ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: compact ? 8 : 10),
             ] else ...[
-              Icon(Icons.attach_file, size: 20, color: Link26Surface.accent),
-              const SizedBox(width: 8),
+              Icon(
+                Icons.attach_file,
+                size: compact ? 18 : 20,
+                color: Link26Surface.accent,
+              ),
+              SizedBox(width: compact ? 6 : 8),
             ],
             Expanded(
               child: Text(
