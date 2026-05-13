@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
@@ -16,6 +17,9 @@ import 'package:link26_app/features/settings/notification_setting_screen.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
 import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
+
+/// 배포·스토어 앱과 소스 트리가 같은지 확인용(더보기 하단에 표시).
+const int kMoreScreenLayoutRevision = 2;
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.showScaffold = true});
@@ -327,6 +331,20 @@ class _MoreBodyState extends State<_MoreBody> with WidgetsBindingObserver {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const GuideScreen()),
+            ),
+          ),
+          SizedBox(height: Link26ResponsiveUi.gapLg(w)),
+          Center(
+            child: Text(
+              kDebugMode
+                  ? 'DEBUG · 더보기 UI #$kMoreScreenLayoutRevision (복용 알림·세션 id)'
+                  : '더보기 UI #$kMoreScreenLayoutRevision',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Link26Surface.textMuted,
+              ),
             ),
           ),
         ],
