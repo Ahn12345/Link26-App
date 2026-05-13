@@ -244,7 +244,8 @@ String? bffCodefNhisTreatResultHintKo(String? code, String? message) {
         '요청 본문이 상품 스펙과 맞지 않을 때도 같은 코드가 날 수 있습니다. '
         'codef.io 콘솔에서 「국민건강보험 진료·투약」상품 이용 권한을 확인하고, '
         'BFF가 넣는 organization(기본 0002)·loginType·loginTypeLevel·identity·_tilkoSimpleAuth 를 '
-        'developer.codef.io 문서와 맞추세요.';
+        'developer.codef.io 문서와 맞추세요. '
+        '(틸코 API KEY는 심평원 간편인증용이며, CF-00003은 CODEF 상품·호스트 문제인 경우가 많습니다.)';
   }
   final m = (message ?? '').trim();
   if (m.isNotEmpty) {

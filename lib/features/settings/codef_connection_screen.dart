@@ -158,6 +158,12 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
                   '호스트와 키 종류가 어긋나면 CF-00404/404·인증 오류가 날 수 있고, '
                   'connectedId 도 같은 환경에서 발급·저장된 값이어야 합니다. '
                   '틸코는 TILKO_API_HOST 가 dev.tilko.net 인지 api.tilko.net 인지 가입·플로우와 맞는지 점검하세요.\n\n'
+                  'apidemo.tilko.net 문서 URL에 API_VERSION=v2.0 이 보여도, '
+                  '「진료 및 투약 정보(공동인증)」본문의 실제 주소는 /api/v1.0/Nhis/... 입니다. '
+                  '그 API는 공동인증서(CertFile·KeyFile)용이고, 이 앱이 쓰는 심평원 간편인증(/api/v1.0/hirasimpleauth/...)·CODEF 건보 상품과는 다른 제품입니다. '
+                  '데모 페이지의 빈 API KEY 칸에는 콘솔에 발급된 일반용 키(표에 있는 값)를 넣어야 하며, 빈 칸 그대로는 호출되지 않습니다.\n\n'
+                  'CF-00003(요청 서비스 상품 정보 없음)은 CODEF 쪽 상품 구독·CODEF_BASE_URL·상품 경로 이슈이며, '
+                  '틸코 API KEY만 바꿔서는 해결되지 않을 수 있습니다.\n\n'
                   '문제가 계속되면 NHIS_SHOW_SYNC_SNACKBARS=true 로 스낵바 원인을 켤 수 있습니다.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF64748B),

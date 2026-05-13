@@ -55,6 +55,20 @@ void main() {
     expect(items.first['frequency'], '2회');
   });
 
+  test('Tilko NHIS detail list shape (ChoBangYakPumMyung)', () {
+    final root = {
+      'data': {
+        'RetrieveTreatmentInjectionInformationPersonDetailList': [
+          {'ChoBangYakPumMyung': '아목시실린', 'TuyakIlSoo': '1일 3회'},
+        ],
+      },
+    };
+    final items = codefRootToMedicationItems(root);
+    expect(items.length, 1);
+    expect(items.first['name'], '아목시실린');
+    expect(items.first['frequency'], '1일 3회');
+  });
+
   test('dedupes identical rows', () {
     final root = {
       'data': {

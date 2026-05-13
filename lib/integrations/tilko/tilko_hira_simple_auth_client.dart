@@ -8,6 +8,9 @@ import 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
 
 /// 틸코 건강보험심사평가원 간편인증 (`/api/v1.0/hirasimpleauth/simpleauthrequest`).
 ///
+/// 틸코 문서의 `Nhis/RetrieveTreatmentInjectionInformationPerson`(apidemo URL의 v2.0 표기와 별개로
+/// 본문 경로는 보통 `/api/v1.0/Nhis/...`)는 **공동인증서** 기반이라 이 클라이언트와 다릅니다.
+/// 앱·BFF 흐름은 간편인증 결과를 CODEF 건보 진료·투약 상품에 넘기는 용도입니다.
 /// 운영에서는 BFF에만 키를 두고 [Link26BffIntegrationsClient]로 프록시하는 편이 안전합니다.
 /// 앱에서 직접 호출 시 [TilkoEnv] + [TilkoHiraSimpleAuthClient] 생성자를 사용하세요.
 

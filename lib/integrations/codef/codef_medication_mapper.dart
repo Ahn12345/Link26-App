@@ -41,6 +41,9 @@ const _listContainerKeys = [
   'drugInfos',
   'treatments',
   'prescriptions',
+  // 틸코 NHIS 공동인증 API 응답 필드 (문서 RetrieveTreatmentInjectionInformationPerson)
+  'ResultList',
+  'RetrieveTreatmentInjectionInformationPersonDetailList',
 ];
 
 const _medicineNameKeys = [
@@ -65,6 +68,10 @@ const _medicineNameKeys = [
   '성분명',
   '보내실약품명',
   '투약약품명',
+  // 틸코 NHIS 진료·투약(공동인증) 응답 필드명
+  'ChoBangYakPumMyung',
+  'MediPrdcNm',
+  'ByungEuiwonYakGukMyung',
 ];
 
 const _doseKeys = [
@@ -82,6 +89,7 @@ const _freqKeys = [
   '복약',
   '복약횟수',
   '횟수',
+  'TuyakIlSoo',
 ];
 
 const _timeKeys = [
