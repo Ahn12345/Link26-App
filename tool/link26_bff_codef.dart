@@ -203,6 +203,7 @@ class CodefTokenCache {
     try {
       final uri = Uri.parse('https://oauth.codef.io/oauth/token');
       final req = await client.postUrl(uri);
+      req.followRedirects = false;
       final basic = base64Encode(utf8.encode('$clientId:$clientSecret'));
       req.headers.set(HttpHeaders.authorizationHeader, 'Basic $basic');
       req.headers.contentType = ContentType(
@@ -244,6 +245,20 @@ Uri codefJoinedProductUri(String baseUrl, String productPath) {
   return Uri.parse('$b$p');
 }
 
+/// CODEF 게이트웨이가 주는 [Location] 값 정리(`<https://…>`·RFC5988 등).
+String? normalizeCodefRedirectLocation(String? raw) {
+  if (raw == null) return null;
+  var s = raw.trim();
+  if (s.length >= 2 && s.startsWith('<') && s.endsWith('>')) {
+    s = s.substring(1, s.length - 1).trim();
+  }
+  final semi = s.indexOf(';');
+  if (semi >= 0) {
+    s = s.substring(0, semi).trim();
+  }
+  return s.isEmpty ? null : s;
+}
+
 /// BFF 502 JSON `hint_ko`·스낵바용 — CODEF 상품 URL 404·CF-00404.
 String? bffCodefFailureHintKo(Object? e) {
   if (e == null) return null;
@@ -265,10 +280,13 @@ String? bffCodefFailureHintKo(Object? e) {
         '샌드박스 클라이언트면 CODEF_BASE_URL=https://sandbox.codef.io, '
         '개발(데모) 키면 https://development.codef.io, 운영이면 https://api.codef.io 를 콘솔·키 유형과 맞추세요.';
   }
-  if (s.contains('CODEF HTTP 302') || s.contains('CODEF HTTP 301')) {
-    return 'CODEF 상품 URL이 잘못되어 리다이렉트(302/301)가 났습니다. '
-        'CODEF_NHIS_TREATMENT_PATH에 /public/each/pp/ 가 맞는지 확인하세요. '
-        '(/public/cach/pp/ 등 오타면 /public/each/pp/ 로 고치세요.)';
+  if (RegExp(r'CODEF HTTP (301|302|303|307|308)').hasMatch(s)) {
+    return 'CODEF 게이트웨이가 HTTP 리다이렉트(301·302·303·307·308)로 응답했습니다. '
+        'BFF를 최신 `tool/link26_bff_codef.dart`로 맞춘 뒤 재시작했는지, 콘솔에 '
+        '`CODEF: HTTP … Location=` 로그가 찍히는지 확인하세요. '
+        '계속되면 CODEF_BASE_URL·클라이언트 키 종류(샌드박스·개발·운영) 짝과 '
+        'CODEF_NHIS_TREATMENT_PATH(/public/each/pp/ 포함)를 developer.codef.io 와 맞추세요. '
+        '(/public/cach/pp/ 등 경로 오타도 302를 유발할 수 있습니다.)';
   }
   if (s.contains('CF-00003') || s.contains('"code":"CF-00003"')) {
     return 'CODEF에서 해당 상품 구독·권한을 찾지 못했습니다(CF-00003). '
@@ -469,9 +487,9 @@ Map<String, dynamic> mergeCodefNhisTilkoTreatmentBody({
 
 /// CODEF 상품 POST (codef-node httpSender 와 동일).
 ///
-/// CODEF·게이트웨이가 **301·302·307·308** 으로 최종 URL을 안내하는 경우가 있어,
-/// Dart [HttpClient] 가 POST 리다이렉트를 따라가지 않아 302만 보이는 문제를 막기 위해
-/// [Location] 헤더를 수동으로 따라갑니다(최대 [maxRedirects]회).
+/// CODEF·게이트웨이가 **301·302·303·307·308** 으로 최종 URL을 안내하는 경우가 있어,
+/// Dart [HttpClient] 가 POST+302 리다이렉트를 자동으로 따라가지 않아 302만 보이는 문제를 막기 위해
+/// [Location] 헤더를 수동으로 따라갑니다(최대 [maxRedirects]회). POST 본문·Bearer는 유지합니다.
 Future<String> codefProductRaw({
   required String baseUrl,
   required String productPath,
@@ -485,6 +503,8 @@ Future<String> codefProductRaw({
   try {
     for (var hop = 0; hop <= maxRedirects; hop++) {
       final req = await client.postUrl(uri);
+      // POST+302 는 Dart 가 자동으로 따라가지 않음. 수동 리다이렉트만 쓰기 위해 명시적으로 끔.
+      req.followRedirects = false;
       req.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
       req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $bearer');
       req.write(encoded);
@@ -492,12 +512,17 @@ Future<String> codefProductRaw({
       final raw = await res.transform(utf8.decoder).join();
       final code = res.statusCode;
 
-      if (code == HttpStatus.movedPermanently ||
-          code == HttpStatus.found ||
-          code == HttpStatus.temporaryRedirect ||
-          code == HttpStatus.permanentRedirect) {
-        final location = res.headers.value(HttpHeaders.locationHeader);
-        if (location == null || location.trim().isEmpty) {
+      // HttpStatus 상수와 무관하게 숫자로 판별(툴 체인·이관 시 혼동 방지).
+      // 303: 일부 게이트웨이가 잘못 쓰는 경우가 있어 POST 유지로 동일 본문 재전송.
+      final manualRedirect = code == 301 ||
+          code == 302 ||
+          code == 303 ||
+          code == 307 ||
+          code == 308;
+      if (manualRedirect) {
+        final locationRaw = res.headers.value(HttpHeaders.locationHeader);
+        final location = normalizeCodefRedirectLocation(locationRaw);
+        if (location == null) {
           throw StateError(
             'CODEF HTTP $code (POST $uri) without Location: $raw',
           );
@@ -507,7 +532,10 @@ Future<String> codefProductRaw({
             'CODEF redirect limit ($maxRedirects) POST $uri → $location',
           );
         }
-        uri = uri.resolve(location.trim());
+        final next = uri.resolve(location);
+        // ignore: avoid_print
+        stderr.writeln('CODEF: HTTP $code Location=$location → POST $next');
+        uri = next;
         continue;
       }
 

@@ -15,11 +15,11 @@ String _flowHttpErrorDetail(int statusCode, String body) {
       final detail = decoded['detail'];
       if (detail is String && detail.trim().isNotEmpty) {
         final d = detail.trim();
-        if (d.contains('CODEF HTTP 302') || d.contains('CODEF HTTP 301')) {
-          return 'CODEF 상품 URL이 맞지 않아 리다이렉트(302·301)가 났습니다. '
-              'BFF 설정의 CODEF_BASE_URL(샌드박스·개발·운영 키와 짝이 맞는지)과 '
-              'CODEF_NHIS_TREATMENT_PATH(문서의 요청 URL, /public/each/pp/ 포함 여부)를 '
-              'developer.codef.io 기준으로 확인하세요.';
+        if (RegExp(r'CODEF HTTP (301|302|303|307|308)').hasMatch(d)) {
+          return 'CODEF가 HTTP 리다이렉트(301·302·303·307·308)로 응답했습니다. '
+              'BFF를 최신 코드로 재시작했는지·콘솔에 `CODEF: HTTP … Location=` 로그가 있는지 확인하고, '
+              'CODEF_BASE_URL·키 종류(샌드박스·개발·운영)와 CODEF_NHIS_TREATMENT_PATH를 '
+              'developer.codef.io 기준으로 맞추세요.';
         }
         if (d.contains('CODEF HTTP')) {
           return 'CODEF 연동 오류입니다. BFF .env의 CODEF 클라이언트·호스트·상품 경로를 '
