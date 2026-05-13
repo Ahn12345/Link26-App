@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/image_assets.dart';
 import '../../core/design/link26_design_catalog.dart';
@@ -57,10 +58,23 @@ class EmergencyContactScreen extends StatelessWidget {
               ),
               SizedBox(height: Link26ResponsiveUi.heroArtToContent(w)),
               FilledButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.emergencyCallPlaceholder)),
-                  );
+                onPressed: () async {
+                  final uri = Uri.parse('tel:119');
+                  try {
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.emergencyCallPlaceholder)),
+                      );
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.emergencyCallPlaceholder)),
+                      );
+                    }
+                  }
                 },
                 icon: const Icon(Icons.call),
                 label: Text(l10n.emergencyCallAction),

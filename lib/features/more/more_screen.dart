@@ -9,7 +9,9 @@ import 'package:link26_app/features/home/home_notification_center_screen.dart';
 import 'package:link26_app/features/family/family_account_screen.dart';
 import 'package:link26_app/features/more/guide_screen.dart';
 import 'package:link26_app/features/settings/display_setting_screen.dart';
+import 'package:link26_app/features/settings/emergency_contact_screen.dart';
 import 'package:link26_app/features/settings/notification_setting_screen.dart';
+import 'package:link26_app/l10n/app_localizations.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.showScaffold = true});
@@ -21,14 +23,16 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = showScaffold ? Link26UnifiedPage.background : Colors.transparent;
-    final body = ColoredBox(color: bg, child: const _MoreBody());
+    final body = ColoredBox(color: bg, child: _MoreBody(l10n: AppLocalizations.of(context)));
     if (!showScaffold) return body;
     return Scaffold(backgroundColor: bg, body: body);
   }
 }
 
 class _MoreBody extends StatelessWidget {
-  const _MoreBody();
+  const _MoreBody({required this.l10n});
+
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +144,14 @@ class _MoreBody extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const NotificationSettingScreen()),
+            ),
+          ),
+          _MenuTile(
+            icon: Icons.phone_in_talk_outlined,
+            title: l10n.settingsEmergencyContact,
+            subtitle: l10n.settingsEmergencyContactSubtitle,
+            onTap: () => Navigator.of(context).pushNamed(
+              EmergencyContactScreen.routeName,
             ),
           ),
           _MenuTile(

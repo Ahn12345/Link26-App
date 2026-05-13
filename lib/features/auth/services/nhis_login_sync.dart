@@ -72,6 +72,16 @@ abstract final class NhisLoginSync {
     final msg = result is Failure<String>
         ? nhisHttpUserMessage(result.error)
         : 'nhis_error';
+    if (result is Failure<String> &&
+        nhisFailureLooksLikeUnreachableHost(result.error) &&
+        !NhisRuntimeConfig.loginRequired) {
+      if (kDebugMode) {
+        debugPrint(
+          'NHIS login POST 생략(연결 불가·로컬만): $msg',
+        );
+      }
+      return const NhisLoginSyncOutcome(result: NhisLoginSyncResult.skipped);
+    }
     if (kDebugMode) {
       debugPrint(
         'NHIS login POST 실패: $msg (base=${NhisRuntimeConfig.baseUrl} path=${NhisRuntimeConfig.loginPath})',

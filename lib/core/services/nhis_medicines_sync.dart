@@ -27,6 +27,7 @@ class NhisMedicinesSyncOutcome {
     this.codefResultMessage,
     this.metaNote,
     this.detail,
+    this.suppressBootstrapBanner = false,
   });
 
   final NhisMedicinesSyncResult result;
@@ -36,6 +37,8 @@ class NhisMedicinesSyncOutcome {
   final String? codefResultMessage;
   final String? metaNote;
   final String? detail;
+  /// PC BFF 미기동·와이파이 단절 등 연결 실패 시 홈 알림 스팸 방지.
+  final bool suppressBootstrapBanner;
 
   bool get isStubDemo =>
       metaSource == 'link26-bff-dart-stub' || metaSource == 'link26-bff-dart';
@@ -47,6 +50,7 @@ class NhisMedicinesSyncOutcome {
   bool get isTilkoCodefNhis => metaSource == 'tilko_codef_nhis';
 
   bool get showBannerOnBootstrap {
+    if (suppressBootstrapBanner) return false;
     if (result == NhisMedicinesSyncResult.failed) return true;
     if (result == NhisMedicinesSyncResult.skipped) return true;
     // BFF 스텁으로 성공한 경우 매 부팅 "데모입니다" 스낵바는 생략(로그만).
@@ -167,13 +171,17 @@ abstract final class NhisMedicinesSync {
     );
 
     if (result is Failure<String>) {
-      final msg = nhisHttpUserMessage(result.error);
+      final fail = result.error;
+      final msg = nhisHttpUserMessage(fail);
+      final unreachable = nhisFailureLooksLikeUnreachableHost(fail);
       debugPrint(
         'NHIS medications GET 실패: $msg (base=${NhisRuntimeConfig.baseUrl} path=${NhisRuntimeConfig.medicinesPath})',
       );
       return NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.failed,
         detail: msg,
+        suppressBootstrapBanner:
+            unreachable && !NhisRuntimeConfig.showMedicationSyncSnackbars,
       );
     }
 

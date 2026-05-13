@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../core/domain/failure.dart';
@@ -29,4 +31,38 @@ String nhisHttpUserMessage(AppFailure failure) {
     }
   }
   return failure.message;
+}
+
+/// Dio 기반 NHIS/BFF 호출이 PC·포트 미연결 등으로 끊긴 경우.
+bool nhisFailureLooksLikeUnreachableHost(AppFailure failure) {
+  final c = failure.cause;
+  if (c is DioException) {
+    switch (c.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+        return true;
+      default:
+        break;
+    }
+  }
+  if (c is SocketException) return true;
+  return false;
+}
+
+/// `package:http` BFF 플로우 등 [catch (e)] 에서 동일 판별.
+bool link26ErrorLooksLikeUnreachableHost(Object e) {
+  if (e is SocketException) return true;
+  if (e is HttpException) return true;
+  final s = e.toString().toLowerCase();
+  return s.contains('clientexception') ||
+      s.contains('connection refused') ||
+      s.contains('failed host lookup') ||
+      s.contains('network is unreachable') ||
+      s.contains('connection timed out') ||
+      s.contains('timed out') ||
+      s.contains('errno = 65') ||
+      s.contains('errno = 61') ||
+      s.contains('no route to host');
 }

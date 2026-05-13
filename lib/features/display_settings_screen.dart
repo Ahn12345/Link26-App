@@ -1,4 +1,8 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
+
+import 'package:link26_app/app.dart';
 
 class DisplaySettingsScreen extends StatefulWidget {
   const DisplaySettingsScreen({super.key});
@@ -11,6 +15,27 @@ class _DisplaySettingsScreenState extends State<DisplaySettingsScreen> {
   double textScale = 1.0;
   bool boldText = true;
   bool highContrast = false;
+
+  static const double _minScale = 0.85;
+  static const double _maxScale = 1.35;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final app = Link26App.maybeOf(context);
+      if (!mounted) return;
+      if (app != null) {
+        setState(() => textScale = app.currentTextScale);
+      }
+    });
+  }
+
+  Future<void> _applyScale(double v) async {
+    final clamped = v.clamp(_minScale, _maxScale);
+    setState(() => textScale = clamped);
+    await Link26App.maybeOf(context)?.setTextScaleFactor(clamped);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +62,12 @@ class _DisplaySettingsScreenState extends State<DisplaySettingsScreen> {
           const SizedBox(height: 30),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: const [Text('작게', style: TextStyle(fontWeight: FontWeight.w700)), Text('크게', style: TextStyle(fontWeight: FontWeight.w700))]),
           Slider(
-            min: .8,
-            max: 1.3,
-            divisions: 4,
-            value: textScale,
+            min: _minScale,
+            max: _maxScale,
+            divisions: 10,
+            value: textScale.clamp(_minScale, _maxScale),
             label: textScale == 1.0 ? '보통' : textScale < 1.0 ? '작게' : '크게',
-            onChanged: (v) => setState(() => textScale = v),
+            onChanged: (v) => unawaited(_applyScale(v)),
           ),
           Center(child: Text(textScale == 1.0 ? '보통' : textScale < 1.0 ? '작게' : '크게', style: const TextStyle(color: Color(0xFF0B6BFF), fontWeight: FontWeight.w800))),
           const SizedBox(height: 20),
@@ -89,11 +114,15 @@ class _DisplaySettingsScreenState extends State<DisplaySettingsScreen> {
           ),
           const SizedBox(height: 26),
           FilledButton(
-            onPressed: () => setState(() {
-              textScale = 1.0;
-              boldText = true;
-              highContrast = false;
-            }),
+            onPressed: () async {
+              setState(() {
+                textScale = 1.0;
+                boldText = true;
+                highContrast = false;
+              });
+              if (!context.mounted) return;
+              await Link26App.maybeOf(context)?.setTextScaleFactor(1.0);
+            },
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFF1F5F9), foregroundColor: const Color(0xFF334155), minimumSize: const Size.fromHeight(56)),
             child: const Text('기본 설정으로 되돌리기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           ),

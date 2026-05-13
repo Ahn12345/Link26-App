@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
+import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
@@ -130,11 +131,53 @@ abstract final class NhisTilkoCodefFlowSync {
         metaNote: metaMap?['notice'] as String?,
       );
     } catch (e, st) {
+      if (link26ErrorLooksLikeUnreachableHost(e)) {
+        if (kDebugMode) {
+          debugPrint('Tilko→NHIS: BFF 연결 불가(폰 단독·PC 미기동 등) — $e');
+        }
+        return null;
+      }
       debugPrint('Tilko→NHIS: $e\n$st');
       return NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.failed,
         detail: '$e',
       );
     }
+  }
+
+  /// 틸코→CODEF 플로우 후, CODEF가 생략되었거나 파싱된 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다.
+  static Future<NhisMedicinesSyncOutcome?> runTilkoThenNhisWithMedicationsFallback({
+    required String displayName,
+    required String phoneDigits,
+    required String gender,
+    required String residentRegistrationDigits13,
+    String? codefConnectedId,
+  }) async {
+    final first = await runTilkoThenNhis(
+      displayName: displayName,
+      phoneDigits: phoneDigits,
+      gender: gender,
+      residentRegistrationDigits13: residentRegistrationDigits13,
+      codefConnectedId: codefConnectedId,
+    );
+    if (first == null) return null;
+    if (NhisRuntimeConfig.useMock) return first;
+    if (!Link26BffIntegrationsClient.canCall) return first;
+
+    final tilkoOnly = first.metaSource == 'tilko_only';
+    final emptyOk = first.result == NhisMedicinesSyncResult.success &&
+        first.remoteItemCount == 0 &&
+        !first.isStubDemo;
+
+    if (!tilkoOnly && !emptyOk) return first;
+
+    final second = await NhisMedicinesSync.syncNow(phoneDigits: phoneDigits);
+    if (second.remoteItemCount > first.remoteItemCount) {
+      return second;
+    }
+    if (second.metaSource == 'codef' && first.metaSource != 'codef') {
+      return second;
+    }
+    return first;
   }
 }

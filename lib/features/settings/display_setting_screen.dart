@@ -1,5 +1,10 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/app.dart';
+
+/// 표시 설정 — 글자 크기는 [Link26AppState.setTextScaleFactor] 로 앱 전체에 반영됩니다.
 class DisplaySettingScreen extends StatefulWidget {
   const DisplaySettingScreen({super.key});
 
@@ -12,11 +17,35 @@ class _DisplaySettingScreenState extends State<DisplaySettingScreen> {
   bool bold = true;
   bool highContrast = false;
 
-  void reset() => setState(() {
-        textScale = 1.0;
-        bold = false;
-        highContrast = false;
-      });
+  static const double _minScale = 0.85;
+  static const double _maxScale = 1.35;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final app = Link26App.maybeOf(context);
+      if (!mounted) return;
+      if (app != null) {
+        setState(() => textScale = app.currentTextScale);
+      }
+    });
+  }
+
+  Future<void> _applyScale(double v) async {
+    final clamped = v.clamp(_minScale, _maxScale);
+    setState(() => textScale = clamped);
+    await Link26App.maybeOf(context)?.setTextScaleFactor(clamped);
+  }
+
+  Future<void> reset() async {
+    setState(() {
+      textScale = 1.0;
+      bold = false;
+      highContrast = false;
+    });
+    await Link26App.maybeOf(context)?.setTextScaleFactor(1.0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,12 +95,12 @@ class _DisplaySettingScreenState extends State<DisplaySettingScreen> {
             const SizedBox(height: 20),
             const Row(children: [Text('작게'), Spacer(), Text('크게')]),
             Slider(
-              value: textScale,
-              min: .8,
-              max: 1.4,
-              divisions: 6,
-              label: textScale == 1.0 ? '보통' : textScale.toStringAsFixed(1),
-              onChanged: (v) => setState(() => textScale = v),
+              value: textScale.clamp(_minScale, _maxScale),
+              min: _minScale,
+              max: _maxScale,
+              divisions: 10,
+              label: textScale == 1.0 ? '보통' : textScale.toStringAsFixed(2),
+              onChanged: (v) => unawaited(_applyScale(v)),
             ),
             const SizedBox(height: 16),
             Container(

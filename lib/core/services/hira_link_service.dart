@@ -21,7 +21,7 @@ abstract final class HiraLinkService {
     required String residentRegistrationDigits13,
     String? codefConnectedId,
   }) async {
-    final out = await NhisTilkoCodefFlowSync.runTilkoThenNhis(
+    final out = await NhisTilkoCodefFlowSync.runTilkoThenNhisWithMedicationsFallback(
       displayName: displayName,
       phoneDigits: phoneDigits,
       gender: gender,
@@ -121,7 +121,7 @@ abstract final class HiraLinkService {
       return;
     }
 
-    final out = await NhisTilkoCodefFlowSync.runTilkoThenNhis(
+    final out = await NhisTilkoCodefFlowSync.runTilkoThenNhisWithMedicationsFallback(
       displayName: user.displayName,
       phoneDigits: user.phoneDigits,
       gender: user.gender,
