@@ -228,6 +228,8 @@ Future<void> _handle(HttpRequest request) async {
         final bearer = await bffCodefBearer(env);
         final merged = Map<String, dynamic>.from(codefExtra)
           ..['_tilkoSimpleAuth'] = tilkoRes;
+        // ignore: avoid_print
+        print('BFF flow CODEF POST ${codefJoinedProductUri(base, productPath)}');
         final raw = await codefProductRaw(
           baseUrl: base,
           productPath: productPath,

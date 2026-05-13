@@ -211,7 +211,8 @@ String? bffCodefFailureHintKo(Object e) {
         '운영: https://api.codef.io, 샌드박스: https://sandbox.codef.io) 확인하고, '
         'CODEF_NHIS_TREATMENT_PATH(또는 CODEF_MEDICATION_PATH)가 developer.codef.io '
         '해당 상품 문서의 «요청 URL» 경로와 동일한지 확인하세요. '
-        'codef.io 콘솔에서 해당 공공 상품 이용 권한이 있는지도 확인하세요.';
+        'codef.io 콘솔에서 해당 공공 상품 이용 권한이 있는지도 확인하세요. '
+        '데모·테스트용 클라이언트면 운영 대신 sandbox.codef.io 조합이 필요할 수 있습니다.';
   }
   return null;
 }
