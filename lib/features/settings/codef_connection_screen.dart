@@ -150,7 +150,14 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
                   'assets/env/dotenv 및 PC BFF .env 에서 '
                   'NHIS_USE_MOCK=false, NHIS_BASE_URL, CODEF_CONNECTED_ID 를 맞춘 뒤 '
                   '앱을 다시 빌드하거나, 위 입력란에 connectedId 를 저장하고 홈에서 '
-                  '당겨서 새로고침해 보세요. '
+                  '당겨서 새로고침해 보세요.\n\n'
+                  '키를 넣었는데도 안 되면 CODEF·틸코 권한 환경(샌드박스 vs 실연동)을 '
+                  '다시 확인하세요. CODEF 콘솔에서 발급받은 클라이언트가 개발용이면 '
+                  'BFF .env 의 CODEF_BASE_URL 을 development.codef.io(또는 문서의 개발 호스트)에, '
+                  '운영·실연동용이면 api.codef.io 등 운영 호스트에 맞춥니다. '
+                  '호스트와 키 종류가 어긋나면 CF-00404/404·인증 오류가 날 수 있고, '
+                  'connectedId 도 같은 환경에서 발급·저장된 값이어야 합니다. '
+                  '틸코는 TILKO_API_HOST 가 dev.tilko.net 인지 api.tilko.net 인지 가입·플로우와 맞는지 점검하세요.\n\n'
                   '문제가 계속되면 NHIS_SHOW_SYNC_SNACKBARS=true 로 스낵바 원인을 켤 수 있습니다.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF64748B),
