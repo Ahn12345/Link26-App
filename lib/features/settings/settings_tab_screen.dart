@@ -10,7 +10,6 @@ import '../medicine_guide/medicine_guide_screen.dart';
 import '../more/more_screen.dart';
 import '../push_settings/push_settings_screen.dart';
 import '../search/search_screen.dart';
-import 'codef_connection_screen.dart';
 import 'emergency_contact_screen.dart';
 import 'health_link_screen.dart';
 import 'settings_screen.dart';
@@ -53,14 +52,6 @@ class SettingsTabScreen extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context)
                     .pushNamed(HealthLinkScreen.routeName),
-              ),
-              ListTile(
-                leading: const Icon(Icons.link),
-                title: Text(l10n.settingsCodefConnectionTitle),
-                subtitle: Text(l10n.settingsCodefConnectionSubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context)
-                    .pushNamed(CodefConnectionScreen.routeName),
               ),
               ListTile(
                 leading: DecodedAssetImage(

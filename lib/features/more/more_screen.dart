@@ -24,7 +24,7 @@ import 'package:link26_app/features/more/phone_reminder_settings_screen.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 /// 배포·스토어 앱과 소스 트리가 같은지 확인용(더보기 하단에 표시).
-const int kMoreScreenLayoutRevision = 4;
+const int kMoreScreenLayoutRevision = 5;
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, this.showScaffold = true});
