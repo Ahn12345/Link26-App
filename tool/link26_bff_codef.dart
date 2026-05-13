@@ -115,13 +115,21 @@ bool _truthy(String? s) {
 /// link26_bff.dart 헬스 응답용.
 bool bffEnvTruthy(String? s) => _truthy(s);
 
+/// `CODEF_MEDICATION_PATH` 우선, 비어 있으면 틸코·건보 플로우와 동일한
+/// `CODEF_NHIS_TREATMENT_PATH` 를 씁니다(같은 건보 진료·투약 상품 URL인 경우).
+String bffResolvedMedicationProductPath(Map<String, String> env) {
+  final a = (env['CODEF_MEDICATION_PATH'] ?? '').trim();
+  if (a.isNotEmpty) return a;
+  return (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim();
+}
+
 /// `/v1/medications` 에서 CODEF 상품 호출에 필요한 클라이언트 설정이 모두 있는지.
 bool bffMedicationsCodefConfigured(Map<String, String> env) {
-  final pathSet = (env['CODEF_MEDICATION_PATH'] ?? '').trim().isNotEmpty;
+  final path = bffResolvedMedicationProductPath(env);
   final idSet = (env['CODEF_CLIENT_ID'] ?? '').trim().isNotEmpty;
   final secretSet = (env['CODEF_CLIENT_SECRET'] ?? '').trim().isNotEmpty;
   return bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']) &&
-      pathSet &&
+      path.isNotEmpty &&
       idSet &&
       secretSet;
 }
@@ -534,7 +542,7 @@ Future<String> codefNhisTreatmentProductRaw({
 }
 
 /// `/v1/medications` 용: `.env` 에 `BFF_USE_CODEF_FOR_MEDICATIONS=true` 이고
-/// `CODEF_CLIENT_*` + `CODEF_MEDICATION_PATH` 가 있을 때만 CODEF 호출.
+/// `CODEF_CLIENT_*` + ([CODEF_MEDICATION_PATH] 또는 [CODEF_NHIS_TREATMENT_PATH]) 가 있을 때만 CODEF 호출.
 /// 미설정·오류 시 null → 스텁 응답.
 Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
   required Map<String, String> env,
@@ -545,7 +553,7 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
 }) async {
   if (!_truthy(env['BFF_USE_CODEF_FOR_MEDICATIONS'])) return null;
 
-  final path = (env['CODEF_MEDICATION_PATH'] ?? '').trim();
+  final path = bffResolvedMedicationProductPath(env);
   final id = (env['CODEF_CLIENT_ID'] ?? '').trim();
   final secret = (env['CODEF_CLIENT_SECRET'] ?? '').trim();
   if (id.isEmpty || secret.isEmpty || path.isEmpty) return null;
@@ -587,7 +595,9 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
 
   try {
     if (!path.startsWith('/')) {
-      throw StateError('CODEF_MEDICATION_PATH 는 / 로 시작해야 합니다.');
+      throw StateError(
+        'CODEF_MEDICATION_PATH(또는 CODEF_NHIS_TREATMENT_PATH) 는 / 로 시작해야 합니다.',
+      );
     }
     final pathLower = path.toLowerCase();
     if (pathLower.contains('connectedid-list') ||
