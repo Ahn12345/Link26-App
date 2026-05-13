@@ -7,6 +7,7 @@ import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
+import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
 
@@ -58,8 +59,7 @@ abstract final class NhisTilkoCodefFlowSync {
       );
     }
 
-    final privateAuthType =
-        (dotenv.env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'KAKAO').trim();
+    final privateAuthType = TilkoEnv.privateAuthType;
     final codefPayload = <String, dynamic>{};
     final cid = codefConnectedId?.trim();
     if (cid != null && cid.isNotEmpty) {
