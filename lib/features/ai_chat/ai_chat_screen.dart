@@ -353,9 +353,9 @@ class _AiChatBodyState extends State<_AiChatBody> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final embedded = widget.embeddedInShell;
-    // 하단 탭: Material 3 NavigationBar(약 80dp) + 시스템 제스처 — 입력창이 내비에 가리지 않게 여유를 둔다.
+    // 하단 탭: 내비 높이 + 제스처. 입력 카드가 탭에 너무 붙지 않게 하되, 과한 빈 공간은 줄임.
     final shellNavPad = embedded
-        ? MediaQuery.viewPaddingOf(context).bottom + 96.0
+        ? MediaQuery.viewPaddingOf(context).bottom + 68.0
         : 0.0;
     final keyboardLift = MediaQuery.viewInsetsOf(context).bottom;
     final inputEnabled = !AiChatOutgoingBusy.instance.value &&
@@ -512,11 +512,11 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                 Transform.translate(
                                   offset: Offset(
                                     0,
-                                    embedded
-                                        ? -(Link26ResponsiveUi.gapXs(w)
-                                                .clamp(4.0, 8.0) +
-                                            4.0)
-                                        : 0,
+                                    -(embedded
+                                            ? 22.0 +
+                                                Link26ResponsiveUi.gapXs(w)
+                                                    .clamp(0.0, 8.0)
+                                            : 14.0),
                                   ),
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(

@@ -128,7 +128,8 @@ void _printEnvReadinessSummary(Map<String, String> env) {
   stdout.writeln('    틸코 TILKO_API_KEY: $tilko');
   // ignore: avoid_print
   stdout.writeln(
-    '    CODEF OAuth(클라이언트): $codefOAuth  |  복약상품 경로까지: $codefMeds  (BFF_USE_CODEF_FOR_MEDICATIONS + CODEF_MEDICATION_PATH)',
+    '    CODEF OAuth(클라이언트): $codefOAuth  |  복약상품 경로까지: $codefMeds  '
+    '(BFF_USE_CODEF_FOR_MEDICATIONS + CODEF_MEDICATION_PATH 또는 CODEF_NHIS_TREATMENT_PATH)',
   );
   // ignore: avoid_print
   stdout.writeln('');
@@ -156,6 +157,9 @@ Future<void> _handle(HttpRequest request) async {
       final env = loadBffDotEnv();
       final probe = await codefHealthProbe(env);
       final codefMedicationsReady = bffMedicationsCodefConfigured(env);
+      final useCodefMeds = bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']);
+      final medPathOk =
+          bffResolvedMedicationProductPath(env).trim().isNotEmpty;
       await _json(request, 200, {
         'ok': true,
         'service': 'link26-bff-dart',
@@ -169,6 +173,10 @@ Future<void> _handle(HttpRequest request) async {
         },
         'medicationsSource':
             codefMedicationsReady ? 'codef' : 'stub',
+        'medicationsConfig': {
+          'bffUseCodefForMedications': useCodefMeds,
+          'resolvedProductPath': medPathOk,
+        },
         'authProxy': {
           'signup':
               (env['NHIS_PROXY_SIGNUP_URL'] ?? '').trim().isNotEmpty,

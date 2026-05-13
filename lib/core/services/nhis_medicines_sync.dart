@@ -124,6 +124,45 @@ abstract final class NhisMedicinesSync {
   static String _norm(String name) =>
       name.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
+  /// Dart BFF 스텁(`link26-bff-dart-stub`) 고정 예시 — 실조회 응답이 와도 병합 때문에 캐시에 남던 것을 제거.
+  static const Set<String> _link26BffStubMedicineNorms = {
+    '심사·데모 복약 안내',
+    '종합비타민(예시)',
+  };
+
+  static bool _isLink26BffStubMedicineName(String name) {
+    final n = _norm(name);
+    for (final s in _link26BffStubMedicineNorms) {
+      if (_norm(s) == n) return true;
+    }
+    return false;
+  }
+
+  /// BFF가 CODEF·실연동 계열 응답을 줄 때만 — 스텁/목 응답에서는 유지.
+  static bool _shouldPurgeLink26BffStubDemos(String? metaSource) {
+    final s = metaSource?.trim() ?? '';
+    return s == 'codef' ||
+        s == 'codef_missing_connected_id' ||
+        s == 'codef_error' ||
+        s == 'tilko_codef_nhis';
+  }
+
+  static Future<void> _purgeLink26BffStubDemosFromCache() async {
+    final cached = await NhisMedicineCacheStore.loadMedicines();
+    final filtered = cached
+        .where((m) => !_isLink26BffStubMedicineName(m.name))
+        .toList();
+    if (filtered.length != cached.length) {
+      await NhisMedicineCacheStore.saveMedicines(filtered);
+    }
+    final names = await LocalMedicineListStore.load();
+    final namesFiltered =
+        names.where((n) => !_isLink26BffStubMedicineName(n)).toList();
+    if (namesFiltered.length != names.length) {
+      await LocalMedicineListStore.save(namesFiltered);
+    }
+  }
+
   static Future<NhisMedicinesSyncOutcome> syncNow({
     required String phoneDigits,
   }) async {
@@ -201,9 +240,12 @@ abstract final class NhisMedicinesSync {
 
     final body = (result as Success<String>).data;
     final meta = _parseResponseMeta(body);
+    final src = meta?['source'] as String?;
+    if (_shouldPurgeLink26BffStubDemos(src)) {
+      await _purgeLink26BffStubDemosFromCache();
+    }
     await _maybePersistConnectedIdFromMedicationsBody(body, resolvedPhone);
     final fromApi = NhisMedicationsParser.parseResponseBody(body);
-    final src = meta?['source'] as String?;
     if (isAuthoritativeMedicationsMetaSource(src)) {
       await _replaceLocalWithRemote(fromApi);
       await DoseReminderCompletionStore.clearAll();
