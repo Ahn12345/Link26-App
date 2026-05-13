@@ -19,21 +19,23 @@ try {
 } catch { }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
-function Clear-BrokenGradleUserHome {
-  $gh = $env:GRADLE_USER_HOME
-  if ([string]::IsNullOrWhiteSpace($gh)) { return }
-  try {
-    $root = [System.IO.Path]::GetPathRoot($gh.Trim())
-    if ([string]::IsNullOrWhiteSpace($root)) { return }
-    $drive = $root.TrimEnd('\', '/')
-    if ($drive.Length -eq 2 -and $drive[1] -eq ':') {
-      if (-not (Test-Path "${drive}\")) {
-        Remove-Item Env:GRADLE_USER_HOME -ErrorAction SilentlyContinue
+function Clear-BrokenSubstEnvPaths {
+  foreach ($name in @('GRADLE_USER_HOME', 'TMP', 'TEMP')) {
+    $gh = [Environment]::GetEnvironmentVariable($name, 'Process')
+    if ([string]::IsNullOrWhiteSpace($gh)) { continue }
+    try {
+      $root = [System.IO.Path]::GetPathRoot($gh.Trim())
+      if ([string]::IsNullOrWhiteSpace($root)) { continue }
+      $drive = $root.TrimEnd('\', '/')
+      if ($drive.Length -eq 2 -and $drive[1] -eq ':') {
+        if (-not (Test-Path "${drive}\")) {
+          Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 }
-Clear-BrokenGradleUserHome
+Clear-BrokenSubstEnvPaths
 
 & (Join-Path $PSScriptRoot "sync_dotenv_asset.ps1") -ProjectRoot $projectRoot
 
