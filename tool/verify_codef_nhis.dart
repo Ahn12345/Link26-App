@@ -48,4 +48,36 @@ void main() async {
     print('[verify] FAIL: $e');
     print(_truncate('$st', 500));
   }
+
+  print('[verify] fetchMedicationsFromCodef (앱 GET /v1/medications 와 동일한 CODEF 호출)');
+  final phoneMed = (env['CODEF_VERIFY_PLACEHOLDER_PHONE'] ?? '01012345678')
+      .replaceAll(RegExp(r'\D'), '');
+  final phoneOk = phoneMed.length >= 10 ? phoneMed : '01012345678';
+  try {
+    final med = await fetchMedicationsFromCodef(
+      env: env,
+      phoneDigits: phoneOk,
+      displayName: (env['CODEF_VERIFY_PLACEHOLDER_NAME'] ?? '').trim(),
+      gender: '',
+    );
+    if (med == null) {
+      print(
+        '[verify] medications: null — BFF_USE_CODEF_FOR_MEDICATIONS 또는 클라이언트·경로 비어 있음',
+      );
+      return;
+    }
+    final meta = med['meta'];
+    final items = med['items'];
+    final n = items is List ? items.length : -1;
+    print('[verify] medications: items.count=$n meta=$meta');
+    if (n > 0 && items is List) {
+      final first = items.first;
+      if (first is Map) {
+        print('[verify] medications: first.name=${first['name']}');
+      }
+    }
+  } catch (e, st) {
+    print('[verify] medications FAIL: $e');
+    print(_truncate('$st', 500));
+  }
 }

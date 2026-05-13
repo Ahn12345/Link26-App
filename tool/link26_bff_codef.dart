@@ -458,19 +458,10 @@ bool codefErrorLooksLikeWrongProductUrl(Object e) {
       s.contains('NOT_FOUND 404');
 }
 
-/// 국민건강보험 진료·투약(CODEF): 문서상 `/public/each/pp/` 와 구 `/public/pp/` 가 섞여 있고,
-/// 호스트(api·development·sandbox) 조합에 따라 404가 나는 경우가 있어 후보를 순서대로 시도합니다.
-Future<String> codefNhisTreatmentProductRaw({
-  required Map<String, String> env,
-  required String bearer,
-  required Map<String, dynamic> body,
-}) async {
-  const defaultPath =
-      '/v1/kr/public/each/pp/nhis-insurance-treatment-information';
-  final fromEnv = (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim();
-  final primary = fromEnv.isNotEmpty ? fromEnv : defaultPath;
-  final normalized =
-      primary.startsWith('/') ? primary : '/$primary';
+/// `/public/each/pp/` ↔ 구 `/public/pp/` 등 문서·환경 차이를 흡수합니다.
+List<String> bffCodefNhisPathCandidatesFromPrimary(String primaryPath) {
+  final primary = primaryPath.trim();
+  final normalized = primary.startsWith('/') ? primary : '/$primary';
 
   final pathCandidates = <String>[];
   void addPath(String p) {
@@ -488,7 +479,11 @@ Future<String> codefNhisTreatmentProductRaw({
   if (hasEach) {
     addPath(normalized.replaceAll('/public/each/pp/', '/public/pp/'));
   }
+  return pathCandidates;
+}
 
+/// 사용자 설정 우선, 이어서 api·development·sandbox.
+List<String> bffCodefBaseUrlCandidates(Map<String, String> env) {
   final userBase = (env['CODEF_BASE_URL'] ?? '').trim();
   final baseCandidates = <String>[];
   void addBase(String b) {
@@ -504,6 +499,22 @@ Future<String> codefNhisTreatmentProductRaw({
   if (baseCandidates.isEmpty) {
     baseCandidates.add('https://api.codef.io');
   }
+  return baseCandidates;
+}
+
+/// 국민건강보험 진료·투약(CODEF): 문서상 `/public/each/pp/` 와 구 `/public/pp/` 가 섞여 있고,
+/// 호스트(api·development·sandbox) 조합에 따라 404가 나는 경우가 있어 후보를 순서대로 시도합니다.
+Future<String> codefNhisTreatmentProductRaw({
+  required Map<String, String> env,
+  required String bearer,
+  required Map<String, dynamic> body,
+}) async {
+  const defaultPath =
+      '/v1/kr/public/each/pp/nhis-insurance-treatment-information';
+  final fromEnv = (env['CODEF_NHIS_TREATMENT_PATH'] ?? '').trim();
+  final primary = fromEnv.isNotEmpty ? fromEnv : defaultPath;
+  final pathCandidates = bffCodefNhisPathCandidatesFromPrimary(primary);
+  final baseCandidates = bffCodefBaseUrlCandidates(env);
 
   Object? lastErr;
   for (final base in baseCandidates) {
@@ -558,16 +569,17 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
   final secret = (env['CODEF_CLIENT_SECRET'] ?? '').trim();
   if (id.isEmpty || secret.isEmpty || path.isEmpty) return null;
 
-  final base = (env['CODEF_BASE_URL'] ?? 'https://development.codef.io').trim();
-
   final connectedId =
       (connectedIdOverride ?? env['CODEF_CONNECTED_ID'] ?? '').trim();
-  final org = (env['CODEF_HW_ORGANIZATION'] ?? env['CODEF_ORGANIZATION'] ?? '')
-      .trim();
+  final orgEnv =
+      (env['CODEF_HW_ORGANIZATION'] ?? env['CODEF_ORGANIZATION'] ?? '').trim();
+  /// 틸코 병합 본문과 동일: 비우면 건보 공공 상품 기본 기관코드(0002).
+  final org =
+      orgEnv.isNotEmpty ? orgEnv : codefNhisOrganizationDefault;
 
   final body = <String, dynamic>{};
   if (connectedId.isNotEmpty) body['connectedId'] = connectedId;
-  if (org.isNotEmpty) body['organization'] = org;
+  body['organization'] = org;
   if (phoneDigits.isNotEmpty) {
     body['phoneNo'] = phoneDigits;
     body['id'] = phoneDigits;
@@ -609,36 +621,80 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
       );
     }
     final bearer = await _codefToken.token(clientId: id, clientSecret: secret);
-    final decoded = await codefProductRaw(
-      baseUrl: base,
-      productPath: path,
-      bearer: bearer,
-      body: body,
-    );
-    final map = jsonDecode(decoded) as Map<String, dynamic>;
-    final items = bffMapCodefRootToMedicationItems(map);
-    final result = map['result'];
-    String? code;
-    String? message;
-    if (result is Map) {
-      code = '${result['code'] ?? ''}';
-      message = '${result['message'] ?? ''}';
+    final pathCandidates = bffCodefNhisPathCandidatesFromPrimary(path);
+    final baseCandidates = bffCodefBaseUrlCandidates(env);
+
+    Object? lastErr;
+    for (final baseTry in baseCandidates) {
+      for (final pathTry in pathCandidates) {
+        try {
+          final decoded = await codefProductRaw(
+            baseUrl: baseTry,
+            productPath: pathTry,
+            bearer: bearer,
+            body: body,
+          );
+          final map = jsonDecode(decoded) as Map<String, dynamic>;
+          final result = map['result'];
+          if (result is Map) {
+            final c = '${result['code'] ?? ''}'.trim();
+            if (c == 'CF-00404') {
+              lastErr = StateError('CODEF HTTP 200 result CF-00404: $decoded');
+              continue;
+            }
+          }
+          final items = bffMapCodefRootToMedicationItems(map);
+          String? code;
+          String? message;
+          if (result is Map) {
+            code = '${result['code'] ?? ''}';
+            message = '${result['message'] ?? ''}';
+          }
+          final hint = bffCodefNhisTreatResultHintKo(code, message);
+
+          final extractedId = parseConnectedIdFromCodefRootMap(map);
+          final cidOut = (extractedId != null && extractedId.trim().isNotEmpty)
+              ? extractedId.trim()
+              : (connectedId.isEmpty ? null : connectedId);
+
+          // ignore: avoid_print
+          print('CODEF medications OK: $baseTry$pathTry');
+          return {
+            'items': items,
+            'meta': {
+              'source': 'codef',
+              'phone': phoneDigits,
+              'connectedId': cidOut,
+              'productPath': pathTry,
+              'codefBaseTried': baseTry,
+              'codefResultCode': code,
+              'codefResultMessage': message,
+              if (hint != null && hint.isNotEmpty) 'note': hint,
+            },
+          };
+        } catch (e) {
+          lastErr = e;
+          if (!codefErrorLooksLikeWrongProductUrl(e)) {
+            stderr.writeln('CODEF medications 오류: $e');
+            return {
+              'items': <Map<String, dynamic>>[],
+              'meta': {
+                'source': 'codef_error',
+                'phone': phoneDigits,
+                'error': '$e',
+              },
+            };
+          }
+        }
+      }
     }
-
-    final extractedId = parseConnectedIdFromCodefRootMap(map);
-    final cidOut = (extractedId != null && extractedId.trim().isNotEmpty)
-        ? extractedId.trim()
-        : (connectedId.isEmpty ? null : connectedId);
-
+    stderr.writeln('CODEF medications: base·path 후보 실패: $lastErr');
     return {
-      'items': items,
+      'items': <Map<String, dynamic>>[],
       'meta': {
-        'source': 'codef',
+        'source': 'codef_error',
         'phone': phoneDigits,
-        'connectedId': cidOut,
-        'productPath': path,
-        'codefResultCode': code,
-        'codefResultMessage': message,
+        'error': '$lastErr',
       },
     };
   } catch (e, st) {

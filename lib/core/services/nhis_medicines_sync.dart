@@ -98,6 +98,9 @@ class NhisMedicinesSyncOutcome {
           return '지금 보이는 복약 목록은 데모입니다. 실제 본인 데이터는 BFF에서 CODEF(또는 공단) 상품·connectedId·추가인증까지 완료해야 합니다.';
         }
         if (metaSource == 'codef' && remoteItemCount == 0) {
+          if ((metaNote ?? '').trim().isNotEmpty) {
+            return metaNote!.trim();
+          }
           final c = codefResultCode ?? '';
           final m = codefResultMessage ?? '';
           return '연동 응답은 왔지만 복약 항목이 0건입니다. '
@@ -245,7 +248,14 @@ abstract final class NhisMedicinesSync {
       await _purgeLink26BffStubDemosFromCache();
     }
     await _maybePersistConnectedIdFromMedicationsBody(body, resolvedPhone);
-    final fromApi = NhisMedicationsParser.parseResponseBody(body);
+    var fromApi = NhisMedicationsParser.parseResponseBody(body);
+    // Dart BFF 스텁: 데모 행을 로컬에 쌓지 않음(매 동기화마다 다시 들어가 “실데이터처럼” 보이는 문제 방지).
+    if (src == 'link26-bff-dart-stub' || src == 'link26-bff-dart') {
+      await _purgeLink26BffStubDemosFromCache();
+      fromApi = fromApi
+          .where((m) => !_isLink26BffStubMedicineName(m.name))
+          .toList();
+    }
     if (isAuthoritativeMedicationsMetaSource(src)) {
       await _replaceLocalWithRemote(fromApi);
       await DoseReminderCompletionStore.clearAll();
