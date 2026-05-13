@@ -471,6 +471,16 @@ bool codefErrorLooksLikeWrongProductUrl(Object e) {
       s.contains('NOT_FOUND 404');
 }
 
+/// 잘못된 상품 URL이 아니라 호스트·리다이렉트 등으로 다음 base 후보를 시도할 만한 HTTP 오류.
+bool codefErrorLooksLikeRetryableTransport(Object e) {
+  final s = e.toString();
+  return s.contains('CODEF HTTP 302') ||
+      s.contains('CODEF HTTP 301') ||
+      s.contains('CODEF HTTP 303') ||
+      s.contains('CODEF HTTP 307') ||
+      s.contains('CODEF HTTP 308');
+}
+
 /// `/public/each/pp/` ↔ 구 `/public/pp/` 등 문서·환경 차이를 흡수합니다.
 List<String> bffCodefNhisPathCandidatesFromPrimary(String primaryPath) {
   final primary = primaryPath.trim();
@@ -496,8 +506,13 @@ List<String> bffCodefNhisPathCandidatesFromPrimary(String primaryPath) {
 }
 
 /// 사용자 설정 우선, 이어서 api·development·sandbox.
+///
+/// `CODEF_BASE_URL` 이 비어 있고 콘솔에만 적은 `CODEF_API_HOST` 가 있을 때 그 값을
+/// 첫 후보로 씁니다(이전에는 무시되어 잘못된 기본 호스트로 상품만 호출되는 경우가 있었음).
+/// 둘 다 있으면 둘 다 후보에 넣어 `CF-00003`/`CF-00017` 시 다음 조합을 시도합니다.
 List<String> bffCodefBaseUrlCandidates(Map<String, String> env) {
   final userBase = (env['CODEF_BASE_URL'] ?? '').trim();
+  final apiHost = (env['CODEF_API_HOST'] ?? '').trim();
   final baseCandidates = <String>[];
   void addBase(String b) {
     final t = b.trim();
@@ -506,6 +521,7 @@ List<String> bffCodefBaseUrlCandidates(Map<String, String> env) {
   }
 
   addBase(userBase);
+  addBase(apiHost);
   addBase('https://api.codef.io');
   addBase('https://development.codef.io');
   addBase('https://sandbox.codef.io');
@@ -513,6 +529,24 @@ List<String> bffCodefBaseUrlCandidates(Map<String, String> env) {
     baseCandidates.add('https://api.codef.io');
   }
   return baseCandidates;
+}
+
+/// CODEF 상품 응답 JSON(디코드된 문자열)에서 `result.code` 추출.
+String? bffCodefResultCodeFromDecoded(String decoded) {
+  try {
+    final map = jsonDecode(decoded) as Map<String, dynamic>?;
+    final res = map?['result'];
+    if (res is Map) {
+      return '${res['code'] ?? ''}'.trim();
+    }
+  } catch (_) {}
+  return null;
+}
+
+/// HTTP 200 이지만 호스트·상품 불일치로 다른 base 를 시도할 만한 코드.
+bool bffCodefHttp200ShouldRetryOtherHost(String decoded) {
+  final c = bffCodefResultCodeFromDecoded(decoded) ?? '';
+  return c == 'CF-00404' || c == 'CF-00003' || c == 'CF-00017';
 }
 
 /// 국민건강보험 진료·투약(CODEF): 문서상 `/public/each/pp/` 와 구 `/public/pp/` 가 섞여 있고,
@@ -530,6 +564,8 @@ Future<String> codefNhisTreatmentProductRaw({
   final baseCandidates = bffCodefBaseUrlCandidates(env);
 
   Object? lastErr;
+  String? lastDecodedSoftFail;
+  String? firstDecodedSoftFail;
   for (final base in baseCandidates) {
     for (final path in pathCandidates) {
       try {
@@ -539,27 +575,49 @@ Future<String> codefNhisTreatmentProductRaw({
           bearer: bearer,
           body: body,
         );
+        Map<String, dynamic>? map;
         try {
-          final map = jsonDecode(out) as Map<String, dynamic>;
-          final res = map['result'];
-          if (res is Map) {
-            final c = '${res['code'] ?? ''}'.trim();
-            if (c == 'CF-00404') {
-              lastErr = StateError('CODEF HTTP 200 result CF-00404: $out');
-              continue;
-            }
-          }
+          map = jsonDecode(out) as Map<String, dynamic>?;
         } catch (_) {
-          // JSON 아님 등은 그대로 성공 처리
+          // ignore: avoid_print
+          print('CODEF NHIS treatment OK: $base$path');
+          return out;
+        }
+        final res = map?['result'];
+        if (res is Map) {
+          final c = '${res['code'] ?? ''}'.trim();
+          if (c == 'CF-00404') {
+            lastErr = StateError('CODEF HTTP 200 result CF-00404: $out');
+            continue;
+          }
+          if (bffCodefHttp200ShouldRetryOtherHost(out)) {
+            firstDecodedSoftFail ??= out;
+            lastDecodedSoftFail = out;
+            lastErr = StateError('CODEF HTTP 200 result $c: $out');
+            continue;
+          }
         }
         // ignore: avoid_print
         print('CODEF NHIS treatment OK: $base$path');
         return out;
       } catch (e) {
         lastErr = e;
-        if (!codefErrorLooksLikeWrongProductUrl(e)) rethrow;
+        if (codefErrorLooksLikeWrongProductUrl(e) ||
+            codefErrorLooksLikeRetryableTransport(e)) {
+          continue;
+        }
+        rethrow;
       }
     }
+  }
+  final toReturn = firstDecodedSoftFail ?? lastDecodedSoftFail;
+  if (toReturn != null) {
+    // ignore: avoid_print
+    print(
+      'CODEF NHIS treatment: 모든 base·path 후보가 CF-00003/00017/00404 — '
+      '설정 호스트 우선 응답 반환',
+    );
+    return toReturn;
   }
   throw lastErr ??
       StateError('CODEF NHIS 진료·투약: base·path 후보에서 CF-00404/404');
@@ -649,6 +707,12 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
     final baseCandidates = bffCodefBaseUrlCandidates(env);
 
     Object? lastErr;
+    Map<String, dynamic>? lastSoftFailMap;
+    String? lastSoftBase;
+    String? lastSoftPath;
+    Map<String, dynamic>? firstSoftFailMap;
+    String? firstSoftBase;
+    String? firstSoftPath;
     for (final baseTry in baseCandidates) {
       for (final pathTry in pathCandidates) {
         try {
@@ -664,6 +728,16 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
             final c = '${result['code'] ?? ''}'.trim();
             if (c == 'CF-00404') {
               lastErr = StateError('CODEF HTTP 200 result CF-00404: $decoded');
+              continue;
+            }
+            if (bffCodefHttp200ShouldRetryOtherHost(decoded)) {
+              firstSoftFailMap ??= map;
+              firstSoftBase ??= baseTry;
+              firstSoftPath ??= pathTry;
+              lastSoftFailMap = map;
+              lastSoftBase = baseTry;
+              lastSoftPath = pathTry;
+              lastErr = StateError('CODEF HTTP 200 result $c: $decoded');
               continue;
             }
           }
@@ -698,21 +772,61 @@ Future<Map<String, dynamic>?> fetchMedicationsFromCodef({
           };
         } catch (e) {
           lastErr = e;
-          if (!codefErrorLooksLikeWrongProductUrl(e)) {
-            stderr.writeln('CODEF medications 오류: $e');
-            final hint = bffCodefFailureHintKo(e);
-            return {
-              'items': <Map<String, dynamic>>[],
-              'meta': {
-                'source': 'codef_error',
-                'phone': phoneDigits,
-                'error': '$e',
-                if (hint != null && hint.isNotEmpty) 'note': hint,
-              },
-            };
+          if (codefErrorLooksLikeWrongProductUrl(e) ||
+              codefErrorLooksLikeRetryableTransport(e)) {
+            continue;
           }
+          stderr.writeln('CODEF medications 오류: $e');
+          final hint = bffCodefFailureHintKo(e);
+          return {
+            'items': <Map<String, dynamic>>[],
+            'meta': {
+              'source': 'codef_error',
+              'phone': phoneDigits,
+              'error': '$e',
+              if (hint != null && hint.isNotEmpty) 'note': hint,
+            },
+          };
         }
       }
+    }
+    final failMap = firstSoftFailMap ?? lastSoftFailMap;
+    final reportBase = firstSoftBase ?? lastSoftBase;
+    final reportPath = firstSoftPath ?? lastSoftPath;
+    if (failMap != null) {
+      final map = failMap;
+      final result = map['result'];
+      final items = bffMapCodefRootToMedicationItems(map);
+      String? code;
+      String? message;
+      if (result is Map) {
+        code = '${result['code'] ?? ''}';
+        message = '${result['message'] ?? ''}';
+      }
+      final hint = bffCodefNhisTreatResultHintKo(code, message);
+      final extractedId = parseConnectedIdFromCodefRootMap(map);
+      final cidOut = (extractedId != null && extractedId.trim().isNotEmpty)
+          ? extractedId.trim()
+          : (connectedId.isEmpty ? null : connectedId);
+      // ignore: avoid_print
+      print(
+        'CODEF medications: 모든 호스트·경로 시도 후에도 CF-00003/00017 등 — '
+        '$reportBase$reportPath',
+      );
+      return {
+        'items': items,
+        'meta': {
+          'source': 'codef',
+          'phone': phoneDigits,
+          'connectedId': cidOut,
+          'productPath': reportPath ?? path,
+          'codefBaseTried': reportBase ?? '',
+          'codefResultCode': code,
+          'codefResultMessage': message,
+          if (hint != null && hint.isNotEmpty) 'note': hint,
+          'codefExhaustedHostCandidates': true,
+        },
+      };
     }
     stderr.writeln('CODEF medications: base·path 후보 실패: $lastErr');
     final hintAll = bffCodefFailureHintKo(lastErr);
