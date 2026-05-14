@@ -163,7 +163,14 @@ abstract final class NhisTilkoCodefFlowSync {
         if (kDebugMode) {
           debugPrint('Tilko→NHIS: BFF 연결 불가(폰 단독·PC 미기동 등) — $e');
         }
-        return null;
+        final base = NhisRuntimeConfig.baseUrl.trim();
+        return NhisMedicinesSyncOutcome(
+          result: NhisMedicinesSyncResult.failed,
+          detail:
+              '휴대폰이 BFF에 연결되지 않았습니다. PC에서 BFF를 실행했는지, '
+              '휴대폰과 PC가 같은 Wi-Fi인지, 앱의 NHIS_BASE_URL($base)이 '
+              'PC의 LAN IP인지 확인하세요. (에뮬레이터는 보통 http://10.0.2.2:8787)',
+        );
       }
       debugPrint('Tilko→NHIS: $e\n$st');
       return NhisMedicinesSyncOutcome(
