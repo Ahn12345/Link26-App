@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
@@ -677,7 +678,7 @@ class _AiChatBodyState extends State<_AiChatBody> {
                   child: IconButton(
                     style: IconButton.styleFrom(
                         foregroundColor: Link26Surface.textPrimary),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                    icon: Icon(CupertinoIcons.back, size: 20),
                     onPressed: () => Navigator.maybePop(context),
                   ),
                 ),
@@ -888,7 +889,7 @@ class _GeminiSetupBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.key_off_outlined, color: Colors.amber.shade900, size: 22),
+          Icon(CupertinoIcons.lock_fill, color: Colors.amber.shade900, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -935,7 +936,7 @@ class _DisclaimerBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              Icons.info_outline,
+              CupertinoIcons.info,
               color: Link26Surface.accent,
               size: iconPx,
             ),
@@ -1012,7 +1013,7 @@ class _PendingAttachmentChip extends StatelessWidget {
               SizedBox(width: compact ? 8 : 10),
             ] else ...[
               Icon(
-                Icons.attach_file,
+                CupertinoIcons.paperclip,
                 size: compact ? 18 : 20,
                 color: Link26Surface.accent,
               ),
@@ -1033,7 +1034,7 @@ class _PendingAttachmentChip extends StatelessWidget {
                 onPressed: onRemove,
                 tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
                 icon: Icon(
-                  Icons.close,
+                  CupertinoIcons.xmark,
                   size: 20,
                   color: Link26Surface.textSecondary,
                 ),
@@ -1103,7 +1104,7 @@ class _InputBar extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
             icon: Icon(
-              Icons.attach_file,
+              CupertinoIcons.paperclip,
               size: iconPx,
               semanticLabel: attachTooltip,
             ),
@@ -1176,7 +1177,7 @@ class _InputBar extends StatelessWidget {
                       )
                     : Center(
                         child: Icon(
-                          Icons.send_rounded,
+                          CupertinoIcons.paperplane_fill,
                           color: Colors.white,
                           size: sendIconPx,
                         ),
@@ -1321,7 +1322,7 @@ class _ChatBubble extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      Icons.medication_outlined,
+                      CupertinoIcons.capsule,
                       color: Link26Surface.accent,
                       size: (bodyPx * 1.2).clamp(20.0, 26.0),
                     ),

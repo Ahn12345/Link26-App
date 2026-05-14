@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -432,8 +433,10 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                           children: [
                             IconButton(
                               onPressed: _openNotificationCenter,
-                              icon: const Icon(Icons.notifications_none_rounded),
-                              color: Link26Surface.textSecondary,
+                              icon: Icon(
+                                CupertinoIcons.bell,
+                                color: Link26Surface.textSecondary,
+                              ),
                             ),
                             if (_bellBadgeCount > 0)
                               Positioned(
@@ -508,7 +511,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   Link26SectionHeader(
                     title: '오늘의 알림',
                     action: '전체보기',
-                    icon: Icons.chevron_right_rounded,
                     onAction: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
@@ -559,7 +561,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   Link26SectionHeader(
                     title: l10n.homeMyMedicinesTitle,
                     action: l10n.myMedicinesFullViewCta,
-                    icon: Icons.chevron_right_rounded,
                     onAction: () => Navigator.push<void>(
                       context,
                       MaterialPageRoute<void>(
@@ -648,7 +649,7 @@ class _AiChatImageReplyHomeBanner extends StatelessWidget {
                 radius: Link26ResponsiveUi.alarmAvatarRadius(w),
                 backgroundColor: const Color(0xFFE8F5E9),
                 child: const Icon(
-                  Icons.smart_toy_outlined,
+                  CupertinoIcons.chat_bubble_2,
                   color: Color(0xFF2E7D32),
                 ),
               ),
@@ -707,7 +708,7 @@ class _AiChatImageReplyHomeBanner extends StatelessWidget {
               IconButton(
                 onPressed: onDismiss,
                 icon: Icon(
-                  Icons.close_rounded,
+                  CupertinoIcons.xmark_circle_fill,
                   color: Link26Surface.textMuted,
                   size: 22,
                 ),
@@ -762,7 +763,7 @@ class _SearchPill extends StatelessWidget {
               ),
               SizedBox(width: Link26ResponsiveUi.gapSm(w)),
               Icon(
-                Icons.search_rounded,
+                CupertinoIcons.search,
                 color: Link26Surface.textMuted,
                 size: Link26ResponsiveUi.searchIconSize(w),
               ),
@@ -827,7 +828,10 @@ class _AlarmPreviewCard extends StatelessWidget {
           CircleAvatar(
             radius: avR,
             backgroundColor: const Color(0xFFEAF3FF),
-            child: const Icon(Icons.notifications_none_rounded, color: Link26Surface.accent),
+            child: Icon(
+              CupertinoIcons.bell,
+              color: Link26Surface.accent,
+            ),
           ),
           SizedBox(width: Link26ResponsiveUi.alarmRowGap(w)),
           Expanded(
@@ -911,7 +915,9 @@ class _CompletedTile extends StatelessWidget {
               radius: Link26ResponsiveUi.completedAvatarRadius(w),
               backgroundColor: const Color(0xFFEAF3FF),
               child: Icon(
-                item.type == AlarmType.call ? Icons.call_outlined : Icons.notifications_none_rounded,
+                item.type == AlarmType.call
+                    ? CupertinoIcons.phone
+                    : CupertinoIcons.bell,
                 color: Link26Surface.accent,
               ),
             ),
@@ -940,7 +946,7 @@ class _CompletedTile extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.check_circle,
+              CupertinoIcons.check_mark_circled_solid,
               color: Link26Surface.accent,
               size: Link26ResponsiveUi.searchIconSize(w) + Link26ResponsiveUi.gapXs(w),
             ),
@@ -972,7 +978,10 @@ class _MedicineTile extends StatelessWidget {
             CircleAvatar(
               radius: Link26ResponsiveUi.medicineAvatarRadius(w),
               backgroundColor: const Color(0xFFEAF3FF),
-              child: const Icon(Icons.medication_outlined, color: Link26Surface.accent),
+              child: Icon(
+                CupertinoIcons.capsule,
+                color: Link26Surface.accent,
+              ),
             ),
             SizedBox(width: Link26ResponsiveUi.gapMd(w)),
             Expanded(
@@ -1001,7 +1010,7 @@ class _MedicineTile extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.edit_outlined, color: Link26Surface.accent),
+              icon: Icon(CupertinoIcons.pencil, color: Link26Surface.accent),
             ),
           ],
         ),

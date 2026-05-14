@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
@@ -115,22 +116,31 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               },
               destinations: [
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined, color: scheme.onSurfaceVariant),
-                  selectedIcon: Icon(Icons.home_rounded, color: scheme.primary),
+                  icon: Icon(CupertinoIcons.house, color: scheme.onSurfaceVariant),
+                  selectedIcon:
+                      Icon(CupertinoIcons.house_fill, color: scheme.primary),
                   label: l10n.homeTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.chat_bubble_outline_rounded,
-                      color: scheme.onSurfaceVariant),
-                  selectedIcon:
-                      Icon(Icons.chat_rounded, color: scheme.primary),
+                  icon: Icon(
+                    CupertinoIcons.chat_bubble_2,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  selectedIcon: Icon(
+                    CupertinoIcons.chat_bubble_2_fill,
+                    color: scheme.primary,
+                  ),
                   label: l10n.aiChatTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.more_horiz_rounded,
-                      color: scheme.onSurfaceVariant),
-                  selectedIcon:
-                      Icon(Icons.more_horiz_rounded, color: scheme.primary),
+                  icon: Icon(
+                    CupertinoIcons.ellipsis_circle,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  selectedIcon: Icon(
+                    CupertinoIcons.ellipsis_circle_fill,
+                    color: scheme.primary,
+                  ),
                   label: l10n.moreTitle,
                 ),
               ],

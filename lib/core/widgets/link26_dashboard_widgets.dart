@@ -99,13 +99,11 @@ class Link26SectionHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.action,
-    this.icon,
     this.onAction,
   });
 
   final String title;
   final String? action;
-  final IconData? icon;
   final VoidCallback? onAction;
 
   @override
@@ -113,7 +111,6 @@ class Link26SectionHeader extends StatelessWidget {
     final w = MediaQuery.sizeOf(context).width;
     final titleSize = Link26ResponsiveUi.sectionHeader(w);
     final actionSize = Link26ResponsiveUi.sectionAction(w);
-    final iconSz = Link26ResponsiveUi.sectionHeaderIcon(w);
     return Row(
       children: [
         Expanded(
@@ -127,21 +124,34 @@ class Link26SectionHeader extends StatelessWidget {
           ),
         ),
         if (action != null)
-          TextButton.icon(
+          TextButton(
             onPressed: onAction,
-            icon: Icon(icon, size: iconSz, color: Link26Surface.accent),
-            label: Text(
-              action!,
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                color: Link26Surface.accent,
-                fontSize: actionSize,
-              ),
-            ),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  action!,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Link26Surface.accent,
+                    fontSize: actionSize,
+                  ),
+                ),
+                Text(
+                  ' \u203A',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: Link26Surface.accent,
+                    fontSize: actionSize * 1.05,
+                    height: 1,
+                  ),
+                ),
+              ],
             ),
           ),
       ],
