@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
+import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
@@ -67,6 +68,17 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
         medicines.add(Medicine.fromJson(Map<String, dynamic>.from(e)));
       }
     }
+    if (medicines.isEmpty) {
+      final hiraRaw = res['hira_medications'];
+      if (hiraRaw is Map) {
+        final hiraMap = Map<String, dynamic>.from(
+          hiraRaw.map((k, v) => MapEntry('$k', v)),
+        );
+        for (final row in codefRootToMedicationItems(hiraMap)) {
+          medicines.add(Medicine.fromJson(row));
+        }
+      }
+    }
     final noteRaw = metaMap?['note'] ?? metaMap?['notice'];
     final noteStr = noteRaw is String ? noteRaw.trim() : '';
     await NhisMedicinesSync.applyRemoteMedicines(
@@ -85,16 +97,16 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
       _result = null;
     });
     try {
-      Map<String, dynamic>? codefPayload;
+      Map<String, dynamic>? flowExtras;
       try {
         final decoded = jsonDecode(_bffExtraJson.text.trim());
         if (decoded is Map<String, dynamic>) {
-          codefPayload = decoded;
+          flowExtras = decoded;
         }
       } catch (_) {
         if (fullMedicationFlow) {
           setState(() {
-            _result = '추가 JSON 파싱 실패(BFF codef_payload 형식을 확인하세요)';
+            _result = '추가 JSON 파싱 실패(BFF flow_extras 객체 형식을 확인하세요)';
             _busy = false;
           });
           return;
@@ -103,9 +115,9 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
 
       if (Link26BffIntegrationsClient.canCall) {
         if (fullMedicationFlow) {
-          final res = await Link26BffIntegrationsClient.flowTilkoCodefTreatment(
+          final res = await Link26BffIntegrationsClient.flowTilkoHiraMedications(
             tilko: _tilkoBody(),
-            codefPayload: codefPayload,
+            flowExtras: flowExtras,
           );
           if (mounted) {
             await _persistMedicinesIfFlowOk(res);

@@ -12,9 +12,9 @@ import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
 
-/// 로그인/가입 직후: BFF `POST /v1/flow/tilko-codef-treatment` 로
+/// 로그인/가입 직후: BFF `POST /v1/flow/tilko-hira-medications` 로
 /// 틸코 간편인증 → 심평원 **내가 먹는 약**(hiraa050300000100) 조회 → 로컬 복약 반영.
-abstract final class NhisTilkoCodefFlowSync {
+abstract final class NhisTilkoHiraFlowSync {
   static String _tilkoCellphone(String phoneDigits) {
     final d = phoneDigits.replaceAll(RegExp(r'\D'), '');
     if (d.length == 11 && d.startsWith('010')) {
@@ -26,7 +26,7 @@ abstract final class NhisTilkoCodefFlowSync {
     return d;
   }
 
-  static Future<NhisMedicinesSyncOutcome?> runTilkoThenNhis({
+  static Future<NhisMedicinesSyncOutcome?> runTilkoThenHira({
     required String displayName,
     required String phoneDigits,
     required String gender,
@@ -39,14 +39,14 @@ abstract final class NhisTilkoCodefFlowSync {
 
     if (NhisRuntimeConfig.useMock) {
       if (kDebugMode) {
-        debugPrint('Tilko→NHIS: NHIS_USE_MOCK — 플로우 생략');
+        debugPrint('Tilko→HIRA: NHIS_USE_MOCK — 플로우 생략');
       }
       return null;
     }
 
     if (!Link26BffIntegrationsClient.canCall) {
       if (kDebugMode) {
-        debugPrint('Tilko→NHIS: NHIS_BASE_URL 없음 — 플로우 생략');
+        debugPrint('Tilko→HIRA: NHIS_BASE_URL 없음 — 플로우 생략');
       }
       return null;
     }
@@ -61,17 +61,17 @@ abstract final class NhisTilkoCodefFlowSync {
     }
 
     final privateAuthType = TilkoEnv.privateAuthType;
-    final codefPayload = <String, dynamic>{};
+    final flowExtras = <String, dynamic>{};
     final cid = codefConnectedId?.trim();
     if (cid != null && cid.isNotEmpty) {
-      codefPayload['connectedId'] = cid;
+      flowExtras['connectedId'] = cid;
     }
     if (gender.trim().isNotEmpty) {
-      codefPayload['gender'] = gender.trim();
+      flowExtras['gender'] = gender.trim();
     }
 
     try {
-      final res = await Link26BffIntegrationsClient.flowTilkoCodefTreatment(
+      final res = await Link26BffIntegrationsClient.flowTilkoHiraMedications(
         tilko: {
           'PrivateAuthType':
               privateAuthType.isEmpty ? 'KAKAO' : privateAuthType,
@@ -80,7 +80,7 @@ abstract final class NhisTilkoCodefFlowSync {
           'UserCellphoneNumber': _tilkoCellphone(phoneDigits),
           'IdentityNumber': residentRegistrationDigits13.trim(),
         },
-        codefPayload: codefPayload,
+        flowExtras: flowExtras.isEmpty ? null : flowExtras,
       );
 
       if (res == null) {
@@ -97,7 +97,7 @@ abstract final class NhisTilkoCodefFlowSync {
             ? hint.trim()
             : (detail is String && detail.trim().isNotEmpty)
                 ? detail.trim()
-                : 'BFF 틸코·건보 플로우 실패';
+                : 'BFF 틸코·심평원 연동에 실패했습니다.';
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail: msg,
@@ -135,8 +135,6 @@ abstract final class NhisTilkoCodefFlowSync {
         }
       }
 
-      // BFF가 CODEF용 매퍼로 `items`를 비우고 줬지만 `hira_medications` 원문에는
-      // 약 행이 있는 경우 — 앱에서 동일 매퍼로 한 번 더 시도합니다.
       if (medicines.isEmpty) {
         final hiraRaw = res['hira_medications'];
         if (hiraRaw is Map) {
@@ -161,7 +159,7 @@ abstract final class NhisTilkoCodefFlowSync {
     } catch (e, st) {
       if (link26ErrorLooksLikeUnreachableHost(e)) {
         if (kDebugMode) {
-          debugPrint('Tilko→NHIS: BFF 연결 불가(폰 단독·PC 미기동 등) — $e');
+          debugPrint('Tilko→HIRA: BFF 연결 불가 — $e');
         }
         final base = NhisRuntimeConfig.baseUrl.trim();
         return NhisMedicinesSyncOutcome(
@@ -172,7 +170,7 @@ abstract final class NhisTilkoCodefFlowSync {
               'PC의 LAN IP인지 확인하세요. (에뮬레이터는 보통 http://10.0.2.2:8787)',
         );
       }
-      debugPrint('Tilko→NHIS: $e\n$st');
+      debugPrint('Tilko→HIRA: $e\n$st');
       return NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.failed,
         detail: Link26BffIntegrationsClient.sanitizeIntegrationErrorMessage('$e'),
@@ -180,15 +178,15 @@ abstract final class NhisTilkoCodefFlowSync {
     }
   }
 
-  /// 틸코→심평원 플로우 후, 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다(CODEF 비활성 시 스텁).
-  static Future<NhisMedicinesSyncOutcome?> runTilkoThenNhisWithMedicationsFallback({
+  /// 틸코→심평원 플로우 후, 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다(스텁·레거시 GET).
+  static Future<NhisMedicinesSyncOutcome?> runTilkoThenHiraWithMedicationsFallback({
     required String displayName,
     required String phoneDigits,
     required String gender,
     required String residentRegistrationDigits13,
     String? codefConnectedId,
   }) async {
-    final first = await runTilkoThenNhis(
+    final first = await runTilkoThenHira(
       displayName: displayName,
       phoneDigits: phoneDigits,
       gender: gender,
@@ -226,7 +224,7 @@ abstract final class NhisTilkoCodefFlowSync {
     if (id == null || id.isEmpty) return;
     await UserLocalRepository.updateCodefConnectedId(p, connectedId: id);
     if (kDebugMode) {
-      debugPrint('Tilko→NHIS: connectedId를 로컬 DB에 저장했습니다.');
+      debugPrint('Tilko→HIRA: connectedId를 로컬 DB에 저장했습니다.');
     }
   }
 }

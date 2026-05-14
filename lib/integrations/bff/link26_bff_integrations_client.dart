@@ -55,13 +55,13 @@ String _flowHttpErrorDetail(int statusCode, String body) {
 /// `NHIS_BASE_URL`은 위 BFF의 베이스(예: `http://10.0.2.2:8787`)여야 하며,
 /// 다른 백엔드(FastAPI 등) URL을 넣으면 경로·오류 형식이 맞지 않을 수 있습니다.
 ///
-/// 틸코·CODEF 비밀키는 BFF 루트 `.env`에 두고, 앱은 NHIS_BASE_URL만 알면 됩니다.
+/// 틸코 API 키 등은 BFF 루트 `.env`에 두고, 앱은 NHIS_BASE_URL만 알면 됩니다.
 ///
 /// [NhisRuntimeConfig.useMock] 은 가입·로그인·복약 동기화용 목 데이터에만 쓰이고,
 /// 여기 BFF 프록시(e약은요·틸코·플로우)는 막지 않습니다.
 abstract final class Link26BffIntegrationsClient {
-  /// [NhisTilkoCodefFlowSync] 등 catch 블록에서 `StateError` 전체 문자열을 넣을 때 —
-  /// `flow HTTP 502: {"detail":"…CODEF HTTP 302…"}` 형태를 스낵바용 한글로 줄입니다.
+  /// [NhisTilkoHiraFlowSync] 등 catch 블록에서 `StateError` 전체 문자열을 넣을 때 —
+  /// `flow HTTP 502: {"detail":"…"}` 형태를 스낵바용 한글로 줄입니다.
   static String sanitizeIntegrationErrorMessage(String raw) {
     var t = _stripBom(raw);
     const badState = 'Bad state: ';
@@ -131,18 +131,24 @@ abstract final class Link26BffIntegrationsClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
-  static Future<Map<String, dynamic>?> flowTilkoCodefTreatment({
+  /// 틸코 간편인증 후 심평원 **내가 먹는 약**(hiraa050300000100) — BFF `POST /v1/flow/tilko-hira-medications`.
+  ///
+  /// [flowExtras] 는 BFF로 함께 보내는 부가 필드(예: 레거시 `connectedId`)입니다.
+  static Future<Map<String, dynamic>?> flowTilkoHiraMedications({
     required Map<String, dynamic> tilko,
-    Map<String, dynamic>? codefPayload,
+    Map<String, dynamic>? flowExtras,
   }) async {
     if (!canCall) return null;
-    final uri = Uri.parse('$_base/v1/flow/tilko-codef-treatment');
+    final uri = Uri.parse('$_base/v1/flow/tilko-hira-medications');
+    final extras = flowExtras ?? <String, dynamic>{};
     final res = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'tilko': tilko,
-        'codef_payload': codefPayload ?? <String, dynamic>{},
+        'flow_extras': extras,
+        // 구 BFF·문서 호환: 동일 맵을 codef_payload 키로도 전달
+        'codef_payload': extras,
       }),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {

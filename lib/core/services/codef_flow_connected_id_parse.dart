@@ -1,4 +1,5 @@
-/// BFF `POST /v1/flow/tilko-codef-treatment` 응답·CODEF JSON에서 `connectedId` 추출.
+/// BFF `POST /v1/flow/tilko-hira-medications`(구 `tilko-codef-treatment`) 응답·
+/// 레거시 CODEF JSON에서 `connectedId` 추출.
 /// 앱 저장·BFF echo·테스트가 같은 규칙을 씁니다.
 String? parseConnectedIdFromBffFlowResponse(Map<String, dynamic> res) {
   String? pick(dynamic v) {

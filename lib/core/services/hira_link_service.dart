@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
-import 'package:link26_app/core/services/nhis_tilko_codef_flow_sync.dart';
+import 'package:link26_app/core/services/nhis_tilko_hira_flow_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
@@ -21,7 +21,7 @@ abstract final class HiraLinkService {
     required String residentRegistrationDigits13,
     String? codefConnectedId,
   }) async {
-    final out = await NhisTilkoCodefFlowSync.runTilkoThenNhisWithMedicationsFallback(
+    final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
       displayName: displayName,
       phoneDigits: phoneDigits,
       gender: gender,
@@ -99,7 +99,7 @@ abstract final class HiraLinkService {
       return null;
     }
 
-    final out = await NhisTilkoCodefFlowSync.runTilkoThenNhisWithMedicationsFallback(
+    final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
       displayName: user.displayName,
       phoneDigits: user.phoneDigits,
       gender: user.gender,

@@ -1,7 +1,7 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
 //
 // 제품 흐름(의도): 로그인/가입 후 틸코 간편인증 → 심평원 **내가 먹는 약**(hiraa050300000100) → 본인 복약.
-// 이 Dart BFF는 틸코 프록시·공공 e약은요·(선택) CODEF 스텁 GET(/v1/medications)을 한 PC에서 돕습니다.
+// 이 Dart BFF는 틸코·심평원(HIRA) 프록시·공공 e약은요·(선택) 레거시 CODEF GET(/v1/medications)을 한 PC에서 돕습니다.
 // 앱은 NHIS_BASE_URL 로만 이 BFF에 붙고, 공단/틸코 비밀키는 루트 `.env` 에 둡니다.
 //
 // 포트: 환경변수 PORT 가 있으면 그 포트만 사용 (이미 다른 터미널에서 쓰 중이면 errno 10048).
@@ -36,7 +36,7 @@ Future<void> main() async {
   // ignore: avoid_print
   stdout.writeln(
     '  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health\n'
-    '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-codef-treatment',
+    '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-hira-medications (구: tilko-codef-treatment)',
   );
   final bootEnv = loadBffDotEnv();
   final pSu = (bootEnv['NHIS_PROXY_SIGNUP_URL'] ?? '').trim();
@@ -220,13 +220,15 @@ Future<void> _handle(HttpRequest request) async {
       return;
     }
 
-    if (method == 'POST' && path == '/v1/flow/tilko-codef-treatment') {
+    if (method == 'POST' &&
+        (path == '/v1/flow/tilko-hira-medications' ||
+            path == '/v1/flow/tilko-codef-treatment')) {
       final bodyStr = await _readBody(request);
       final env = loadBffDotEnv();
       try {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
-        // map['codef_payload'] — CODEF 전환 전 호환용. 현재 플로우는 틸코 HIRA 만 사용합니다.
+        // 요청 본문의 flow_extras·codef_payload 는 향후 BFF 확장용(현재 HIRA 분기에서는 미사용).
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
         final tilkoRes = await tilkoClient.requestFromJsonMap(tilkoMap);
         if (tilkoRes['http_status'] != null) {
@@ -293,7 +295,7 @@ Future<void> _handle(HttpRequest request) async {
         });
       } catch (e, st) {
         // ignore: avoid_print
-        print('BFF flow tilko-codef: $e\n$st');
+        print('BFF flow tilko-hira: $e\n$st');
         final hint = bffCodefFailureHintKo(e);
         var detail = '$e';
         if (e is StateError) {
@@ -417,7 +419,8 @@ Future<void> _handle(HttpRequest request) async {
           'source': 'link26-bff-dart-stub',
           'note':
               '데모 JSON입니다. 본인 처방·투약은 BFF에서 틸코 간편인증 후 '
-              '`POST /v1/flow/tilko-codef-treatment`(심평원 내가 먹는 약) 실연동이 필요합니다.',
+              '`POST /v1/flow/tilko-hira-medications`(심평원 내가 먹는 약) 실연동이 필요합니다. '
+              '(구 경로 `tilko-codef-treatment` 도 동일 처리됩니다.)',
         },
       });
       return;
