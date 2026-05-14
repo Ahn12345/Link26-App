@@ -23,7 +23,8 @@
     <application
         android:label="Link26"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher">
+        android:roundIcon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name="com.link26.app.MainActivity"
             android:exported="true"

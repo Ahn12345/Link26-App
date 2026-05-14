@@ -136,12 +136,13 @@ abstract final class NhisTilkoHiraFlowSync {
       }
 
       if (medicines.isEmpty) {
-        final hiraRaw = res['hira_medications'];
-        if (hiraRaw is Map) {
-          final hiraMap = Map<String, dynamic>.from(
-            hiraRaw.map((k, v) => MapEntry('$k', v)),
+        dynamic rootRaw = res['hira_medications'];
+        if (rootRaw is! Map) rootRaw = res['nhis_treatment_injection'];
+        if (rootRaw is Map) {
+          final rootMap = Map<String, dynamic>.from(
+            rootRaw.map((k, v) => MapEntry('$k', v)),
           );
-          for (final row in codefRootToMedicationItems(hiraMap)) {
+          for (final row in codefRootToMedicationItems(rootMap)) {
             medicines.add(Medicine.fromJson(row));
           }
         }
@@ -165,9 +166,14 @@ abstract final class NhisTilkoHiraFlowSync {
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail:
-              '휴대폰이 BFF에 연결되지 않았습니다. PC에서 BFF를 실행했는지, '
-              '휴대폰과 PC가 같은 Wi-Fi인지, 앱의 NHIS_BASE_URL($base)이 '
-              'PC의 LAN IP인지 확인하세요. (에뮬레이터는 보통 http://10.0.2.2:8787)',
+              '심평원 데이터는 PC에서 돌아가는 BFF를 거칩니다. 지금은 그 BFF에 '
+              '연결되지 않았습니다.\n\n'
+              '• PC에서 `dart run tool/link26_bff.dart` 실행 후, 콘솔에 나온 **포트**가 '
+              '앱 설정($base)의 포트와 같은지 확인하세요.\n'
+              '• PC `ipconfig`의 IPv4가 192.168.150.143이 맞는지, 폰과 PC가 **같은 Wi-Fi**인지 확인하세요.\n'
+              '• Windows 방화벽에서 해당 포트(예: 8787) **인바운드 허용** 여부를 확인하세요.\n'
+              '• USB만 쓸 때: PC에서 `adb reverse tcp:8787 tcp:8787` 후 앱 주소를 '
+              '`http://127.0.0.1:8787`로 맞추는 방법도 있습니다.',
         );
       }
       debugPrint('Tilko→HIRA: $e\n$st');

@@ -1,6 +1,6 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
 //
-// 제품 흐름(의도): 로그인/가입 후 틸코 간편인증 → 심평원 **내가 먹는 약**(hiraa050300000100) → 본인 복약.
+// 제품 흐름(의도): 로그인/가입 후 틸코 **국민건강보험공단 간편인증** → NHIS **진료 및 투약 정보** → 본인 복약.
 // 이 Dart BFF는 틸코·심평원(HIRA) 프록시·공공 e약은요·(선택) 레거시 CODEF GET(/v1/medications)을 한 PC에서 돕습니다.
 // 앱은 NHIS_BASE_URL 로만 이 BFF에 붙고, 공단/틸코 비밀키는 루트 `.env` 에 둡니다.
 //
@@ -230,67 +230,55 @@ Future<void> _handle(HttpRequest request) async {
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
         // 요청 본문의 flow_extras·codef_payload 는 향후 BFF 확장용(현재 HIRA 분기에서는 미사용).
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
-        final tilkoRes = await tilkoClient.requestFromJsonMap(tilkoMap);
+        final tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
+          tilkoMap,
+        );
         if (tilkoRes['http_status'] != null) {
           await _json(request, 200, {
             'ok': false,
-            'detail': '틸코 간편인증(simpleauthrequest)이 HTTP 오류로 끝났습니다.',
+            'detail': '틸코 국민건강보험공단 간편인증(simpleauthrequest)이 HTTP 오류로 끝났습니다.',
             'hint_ko':
-                'TILKO_API_KEY·TILKO_API_HOST(데모: https://dev.tilko.net)와 요청 필드를 확인하세요.',
+                'TILKO_API_KEY·TILKO_API_HOST(데모: https://dev.tilko.net)와 요청 필드를 확인하세요. '
+                '인증 채널은 공단 간편인증(nhissimpleauth)에 맞는지 확인하세요.',
             'tilko': tilkoRes,
           });
           return;
         }
 
-        String ymd(DateTime d) =>
-            '${d.year.toString().padLeft(4, '0')}'
-            '${d.month.toString().padLeft(2, '0')}'
-            '${d.day.toString().padLeft(2, '0')}';
-        final today = DateTime.now();
-        final endDay = DateTime(today.year, today.month, today.day);
-        final startDay = endDay.subtract(const Duration(days: 365));
-        final startStr =
-            '${tilkoMap['StartDate'] ?? tilkoMap['startDate'] ?? ''}'.trim();
-        final endStr =
-            '${tilkoMap['EndDate'] ?? tilkoMap['endDate'] ?? ''}'.trim();
-        final startYmd =
-            RegExp(r'^\d{8}$').hasMatch(startStr) ? startStr : ymd(startDay);
-        final endYmd =
-            RegExp(r'^\d{8}$').hasMatch(endStr) ? endStr : ymd(endDay);
-
-        final hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
+        final nhisRes =
+            await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
           tilkoRequestMap: tilkoMap,
           tilkoAuthResponse: tilkoRes,
-          startDateYyyymmdd: startYmd,
-          endDateYyyymmdd: endYmd,
         );
-        if (hiraRes['http_status'] != null) {
-          final inner = hiraRes['body'];
+        if (nhisRes['http_status'] != null) {
+          final inner = nhisRes['body'];
           await _json(request, 200, {
             'ok': false,
-            'detail': '틸코 HIRA 복약 API(hiraa050300000100) HTTP 오류',
+            'detail': '틸코 NHIS 진료·투약 정보(간편인증) HTTP 오류',
             'hint_ko':
-                '간편인증이 완료된 뒤 호출했는지, 조회 기간(StartDate/EndDate)이 YYYYMMDD 8자리인지 '
-                '문서(https://apidemo.tilko.net … HIRAA050300000100)와 대조하세요.',
+                '공단 간편인증이 완료된 뒤 호출했는지, '
+                '문서(https://apidemo.tilko.net … NhisSimpleAuth-RetrieveTreatmentInjectionInformationPerson)와 대조하세요.',
             'tilko': tilkoRes,
-            'hira_medications': inner is Map<String, dynamic> ? inner : hiraRes,
+            'nhis_treatment_injection':
+                inner is Map<String, dynamic> ? inner : nhisRes,
           });
           return;
         }
 
-        final items = bffMapCodefRootToMedicationItems(hiraRes);
+        final items = bffMapCodefRootToMedicationItems(nhisRes);
         final emptyParsed = items.isEmpty;
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoRes,
-          'hira_medications': hiraRes,
+          'nhis_treatment_injection': nhisRes,
+          'hira_medications': nhisRes,
           'items': items,
           'meta': {
-            'source': 'tilko_hira_my_medications',
+            'source': 'tilko_nhis_simpleauth_treatment_injection',
             if (emptyParsed)
               'note':
-                  'HIRA 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '
-                  '처방 이력이 없거나 ResultList/DrugList 구조가 바뀐 경우일 수 있습니다.',
+                  'NHIS 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '
+                  '진료·투약 이력이 없거나 ResultList/RetrieveTreatmentInjectionInformationPersonDetailList 구조가 바뀐 경우일 수 있습니다.',
           },
         });
       } catch (e, st) {
@@ -418,8 +406,8 @@ Future<void> _handle(HttpRequest request) async {
           'phone': phone,
           'source': 'link26-bff-dart-stub',
           'note':
-              '데모 JSON입니다. 본인 처방·투약은 BFF에서 틸코 간편인증 후 '
-              '`POST /v1/flow/tilko-hira-medications`(심평원 내가 먹는 약) 실연동이 필요합니다. '
+              '데모 JSON입니다. 본인 처방·투약은 BFF에서 틸코 공단 간편인증 후 '
+              '`POST /v1/flow/tilko-hira-medications`(NHIS 진료·투약 정보) 실연동이 필요합니다. '
               '(구 경로 `tilko-codef-treatment` 도 동일 처리됩니다.)',
         },
       });

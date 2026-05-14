@@ -6,14 +6,15 @@ import 'package:encrypt/encrypt.dart';
 import 'package:http/http.dart' as http;
 import 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
 
-/// 틸코 건강보험심사평가원 간편인증 (`/api/v1.0/hirasimpleauth/simpleauthrequest`).
+/// 틸코 **건강보험공단(NHIS) 간편인증** 및 진료·투약 조회.
 ///
-/// 틸코 문서의 `Nhis/RetrieveTreatmentInjectionInformationPerson`(apidemo URL의 v2.0 표기와 별개로
-/// 본문 경로는 보통 `/api/v1.0/Nhis/...`)는 **공동인증서** 기반이라 이 클라이언트와 다릅니다.
-/// 간편인증 후 [requestHiraMyMedicationsSimpleAuth] 로 심평원 **내가 먹는 약**(`hiraa050300000100`)을
-/// 호출하는 흐름을 씁니다.
+/// - `POST /api/v1.0/nhissimpleauth/simpleauthrequest` — 공단 간편인증 요청
+/// - `POST /api/v1.0/nhissimpleauth/retrievetreatmentinjectioninformationperson` — [간편인증용] 진료 및 투약 정보
+///
+/// (구) 심평원 **내가 먹는 약** `hirasimpleauth/hiraa050300000100` 는 [requestHiraMyMedicationsSimpleAuth] 로
+/// 필요 시 그대로 호출할 수 있습니다. BFF 기본 플로우는 NHIS 간편인증 경로를 씁니다.
+///
 /// 운영에서는 BFF에만 키를 두고 [Link26BffIntegrationsClient]로 프록시하는 편이 안전합니다.
-/// 앱에서 직접 호출 시 [TilkoEnv] + [TilkoHiraSimpleAuthClient] 생성자를 사용하세요.
 
 /// 틸코 JSON(중첩·리스트)에서 키 [want]와 대소문자만 다른 첫 문자열 값을 찾습니다.
 String? tilkoFindPlainString(dynamic root, String want) {
@@ -186,6 +187,74 @@ class TilkoHiraSimpleAuthClient {
     return decoded;
   }
 
+  /// 공단(NHIS) 간편인증 요청 — `POST …/nhissimpleauth/simpleauthrequest`
+  /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
+  Future<Map<String, dynamic>> requestNhisSimpleAuth({
+    required String privateAuthType,
+    required String userName,
+    required String birthDate,
+    required String userCellphoneNumber,
+    required String identityNumber,
+  }) async {
+    if (apiKey.isEmpty) {
+      throw StateError('TILKO_API_KEY 가 비어 있습니다.');
+    }
+    final pub = await fetchPublicKey();
+    final rnd = Random.secure();
+    final aesKey = Uint8List(16);
+    for (var i = 0; i < 16; i++) {
+      aesKey[i] = rnd.nextInt(256);
+    }
+    final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
+
+    final body = <String, dynamic>{
+      'PrivateAuthType': _aesEncryptField(aesKey, privateAuthType),
+      'UserName': _aesEncryptField(aesKey, userName),
+      'BirthDate': _aesEncryptField(aesKey, birthDate),
+      'UserCellphoneNumber': _aesEncryptField(aesKey, userCellphoneNumber),
+      'IdentityNumber': _aesEncryptField(aesKey, identityNumber),
+    };
+
+    final uri = Uri.parse('$_root/api/v1.0/nhissimpleauth/simpleauthrequest');
+    final res = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'API-KEY': apiKey,
+        'ENC-KEY': encKeyHeader,
+      },
+      body: jsonEncode(body),
+    );
+
+    final text = res.body;
+    Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(text) as Map<String, dynamic>;
+    } catch (_) {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw StateError('Tilko NHIS simpleauth HTTP ${res.statusCode}: $text');
+      }
+      rethrow;
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      return {'http_status': res.statusCode, 'body': decoded};
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> requestNhisSimpleAuthFromJsonMap(
+    Map<String, dynamic> m,
+  ) {
+    return requestNhisSimpleAuth(
+      privateAuthType: '${m['PrivateAuthType'] ?? m['privateAuthType'] ?? ''}',
+      userName: '${m['UserName'] ?? m['userName'] ?? ''}',
+      birthDate: '${m['BirthDate'] ?? m['birthDate'] ?? ''}',
+      userCellphoneNumber:
+          '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}',
+      identityNumber: '${m['IdentityNumber'] ?? m['identityNumber'] ?? ''}',
+    );
+  }
+
   Future<Map<String, dynamic>> requestFromJsonMap(Map<String, dynamic> m) {
     return requestSimpleAuth(
       privateAuthType: '${m['PrivateAuthType'] ?? m['privateAuthType'] ?? ''}',
@@ -280,6 +349,93 @@ class TilkoHiraSimpleAuthClient {
     } catch (_) {
       if (res.statusCode < 200 || res.statusCode >= 300) {
         throw StateError('Tilko HIRAA050300000100 HTTP ${res.statusCode}: $text');
+      }
+      rethrow;
+    }
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      return {'http_status': res.statusCode, 'body': decoded};
+    }
+    return decoded;
+  }
+
+  /// 건강보험공단 간편인증 **[진료 및 투약 정보]** —
+  /// `POST …/nhissimpleauth/retrievetreatmentinjectioninformationperson`
+  /// ([apidemo](https://apidemo.tilko.net/) 문서 BODY 기준 — IdentityNumber 미포함).
+  ///
+  /// [tilkoAuthResponse]: [requestNhisSimpleAuth] / [requestNhisSimpleAuthFromJsonMap] 의 JSON.
+  Future<Map<String, dynamic>> requestNhisRetrieveTreatmentInjectionInformationPerson({
+    required Map<String, dynamic> tilkoRequestMap,
+    required Map<String, dynamic> tilkoAuthResponse,
+  }) async {
+    if (apiKey.isEmpty) {
+      throw StateError('TILKO_API_KEY 가 비어 있습니다.');
+    }
+    String pickReq(String k) =>
+        (tilkoFindPlainString(tilkoRequestMap, k) ?? '').trim();
+
+    final userName = pickReq('UserName');
+    final birth = pickReq('BirthDate');
+    final cell = pickReq('UserCellphoneNumber');
+    final pat = pickReq('PrivateAuthType');
+
+    String pickAuth(String k) =>
+        (tilkoFindPlainString(tilkoAuthResponse, k) ?? '').trim();
+
+    final cx = pickAuth('CxId');
+    final reqTx = pickAuth('ReqTxId');
+    final token = pickAuth('Token');
+    final tx = pickAuth('TxId');
+
+    if ([userName, birth, cell, pat, cx, reqTx, token, tx].any((e) => e.isEmpty)) {
+      throw StateError(
+        'NHIS RetrieveTreatmentInjectionInformationPerson: 필수 값 누락 — '
+        '요청맵(이름·생년월일·휴대폰·인증채널) 또는 간편인증 응답의 '
+        'CxId·ReqTxId·Token·TxId 를 찾지 못했습니다.',
+      );
+    }
+
+    final pub = await fetchPublicKey();
+    final rnd = Random.secure();
+    final aesKey = Uint8List(16);
+    for (var i = 0; i < 16; i++) {
+      aesKey[i] = rnd.nextInt(256);
+    }
+    final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
+
+    final body = <String, dynamic>{
+      'CxId': _aesEncryptField(aesKey, cx),
+      'PrivateAuthType': _aesEncryptField(aesKey, pat),
+      'ReqTxId': _aesEncryptField(aesKey, reqTx),
+      'Token': _aesEncryptField(aesKey, token),
+      'TxId': _aesEncryptField(aesKey, tx),
+      'UserName': _aesEncryptField(aesKey, userName),
+      'BirthDate': _aesEncryptField(aesKey, birth),
+      'UserCellphoneNumber': _aesEncryptField(aesKey, cell),
+    };
+
+    final uri = Uri.parse(
+      '$_root/api/v1.0/nhissimpleauth/retrievetreatmentinjectioninformationperson',
+    );
+    final res = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'API-KEY': apiKey,
+        'ENC-KEY': encKeyHeader,
+      },
+      body: jsonEncode(body),
+    );
+
+    final text = res.body;
+    Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(text) as Map<String, dynamic>;
+    } catch (_) {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw StateError(
+          'Tilko NHIS RetrieveTreatmentInjectionInformationPerson HTTP '
+          '${res.statusCode}: $text',
+        );
       }
       rethrow;
     }

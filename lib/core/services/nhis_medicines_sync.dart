@@ -52,9 +52,14 @@ class NhisMedicinesSyncOutcome {
 
   bool get isTilkoHiraMyMedications => metaSource == 'tilko_hira_my_medications';
 
-  /// 틸코 간편인증 기반 복약 플로우(심평원 HIRA 또는 레거시 CODEF 건보).
+  bool get isTilkoNhisTreatmentSimpleAuth =>
+      metaSource == 'tilko_nhis_simpleauth_treatment_injection';
+
+  /// 틸코 간편인증 기반 복약 플로우(건강보험공단 NHIS·심평원 HIRA 또는 레거시 CODEF 건보).
   bool get isTilkoBackedMedicationsFlow =>
-      isTilkoCodefNhis || isTilkoHiraMyMedications;
+      isTilkoCodefNhis ||
+      isTilkoHiraMyMedications ||
+      isTilkoNhisTreatmentSimpleAuth;
 
   bool get showBannerOnBootstrap {
     if (suppressBootstrapBanner) return false;
@@ -119,6 +124,10 @@ class NhisMedicinesSyncOutcome {
           return '틸코 간편인증 후 심평원 복약 조회를 했지만 항목이 0건입니다. '
               '조회 기간 내 처방이 없거나, BFF 로그의 hira_medications JSON 구조를 확인하세요.';
         }
+        if (isTilkoNhisTreatmentSimpleAuth && remoteItemCount == 0) {
+          return '틸코 공단 간편인증 후 진료·투약 정보 조회를 했지만 항목이 0건입니다. '
+              '해당 기간 내 이력이 없거나, BFF 로그의 nhis_treatment_injection JSON 구조를 확인하세요.';
+        }
         if (isTilkoCodefNhis && remoteItemCount == 0) {
           final c = codefResultCode ?? '';
           final m = codefResultMessage ?? '';
@@ -161,7 +170,8 @@ abstract final class NhisMedicinesSync {
         s == 'codef_missing_connected_id' ||
         s == 'codef_error' ||
         s == 'tilko_codef_nhis' ||
-        s == 'tilko_hira_my_medications';
+        s == 'tilko_hira_my_medications' ||
+        s == 'tilko_nhis_simpleauth_treatment_injection';
   }
 
   static Future<void> _purgeLink26BffStubDemosFromCache() async {
@@ -323,12 +333,13 @@ abstract final class NhisMedicinesSync {
     );
   }
 
-  /// [codef]·[tilko_codef_nhis]·[tilko_hira_my_medications] 응답은 로컬 데모·수동 목록을 덮어씁니다.
+  /// [codef]·[tilko_codef_nhis]·[tilko_hira_my_medications]·[tilko_nhis_simpleauth_treatment_injection] 응답은 로컬 데모·수동 목록을 덮어씁니다.
   static bool isAuthoritativeMedicationsMetaSource(String? source) {
     final s = source?.trim() ?? '';
     return s == 'codef' ||
         s == 'tilko_codef_nhis' ||
-        s == 'tilko_hira_my_medications';
+        s == 'tilko_hira_my_medications' ||
+        s == 'tilko_nhis_simpleauth_treatment_injection';
   }
 
   static Future<void> _maybePersistConnectedIdFromMedicationsBody(

@@ -69,12 +69,13 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
       }
     }
     if (medicines.isEmpty) {
-      final hiraRaw = res['hira_medications'];
-      if (hiraRaw is Map) {
-        final hiraMap = Map<String, dynamic>.from(
-          hiraRaw.map((k, v) => MapEntry('$k', v)),
+      dynamic rootRaw = res['hira_medications'];
+      if (rootRaw is! Map) rootRaw = res['nhis_treatment_injection'];
+      if (rootRaw is Map) {
+        final rootMap = Map<String, dynamic>.from(
+          rootRaw.map((k, v) => MapEntry('$k', v)),
         );
-        for (final row in codefRootToMedicationItems(hiraMap)) {
+        for (final row in codefRootToMedicationItems(rootMap)) {
           medicines.add(Medicine.fromJson(row));
         }
       }
