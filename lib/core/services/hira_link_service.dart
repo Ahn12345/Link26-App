@@ -10,7 +10,7 @@ import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart'
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-/// 가입·로그인 후 틸코 간편인증 → BFF CODEF(국민건강보험 진료·투약) 조회.
+/// 가입·로그인 후 틸코 간편인증 → BFF 심평원 복약(hiraa050300000100) 조회.
 abstract final class HiraLinkService {
   /// 회원가입 직후 — 주민번호는 이미 입력된 값으로 한 번만 BFF 플로우에 사용합니다.
   static Future<void> afterRegistration({

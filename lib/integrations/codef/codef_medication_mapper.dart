@@ -44,6 +44,8 @@ const _listContainerKeys = [
   // 틸코 NHIS 공동인증 API 응답 필드 (문서 RetrieveTreatmentInjectionInformationPerson)
   'ResultList',
   'RetrieveTreatmentInjectionInformationPersonDetailList',
+  // 틸코 간편인증 [내가 먹는 약] HIRAA050300000100 — 처방 행 안의 약 목록
+  'DrugList',
 ];
 
 const _medicineNameKeys = [
@@ -72,6 +74,8 @@ const _medicineNameKeys = [
   'ChoBangYakPumMyung',
   'MediPrdcNm',
   'ByungEuiwonYakGukMyung',
+  // HIRAA050300000100 DrugList
+  'Name',
 ];
 
 const _doseKeys = [
@@ -81,6 +85,8 @@ const _doseKeys = [
   '일투',
   '1일투여량',
   '투여량',
+  'DosagePerOnce',
+  'DailyDose',
 ];
 
 const _freqKeys = [

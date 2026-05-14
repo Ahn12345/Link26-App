@@ -50,6 +50,12 @@ class NhisMedicinesSyncOutcome {
 
   bool get isTilkoCodefNhis => metaSource == 'tilko_codef_nhis';
 
+  bool get isTilkoHiraMyMedications => metaSource == 'tilko_hira_my_medications';
+
+  /// 틸코 간편인증 기반 복약 플로우(CODEF 건보 또는 HIRA 직접).
+  bool get isTilkoBackedMedicationsFlow =>
+      isTilkoCodefNhis || isTilkoHiraMyMedications;
+
   bool get showBannerOnBootstrap {
     if (suppressBootstrapBanner) return false;
     if (result == NhisMedicinesSyncResult.failed) return true;
@@ -66,13 +72,13 @@ class NhisMedicinesSyncOutcome {
       return true;
     }
     if (metaSource == 'codef' && remoteItemCount == 0) return true;
-    if (isTilkoCodefNhis &&
+    if (isTilkoBackedMedicationsFlow &&
         remoteItemCount == 0 &&
         codefResultCode != null &&
         codefResultCode != 'CF-00000') {
       return true;
     }
-    if (isTilkoCodefNhis && remoteItemCount == 0) return true;
+    if (isTilkoBackedMedicationsFlow && remoteItemCount == 0) return true;
     if (metaSource == 'tilko_only' && (metaNote ?? '').trim().isNotEmpty) {
       return true;
     }
@@ -107,6 +113,10 @@ class NhisMedicinesSyncOutcome {
           final m = codefResultMessage ?? '';
           return '연동 응답은 왔지만 복약 항목이 0건입니다. '
               'CODEF connectedId·상품 경로·추가인증을 확인하세요. ($c ${m.isNotEmpty ? m : ''})';
+        }
+        if (isTilkoHiraMyMedications && remoteItemCount == 0) {
+          return '틸코 간편인증 후 심평원 복약 조회를 했지만 항목이 0건입니다. '
+              '조회 기간 내 처방이 없거나, BFF 로그의 hira_medications JSON 구조를 확인하세요.';
         }
         if (isTilkoCodefNhis && remoteItemCount == 0) {
           final c = codefResultCode ?? '';
@@ -149,7 +159,8 @@ abstract final class NhisMedicinesSync {
     return s == 'codef' ||
         s == 'codef_missing_connected_id' ||
         s == 'codef_error' ||
-        s == 'tilko_codef_nhis';
+        s == 'tilko_codef_nhis' ||
+        s == 'tilko_hira_my_medications';
   }
 
   static Future<void> _purgeLink26BffStubDemosFromCache() async {
@@ -299,10 +310,12 @@ abstract final class NhisMedicinesSync {
     );
   }
 
-  /// [codef]·[tilko_codef_nhis] 응답은 로컬 데모·수동 목록을 덮어씁니다.
+  /// [codef]·[tilko_codef_nhis]·[tilko_hira_my_medications] 응답은 로컬 데모·수동 목록을 덮어씁니다.
   static bool isAuthoritativeMedicationsMetaSource(String? source) {
     final s = source?.trim() ?? '';
-    return s == 'codef' || s == 'tilko_codef_nhis';
+    return s == 'codef' ||
+        s == 'tilko_codef_nhis' ||
+        s == 'tilko_hira_my_medications';
   }
 
   static Future<void> _maybePersistConnectedIdFromMedicationsBody(

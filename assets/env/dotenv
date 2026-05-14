@@ -1,13 +1,13 @@
-# --- CODEF (활성: 샌드박스 client — 상품 POST 는 sandbox.codef.io; OAuth 는 oauth.codef.io 공통) ---
+# --- CODEF (비활성 — 복약·진료 조회는 틸코 HIRA 간편인증 hiraa050300000100) ---
 # public_key: 샌드박스/데모 콘솔에서 짝 맞는 키 PEM 전체 복사 권장.
-CODEF_CLIENT_ID=ef27cfaa-10c1-4470-adac-60ba476273f9
-CODEF_CLIENT_SECRET=83160c33-9045-4915-86d8-809473cdf5c3
-CODEF_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjlFcTaZzIPppqO1w2YfP2nzms//hCYRBpKCOD1VYEI4Bfv4Gl7qov5gEoE1aEOAmx0wD/ffYCJagEAYwoPCNZuCfKs9lhLKaYWju17qnNIPDm5RrjvDcT/ZKs6g4PelioYFb6bLmcKvRbf7c3r3HT+gacL7zl5+cW55GzjAUH9+AObWkxnNhHKfQUtNDUMsBXNuKcArcK0zcRkK3G3teToxodnZDJYdOqLFkyAgHLnIFFa7+qalpZHY/N4sU2IEaGVhU+gQ7GMA+tur7bz0a+taKZZ4qEBxLgwjny76fFoQhr7iy9S4IUso/L1CLrU8AUyRUTwsYUkw+XjBzivCZswIDAQAB-----END PUBLIC KEY-----"
+# CODEF_CLIENT_ID=ef27cfaa-10c1-4470-adac-60ba476273f9
+# CODEF_CLIENT_SECRET=83160c33-9045-4915-86d8-809473cdf5c3
+# CODEF_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjlFcTaZzIPppqO1w2YfP2nzms//hCYRBpKCOD1VYEI4Bfv4Gl7qov5gEoE1aEOAmx0wD/ffYCJagEAYwoPCNZuCfKs9lhLKaYWju17qnNIPDm5RrjvDcT/ZKs6g4PelioYFb6bLmcKvRbf7c3r3HT+gacL7zl5+cW55GzjAUH9+AObWkxnNhHKfQUtNDUMsBXNuKcArcK0zcRkK3G3teToxodnZDJYdOqLFkyAgHLnIFFa7+qalpZHY/N4sU2IEaGVhU+gQ7GMA+tur7bz0a+taKZZ4qEBxLgwjny76fFoQhr7iy9S4IUso/L1CLrU8AUyRUTwsYUkw+XjBzivCZswIDAQAB-----END PUBLIC KEY-----"
 # 콘솔 샌드박스 블록에 api.codef.io 가 보여도, 이 클라이언트 상품 호출은 sandbox.codef.io (CF-00017 방지).
-CODEF_API_HOST=https://sandbox.codef.io
-CODEF_BASE_URL=https://sandbox.codef.io
-CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/each/pp/nhis-insurance-treatment-information
-BFF_USE_CODEF_FOR_MEDICATIONS=true
+# CODEF_API_HOST=https://sandbox.codef.io
+# CODEF_BASE_URL=https://sandbox.codef.io
+# CODEF_NHIS_TREATMENT_PATH=/v1/kr/public/each/pp/nhis-insurance-treatment-information
+# BFF_USE_CODEF_FOR_MEDICATIONS=true
 # Connected ID: [가이드](https://developer.codef.io/common-guide/connected-id/register) — 샌드도 동일 플로우면 발급 후 아래 설정.
 # CODEF_CONNECTED_ID=
 # --- 참고: 데모버전 NEW (development.codef.io) ---
@@ -15,7 +15,6 @@ BFF_USE_CODEF_FOR_MEDICATIONS=true
 # CODEF_CLIENT_SECRET=649d9385-ce4e-4cd4-8a31-17b501b267c1
 # CODEF_API_HOST=https://development.codef.io
 # CODEF_BASE_URL=https://development.codef.io
-
 GEMINI_API_KEY="AIzaSyAH91tPYhoabPC7ffMl0CjY5O9PCk8Ge_g"
 GEMINI_MODEL_ID=gemini-2.5-flash
 NHIS_USE_MOCK=false

@@ -1,7 +1,7 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
 //
-// 제품 흐름(의도): 로그인/가입 후 틸코 간편인증 → (CODEF 등) 건강보험 진료·투약 정보 → 본인 복약.
-// 이 Dart BFF는 그중 틸코 프록시·공공 e약은요·CODEF 상품(/v1/medications)을 한 PC에서 돕는 역할입니다.
+// 제품 흐름(의도): 로그인/가입 후 틸코 간편인증 → 심평원 **내가 먹는 약**(hiraa050300000100) → 본인 복약.
+// 이 Dart BFF는 틸코 프록시·공공 e약은요·(선택) CODEF 스텁 GET(/v1/medications)을 한 PC에서 돕습니다.
 // 앱은 NHIS_BASE_URL 로만 이 BFF에 붙고, 공단/틸코 비밀키는 루트 `.env` 에 둡니다.
 //
 // 포트: 환경변수 PORT 가 있으면 그 포트만 사용 (이미 다른 터미널에서 쓰 중이면 errno 10048).
@@ -226,79 +226,69 @@ Future<void> _handle(HttpRequest request) async {
       try {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
-        final codefExtra = map['codef_payload'] as Map<String, dynamic>? ?? {};
+        // map['codef_payload'] — CODEF 전환 전 호환용. 현재 플로우는 틸코 HIRA 만 사용합니다.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
         final tilkoRes = await tilkoClient.requestFromJsonMap(tilkoMap);
-        final id = (env['CODEF_CLIENT_ID'] ?? '').trim();
-        final secret = (env['CODEF_CLIENT_SECRET'] ?? '').trim();
-        if (id.isEmpty || secret.isEmpty) {
-          await _json(request, 200, {
-            'ok': true,
-            'tilko': tilkoRes,
-            'codef': null,
-            'notice': 'CODEF 클라이언트 미설정 — CODEF 호출 생략',
-          });
-          return;
-        }
-        final bearer = await bffCodefBearer(env);
-        final merged = mergeCodefNhisTilkoTreatmentBody(
-          env: env,
-          codefExtra: codefExtra,
-          tilkoMap: tilkoMap,
-          tilkoRes: tilkoRes,
-        );
-        final raw = await codefNhisTreatmentProductRaw(
-          env: env,
-          bearer: bearer,
-          body: merged,
-        );
-        final codefDecoded = jsonDecode(raw) as Map<String, dynamic>;
-        String? cfCode;
-        String? cfMsg;
-        final resObj = codefDecoded['result'];
-        if (resObj is Map) {
-          cfCode = '${resObj['code'] ?? ''}'.trim();
-          cfMsg = '${resObj['message'] ?? ''}'.trim();
-        }
-        final cfBusinessOk =
-            cfCode == null || cfCode.isEmpty || cfCode == 'CF-00000';
-        if (!cfBusinessOk) {
-          final msgOut = (cfMsg ?? '').trim();
-          final detailOut = msgOut.isNotEmpty ? msgOut : cfCode;
-          final hint = bffCodefNhisTreatResultHintKo(cfCode, cfMsg) ??
-              'CODEF 건보 진료·투약 조회에 실패했습니다.';
+        if (tilkoRes['http_status'] != null) {
           await _json(request, 200, {
             'ok': false,
-            'detail': detailOut,
-            'hint_ko': hint,
+            'detail': '틸코 간편인증(simpleauthrequest)이 HTTP 오류로 끝났습니다.',
+            'hint_ko':
+                'TILKO_API_KEY·TILKO_API_HOST(데모: https://dev.tilko.net)와 요청 필드를 확인하세요.',
             'tilko': tilkoRes,
-            'codef': codefDecoded,
           });
           return;
         }
-        final items = bffMapCodefRootToMedicationItems(codefDecoded);
-        final extractedCid = bffExtractConnectedIdFromCodefRoot(codefDecoded);
-        final sentCid = '${merged['connectedId'] ?? ''}'.trim();
-        final echoCid = (extractedCid != null && extractedCid.isNotEmpty)
-            ? extractedCid
-            : (sentCid.isNotEmpty ? sentCid : null);
+
+        String ymd(DateTime d) =>
+            '${d.year.toString().padLeft(4, '0')}'
+            '${d.month.toString().padLeft(2, '0')}'
+            '${d.day.toString().padLeft(2, '0')}';
+        final today = DateTime.now();
+        final endDay = DateTime(today.year, today.month, today.day);
+        final startDay = endDay.subtract(const Duration(days: 365));
+        final startStr =
+            '${tilkoMap['StartDate'] ?? tilkoMap['startDate'] ?? ''}'.trim();
+        final endStr =
+            '${tilkoMap['EndDate'] ?? tilkoMap['endDate'] ?? ''}'.trim();
+        final startYmd =
+            RegExp(r'^\d{8}$').hasMatch(startStr) ? startStr : ymd(startDay);
+        final endYmd =
+            RegExp(r'^\d{8}$').hasMatch(endStr) ? endStr : ymd(endDay);
+
+        final hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
+          tilkoRequestMap: tilkoMap,
+          tilkoAuthResponse: tilkoRes,
+          startDateYyyymmdd: startYmd,
+          endDateYyyymmdd: endYmd,
+        );
+        if (hiraRes['http_status'] != null) {
+          final inner = hiraRes['body'];
+          await _json(request, 200, {
+            'ok': false,
+            'detail': '틸코 HIRA 복약 API(hiraa050300000100) HTTP 오류',
+            'hint_ko':
+                '간편인증이 완료된 뒤 호출했는지, 조회 기간(StartDate/EndDate)이 YYYYMMDD 8자리인지 '
+                '문서(https://apidemo.tilko.net … HIRAA050300000100)와 대조하세요.',
+            'tilko': tilkoRes,
+            'hira_medications': inner is Map<String, dynamic> ? inner : hiraRes,
+          });
+          return;
+        }
+
+        final items = bffMapCodefRootToMedicationItems(hiraRes);
         final emptyParsed = items.isEmpty;
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoRes,
-          'codef': codefDecoded,
+          'hira_medications': hiraRes,
           'items': items,
-          if (echoCid != null && echoCid.isNotEmpty) 'connectedId': echoCid,
           'meta': {
-            'source': 'tilko_codef_nhis',
-            'codefResultCode': cfCode,
-            'codefResultMessage': cfMsg,
-            if (echoCid != null && echoCid.isNotEmpty) 'connectedId': echoCid,
+            'source': 'tilko_hira_my_medications',
             if (emptyParsed)
               'note':
-                  'CODEF 응답은 정상(CF-00000)이나 앱이 인식한 복약 항목이 0건입니다. '
-                  '실제 처방이 없거나, 응답 data 구조가 달라 약품명 필드를 찾지 못한 경우일 수 있습니다. '
-                  'BFF 로그의 codef JSON을 확인하세요.',
+                  'HIRA 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '
+                  '처방 이력이 없거나 ResultList/DrugList 구조가 바뀐 경우일 수 있습니다.',
           },
         });
       } catch (e, st) {
@@ -426,7 +416,8 @@ Future<void> _handle(HttpRequest request) async {
           'phone': phone,
           'source': 'link26-bff-dart-stub',
           'note':
-              '데모 JSON입니다. 본인 처방·투약은 CODEF 계정·상품 경로·connectedId 등 BFF 실연동이 필요합니다.',
+              '데모 JSON입니다. 본인 처방·투약은 BFF에서 틸코 간편인증 후 '
+              '`POST /v1/flow/tilko-codef-treatment`(심평원 내가 먹는 약) 실연동이 필요합니다.',
         },
       });
       return;

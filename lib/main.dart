@@ -68,13 +68,14 @@ Future<void> main() async {
       'Link26: Gemini keyLength=$n model=${GeminiRuntimeConfig.modelId} '
       '(0이면 앱이 키를 못 읽은 것. 키는 .env 또는 --dart-define=GEMINI_API_KEY=)',
     );
-    final cid =
-        (dotenv.env['CODEF_CONNECTED_ID'] ?? dotenv.env['NHIS_CODEF_CONNECTED_ID'] ?? '')
-            .trim();
-    debugPrint(
-      'Link26: CODEF_CONNECTED_ID length=${cid.length} '
-      '(0이면 홈 복약 동기화 시 connectedId 안내가 날 수 있음. 설정 화면 또는 BFF .env 참고)',
-    );
+    // CODEF_CONNECTED_ID — CODEF 비활성화 시 로그 생략
+    // final cid =
+    //     (dotenv.env['CODEF_CONNECTED_ID'] ?? dotenv.env['NHIS_CODEF_CONNECTED_ID'] ?? '')
+    //         .trim();
+    // debugPrint(
+    //   'Link26: CODEF_CONNECTED_ID length=${cid.length} '
+    //   '(0이면 홈 복약 동기화 시 connectedId 안내가 날 수 있음. 설정 화면 또는 BFF .env 참고)',
+    // );
   }
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(

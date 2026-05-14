@@ -12,7 +12,7 @@ import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
 
 /// 로그인/가입 직후: BFF `POST /v1/flow/tilko-codef-treatment` 로
-/// 틸코 간편인증 → CODEF 국민건강보험 진료·투약 상품 조회 → 로컬 복약 반영.
+/// 틸코 간편인증 → 심평원 **내가 먹는 약**(hiraa050300000100) 조회 → 로컬 복약 반영.
 abstract final class NhisTilkoCodefFlowSync {
   static String _tilkoCellphone(String phoneDigits) {
     final d = phoneDigits.replaceAll(RegExp(r'\D'), '');
@@ -158,7 +158,7 @@ abstract final class NhisTilkoCodefFlowSync {
     }
   }
 
-  /// 틸코→CODEF 플로우 후, CODEF가 생략되었거나 파싱된 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다.
+  /// 틸코→심평원 플로우 후, 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다(CODEF 비활성 시 스텁).
   static Future<NhisMedicinesSyncOutcome?> runTilkoThenNhisWithMedicationsFallback({
     required String displayName,
     required String phoneDigits,
