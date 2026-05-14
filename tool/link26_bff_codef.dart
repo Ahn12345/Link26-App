@@ -15,6 +15,7 @@ import 'dart:io';
 
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
+import 'package:link26_app/tool_support/bff_dotenv_line_scan.dart';
 import 'package:path/path.dart' as p;
 
 /// 프로젝트 루트 환경을 읽습니다.
@@ -32,7 +33,7 @@ Map<String, String> loadBffDotEnv() {
   void mergeFile(String relativePath) {
     final f = File(p.join(root, relativePath));
     if (f.existsSync()) {
-      merged.addAll(_parseDotEnv(f.readAsStringSync()));
+      merged.addAll(_parseDotEnv(BffDotenvLineScan.stripUtf8Bom(f.readAsStringSync())));
     }
   }
 
@@ -40,7 +41,7 @@ Map<String, String> loadBffDotEnv() {
   void mergeEnvFileNoEmptyWipe(String relativePath) {
     final f = File(p.join(root, relativePath));
     if (!f.existsSync()) return;
-    final parsed = _parseDotEnv(f.readAsStringSync());
+    final parsed = _parseDotEnv(BffDotenvLineScan.stripUtf8Bom(f.readAsStringSync()));
     for (final e in parsed.entries) {
       final incoming = e.value.trim();
       final existing = (merged[e.key] ?? '').trim();
@@ -65,6 +66,23 @@ Map<String, String> loadBffDotEnv() {
     final v = e.value.trim();
     if (v.isNotEmpty) merged[k] = v;
   }
+
+  if ((merged['TILKO_API_KEY'] ?? '').trim().isEmpty) {
+    for (final rel in <String>['.env', p.join('assets', 'env', 'dotenv')]) {
+      final f = File(p.join(root, rel));
+      if (!f.existsSync()) continue;
+      final hit = BffDotenvLineScan.scanTilkoApiKeyLineByLine(f.readAsStringSync());
+      if (hit != null && hit.trim().isNotEmpty) {
+        merged['TILKO_API_KEY'] = hit.trim();
+        // ignore: avoid_print
+        stderr.writeln(
+          '[BFF env] TILKO_API_KEY: 일반 병합에서 비어 있어 $rel 원문 줄 스캔으로 복구했습니다.',
+        );
+        break;
+      }
+    }
+  }
+
   return merged;
 }
 
@@ -149,19 +167,10 @@ Map<String, String> _parseDotEnv(String raw) {
     if (eq <= 0) continue;
     final key = line.substring(0, eq).trim();
     var val = line.substring(eq + 1).trim();
-    val = _stripQuotes(val);
+    val = BffDotenvLineScan.stripQuotes(val);
     out[key] = val;
   }
   return out;
-}
-
-String _stripQuotes(String v) {
-  if (v.length >= 2 &&
-      ((v.startsWith('"') && v.endsWith('"')) ||
-          (v.startsWith("'") && v.endsWith("'")))) {
-    return v.substring(1, v.length - 1).trim();
-  }
-  return v;
 }
 
 bool _truthy(String? s) {
