@@ -13,7 +13,7 @@ import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
 
 /// 로그인/가입 직후: BFF `POST /v1/flow/tilko-hira-medications` 로
-/// 틸코 간편인증 → 심평원 **내가 먹는 약**(hiraa050300000100) 조회 → 로컬 복약 반영.
+/// 틸코 공단 간편인증 → NHIS 진료·투약 정보 조회 → 로컬 복약 반영.
 abstract final class NhisTilkoHiraFlowSync {
   static String _tilkoCellphone(String phoneDigits) {
     final d = phoneDigits.replaceAll(RegExp(r'\D'), '');
@@ -97,7 +97,7 @@ abstract final class NhisTilkoHiraFlowSync {
             ? hint.trim()
             : (detail is String && detail.trim().isNotEmpty)
                 ? detail.trim()
-                : 'BFF 틸코·심평원 연동에 실패했습니다.';
+                : 'BFF 틸코·건강보험공단(NHIS) 연동에 실패했습니다.';
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail: msg,
@@ -166,12 +166,13 @@ abstract final class NhisTilkoHiraFlowSync {
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail:
-              '심평원 데이터는 PC에서 돌아가는 BFF를 거칩니다. 지금은 그 BFF에 '
+              '진료·복약 데이터는 PC에서 돌아가는 BFF를 거칩니다. 지금은 그 BFF에 '
               '연결되지 않았습니다.\n\n'
-              '• PC에서 `dart run tool/link26_bff.dart` 실행 후, 콘솔에 나온 **포트**가 '
+              '• PC에서 `dart run tool/link26_bff.dart` 실행 후, 콘솔에 나온 포트가 '
               '앱 설정($base)의 포트와 같은지 확인하세요.\n'
-              '• PC `ipconfig`의 IPv4가 192.168.150.143이 맞는지, 폰과 PC가 **같은 Wi-Fi**인지 확인하세요.\n'
-              '• Windows 방화벽에서 해당 포트(예: 8787) **인바운드 허용** 여부를 확인하세요.\n'
+              '• 앱에 넣은 PC 주소의 IP가 PC에서 `ipconfig`로 본 IPv4와 같은지, '
+              '폰과 PC가 같은 Wi-Fi인지 확인하세요.\n'
+              '• Windows 방화벽에서 해당 포트(예: 8787) 인바운드 허용 여부를 확인하세요.\n'
               '• USB만 쓸 때: PC에서 `adb reverse tcp:8787 tcp:8787` 후 앱 주소를 '
               '`http://127.0.0.1:8787`로 맞추는 방법도 있습니다.',
         );
@@ -184,7 +185,7 @@ abstract final class NhisTilkoHiraFlowSync {
     }
   }
 
-  /// 틸코→심평원 플로우 후, 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다(스텁·레거시 GET).
+  /// 틸코→BFF(NHIS) 플로우 후, 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다(스텁·레거시 GET).
   static Future<NhisMedicinesSyncOutcome?> runTilkoThenHiraWithMedicationsFallback({
     required String displayName,
     required String phoneDigits,
