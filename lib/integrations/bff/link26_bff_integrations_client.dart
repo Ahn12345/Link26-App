@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
@@ -22,19 +23,22 @@ String _stripBom(String s) {
   return t;
 }
 
-/// BFF가 `StateError('TILKO_API_KEY 가 비어 있습니다.')` 등을 JSON detail로 돌릴 때
-/// 앱만 `.env`를 채웠다고 오해하지 않도록 안내합니다.
+/// BFF가 `TILKO_API_KEY` 비어 있음을 알릴 때 — 스낵바는 짧게, 자세한 건 디버그 로그.
 String _tilkoKeyMissingHintKo() =>
-    '틸코 API 키가 없습니다. 심평원·복약 플로우는 PC에서 실행하는 BFF가 틸코를 호출하므로, '
-    '프로젝트 루트 .env(BFF와 같은 폴더)에 TILKO_API_KEY=… 를 넣고 '
-    'dart run tool/link26_bff.dart 를 다시 실행하세요. '
-    '(선택) TILKO_API_HOST 기본값은 dev.tilko.net 입니다. '
-    '앱 쪽 assets/env/dotenv에는 주로 NHIS_BASE_URL만 맞으면 됩니다.';
+    '심평원·복약 연동은 PC의 BFF가 틸코를 호출합니다. '
+    '프로젝트 루트 .env에 TILKO_API_KEY를 넣고 BFF를 다시 실행해 주세요.';
 
 String _rewriteTilkoEnvHint(String msg) {
   final s = msg.trim();
   if (s.contains('TILKO_API_KEY') &&
       (s.contains('비어') || s.toLowerCase().contains('empty'))) {
+    if (kDebugMode) {
+      debugPrint(
+        'Link26: Tilko — PC `dart run tool/link26_bff.dart` 가 읽는 루트 .env에 '
+        'TILKO_API_KEY(필수), TILKO_API_HOST(선택, 기본 dev.tilko.net). '
+        '앱 assets/env/dotenv 는 NHIS_BASE_URL 위주.',
+      );
+    }
     return _tilkoKeyMissingHintKo();
   }
   return msg;
