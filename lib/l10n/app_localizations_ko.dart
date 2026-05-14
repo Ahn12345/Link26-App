@@ -55,6 +55,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authWelcomeSubtitle => '로그인 또는 회원가입 후 홈 화면으로 이동합니다.';
 
   @override
+  String get authSocialLoginComingSoon =>
+      '소셜 로그인은 준비 중입니다. 휴대폰 번호 로그인을 이용해 주세요.';
+
+  @override
+  String get authKakaoLogin => '카카오 로그인';
+
+  @override
+  String get authGoogleLogin => 'Google 로그인';
+
+  @override
   String get continueCta => '계속';
 
   @override

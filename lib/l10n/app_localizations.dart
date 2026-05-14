@@ -59,6 +59,10 @@ abstract class AppLocalizations {
   String get login;
   String get signup;
   String get authWelcomeSubtitle;
+  /// 소셜 로그인 버튼 탭 시(아직 미연동).
+  String get authSocialLoginComingSoon;
+  String get authKakaoLogin;
+  String get authGoogleLogin;
   String get continueCta;
   String get loginEmailLabel;
   String get loginPasswordLabel;

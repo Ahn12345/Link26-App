@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/app_build_fingerprint.dart';
+import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -118,8 +119,17 @@ class AuthWelcomeScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               FilledButton(
-                                onPressed: () {
-                                  Navigator.of(context).pushNamed(LoginPage.routeName);
+                                onPressed: () async {
+                                  final has =
+                                      await UserLocalRepository.hasAnyUser();
+                                  if (!context.mounted) return;
+                                  if (!has) {
+                                    await Navigator.of(context)
+                                        .pushNamed(SignupPage.routeName);
+                                  } else {
+                                    await Navigator.of(context)
+                                        .pushNamed(LoginPage.routeName);
+                                  }
                                 },
                                 style: Link26UnifiedPage.filledCtaButton(
                                   minimumSize: const Size.fromHeight(56),
@@ -132,6 +142,52 @@ class AuthWelcomeScreen extends StatelessWidget {
                                     Navigator.of(context).pushNamed(SignupPage.routeName),
                                 style: outlineBtn,
                                 child: Text(l10n.signup, style: const TextStyle(fontWeight: FontWeight.w800)),
+                              ),
+                              SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(l10n.authSocialLoginComingSoon),
+                                          ),
+                                        );
+                                      },
+                                      style: outlineBtn.copyWith(
+                                        minimumSize: const WidgetStatePropertyAll(
+                                          Size.fromHeight(48),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        l10n.authKakaoLogin,
+                                        style: const TextStyle(fontWeight: FontWeight.w800),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: Link26ResponsiveUi.gapSm(w)),
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(l10n.authSocialLoginComingSoon),
+                                          ),
+                                        );
+                                      },
+                                      style: outlineBtn.copyWith(
+                                        minimumSize: const WidgetStatePropertyAll(
+                                          Size.fromHeight(48),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        l10n.authGoogleLogin,
+                                        style: const TextStyle(fontWeight: FontWeight.w800),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

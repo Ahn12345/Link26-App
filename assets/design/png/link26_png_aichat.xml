@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="aichat" file="aichat.png" dartConst="ImageAssets.aichat">
-  <summary usage="AI 약 정보 채팅 상단 일러스트" />
-  <source path="assets/images/aichat.png" />
-  <responsiveImageScreen ref="aiChat" />
-  <responsiveUi hint="heroArtToContent — 일러 아래 첫 말풍선 ../link26_responsive_ui.xml" />
+  <summary usage="AI 약 정보 채팅 상단 일러스트"/>
+  <source path="assets/images/aichat.png"/>
+  <measured intrinsicWidth="752" intrinsicHeight="1408" bytesOnDisk="316157" generatedAt="2026-05-14T15:36:35.710210Z" path="assets/images/aichat.png"/>
+  <responsiveImageScreen ref="aiChat"/>
+  <responsiveUi hint="heroArtToContent — 일러 아래 첫 말풍선 ../link26_responsive_ui.xml"/>
   <flutter>
-    <file path="lib/features/ai_chat/ai_chat_screen.dart" />
+    <file path="lib/features/ai_chat/ai_chat_screen.dart"/>
   </flutter>
-  <android strings="@string/flutter_image_aichat" layout="reference_ai_chat_screen.xml" />
-  <screenSpec ref="../screens/link26_screen_ai_chat.xml" />
+  <android strings="@string/flutter_image_aichat" layout="reference_ai_chat_screen.xml"/>
+  <screenSpec ref="../screens/link26_screen_ai_chat.xml"/>
 </link26-png-spec>

@@ -78,6 +78,21 @@ void main() {
     File(path).writeAsBytesSync(img.encodePng(image), flush: true);
     stdout.writeln('wrote $path');
   }
-  stdout.writeln('done: ${_ids.length} files');
+  // 저장소에 가족 추가 시안이 `family_account.png` 로만 있을 때 — 카탈로그명(`familyadd.png`)으로 맞춥니다.
+  final legacyFamily = File(
+    '${out.path}${Platform.pathSeparator}family_account.png',
+  );
+  final familyAddOut =
+      File('${out.path}${Platform.pathSeparator}familyadd.png');
+  if (legacyFamily.existsSync()) {
+    legacyFamily.copySync(familyAddOut.path);
+    stdout.writeln('copied family_account.png -> familyadd.png');
+  }
+  // `ImageAssets.logoKo` — 한글 파일명. 시안 PNG로 교체 전까지 `logo.png`와 동일 바이트로 둡니다.
+  final logoPath = '${out.path}${Platform.pathSeparator}logo.png';
+  final logoKoPath = '${out.path}${Platform.pathSeparator}\uB85C\uACE0.png';
+  File(logoPath).copySync(logoKoPath);
+  stdout.writeln('copied logo.png -> 로고.png');
+  stdout.writeln('done: ${_ids.length} files + 로고.png');
   stdout.writeln('Next: dart run tool/sync_image_specs_from_assets.dart');
 }

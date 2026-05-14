@@ -8,6 +8,7 @@
 -->
 <link26-png-index version="1">
   <entry catalogId="applogo" spec="link26_png_applogo.xml" />
+  <entry catalogId="logo_ko" spec="link26_png_logo_ko.xml" />
   <entry catalogId="logo" spec="link26_png_logo.xml" />
   <entry catalogId="login" spec="link26_png_login.xml" />
   <entry catalogId="signup" spec="link26_png_signup.xml" />

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="familyadd" file="familyadd.png" dartConst="ImageAssets.familyadd">
-  <summary usage="가족 추가 진입 ListTile 등 소형 일러스트" />
-  <source path="assets/images/familyadd.png" />
-  <responsiveImageScreen ref="" />
-  <responsiveUi hint="listTileIllustrationSize(w) — ../link26_responsive_ui.xml" />
+  <summary usage="가족 추가 진입 ListTile 등 소형 일러스트"/>
+  <source path="assets/images/familyadd.png"/>
+  <measured intrinsicWidth="861" intrinsicHeight="1024" bytesOnDisk="866405" generatedAt="2026-05-14T15:36:35.710210Z" path="assets/images/familyadd.png"/>
+  <responsiveImageScreen ref=""/>
+  <responsiveUi hint="listTileIllustrationSize(w) — ../link26_responsive_ui.xml"/>
   <flutter>
-    <file path="lib/features/settings/settings_tab_screen.dart" />
+    <file path="lib/features/settings/settings_tab_screen.dart"/>
   </flutter>
-  <android strings="@string/flutter_image_familyadd" />
-  <screenSpec ref="../screens/link26_screen_familyadd.xml" />
+  <android strings="@string/flutter_image_familyadd"/>
+  <screenSpec ref="../screens/link26_screen_familyadd.xml"/>
 </link26-png-spec>

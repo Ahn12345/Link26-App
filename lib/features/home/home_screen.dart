@@ -508,7 +508,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   Link26SectionHeader(
                     title: '오늘의 알림',
                     action: '전체보기',
-                    icon: Icons.calendar_month_outlined,
+                    icon: Icons.chevron_right_rounded,
                     onAction: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
@@ -559,7 +559,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   Link26SectionHeader(
                     title: l10n.homeMyMedicinesTitle,
                     action: l10n.myMedicinesFullViewCta,
-                    icon: Icons.calendar_month_outlined,
+                    icon: Icons.chevron_right_rounded,
                     onAction: () => Navigator.push<void>(
                       context,
                       MaterialPageRoute<void>(

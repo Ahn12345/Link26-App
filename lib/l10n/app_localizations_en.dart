@@ -58,6 +58,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Log in or create an account to open your home screen.';
 
   @override
+  String get authSocialLoginComingSoon =>
+      'Social sign-in is not available yet. Please use phone number sign-in.';
+
+  @override
+  String get authKakaoLogin => 'Kakao';
+
+  @override
+  String get authGoogleLogin => 'Google';
+
+  @override
   String get continueCta => 'Continue';
 
   @override

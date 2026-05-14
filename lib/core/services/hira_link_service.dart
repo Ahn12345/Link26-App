@@ -43,11 +43,48 @@ abstract final class HiraLinkService {
     }
   }
 
-  /// 로그인 직후 — 주민번호는 기기에 저장하지 않으므로, 조회 시 한 번 입력받습니다.
+  /// 로그인 직후 — 기기에 주민번호를 저장하지 않습니다.
+  ///
+  /// 로컬 DB에 `codefConnectedId`(이전 틸코·BFF 연동)가 있으면 [NhisMedicinesSync.syncNow]로
+  /// 복약 목록을 먼저 받아 **주민번호 입력 없이** 연동을 시도합니다(기획서 「2번째: DB에 정보 있음」).
+  /// 그렇지 않거나 자동 동기화가 경고·실패면, 기존처럼 주민번호 입력 후 틸코·심평원 플로우를 띄웁니다.
   static Future<void> afterLogin({
     required BuildContext context,
     required LocalUserRecord user,
   }) async {
+    if (!context.mounted) return;
+    try {
+      await dotenv.load(fileName: 'assets/env/dotenv');
+    } catch (_) {}
+
+    if (!context.mounted) return;
+
+    if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
+      if (kDebugMode) {
+        debugPrint(
+          'HIRA: 로그인 직후 연동 생략 (mock 또는 NHIS_BASE_URL 없음)',
+        );
+      }
+      return;
+    }
+
+    final cid = user.codefConnectedId?.trim();
+    if (cid != null && cid.isNotEmpty) {
+      final auto = await NhisMedicinesSync.syncNow(
+        phoneDigits: user.phoneDigits,
+      );
+      if (!context.mounted) return;
+      if (auto.result == NhisMedicinesSyncResult.success &&
+          !auto.showBannerOnBootstrap) {
+        if (kDebugMode) {
+          debugPrint(
+            'HIRA: connectedId 기반 복약 동기화 완료 — 주민번호 다이얼로그 생략',
+          );
+        }
+        return;
+      }
+    }
+
     await promptRrnAndSyncHiraMedications(
       context: context,
       user: user,

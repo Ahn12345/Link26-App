@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <link26-png-spec version="1" catalogId="emergencycall" file="emergencycall.png" dartConst="ImageAssets.emergencycall">
-  <summary usage="긴급 연락 화면 일러스트·설정 탭 일부 타일 썸네일" />
-  <source path="assets/images/emergencycall.png" />
-  <responsiveImageScreen ref="emergencyIllustration" />
+  <summary usage="긴급 연락 화면 일러스트·설정 탭 일부 타일 썸네일"/>
+  <source path="assets/images/emergencycall.png"/>
+  <measured intrinsicWidth="2160" intrinsicHeight="1620" bytesOnDisk="2239678" generatedAt="2026-05-14T15:36:35.710210Z" path="assets/images/emergencycall.png"/>
+  <responsiveImageScreen ref="emergencyIllustration"/>
   <flutter>
-    <file path="lib/features/settings/emergency_contact_screen.dart" />
-    <file path="lib/features/settings/settings_tab_screen.dart" note="familyVoice 타일 leading 등" />
+    <file path="lib/features/settings/emergency_contact_screen.dart"/>
+    <file path="lib/features/settings/settings_tab_screen.dart" note="familyVoice 타일 leading 등"/>
   </flutter>
-  <android strings="@string/flutter_image_emergencycall" />
-  <screenSpec ref="../screens/link26_screen_emergencycall.xml" />
+  <android strings="@string/flutter_image_emergencycall"/>
+  <screenSpec ref="../screens/link26_screen_emergencycall.xml"/>
 </link26-png-spec>
