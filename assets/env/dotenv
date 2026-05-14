@@ -1,26 +1,22 @@
 # =============================================================================
-# 앱이 읽는 파일: assets/env/dotenv (Flutter 번들). 루트 .env 는 PC BFF·스크립트용.
-# NHIS_USE_MOCK=true 이면 PC BFF 없이도 복약 동기화는 목 데이터로만 돌아가 연결 오류가 나지 않습니다.
-# 실연동 시: NHIS_USE_MOCK=false 로 바꾸고 아래 NHIS_BASE_URL·TILKO_* 등 주석(#)을 제거하세요.
+# 앱 번들: assets/env/dotenv
+# - AI(Gemini)·틸코·공공데이터 키는 기본 사용(주석 없음).
+# - PC BFF 없이 홈만 목으로 보려면: NHIS_USE_MOCK=true, NHIS_BASE_URL 은 비우거나 주석.
+# - 실연동: NHIS_USE_MOCK=false + NHIS_BASE_URL + PC에서 dart run tool/link26_bff.dart
 # =============================================================================
 
-NHIS_USE_MOCK=true
+NHIS_USE_MOCK=false
+NHIS_BASE_URL=http://192.168.150.143:8787,http://192.168.193.209:8787
+NHIS_SHOW_SYNC_SNACKBARS=false
 
-# --- NHIS / BFF ---
-# NHIS_BASE_URL=http://192.168.150.143:8787,http://192.168.193.209:8787
-# NHIS_SHOW_SYNC_SNACKBARS=false
+GEMINI_API_KEY="AIzaSyAH91tPYhoabPC7ffMl0CjY5O9PCk8Ge_g"
+GEMINI_MODEL_ID=gemini-2.5-flash
 
-# --- Gemini ---
-# GEMINI_API_KEY="AIzaSyAH91tPYhoabPC7ffMl0CjY5O9PCk8Ge_g"
-# GEMINI_MODEL_ID=gemini-2.5-flash
+PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6a501623c
 
-# --- 공공데이터 e약은요 (비우면 앱 약 검색 BFF 호출 503 가능) ---
-# PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6a501623c
-
-# --- 틸코 (실연동·BFF 띄울 때: 앱 이 파일과 PC 루트 .env 둘 다 해제) ---
-# TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
-# TILKO_API_HOST=https://dev.tilko.net
-# TILKO_PRIVATE_AUTH_TYPE=KAKAO
+TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
+TILKO_API_HOST=https://dev.tilko.net
+TILKO_PRIVATE_AUTH_TYPE=KAKAO
 
 # --- CODEF (비활성, 예시는 .env.example) ---
 # CODEF_CLIENT_ID=
