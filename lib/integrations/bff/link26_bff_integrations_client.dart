@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
 final _codfRedirectRe = RegExp(r'CODEF HTTP (301|302|303|307|308)');
@@ -52,8 +54,8 @@ String _flowHttpErrorDetail(int statusCode, String body) {
 
 /// 이 레포의 **Dart BFF**(`dart run tool/link26_bff.dart`)에만 붙입니다.
 ///
-/// `NHIS_BASE_URL`은 위 BFF의 베이스(예: `http://10.0.2.2:8787`)여야 하며,
-/// 다른 백엔드(FastAPI 등) URL을 넣으면 경로·오류 형식이 맞지 않을 수 있습니다.
+/// `NHIS_BASE_URL`은 BFF 베이스(예: `http://10.0.2.2:8787`) 하나이거나,
+/// Wi-Fi·이더넷 등 쉼표로 구분한 여러 베이스(연결 실패 시 순서대로 재시도)입니다.
 ///
 /// 틸코 API 키 등은 BFF 루트 `.env`에 두고, 앱은 NHIS_BASE_URL만 알면 됩니다.
 ///
@@ -86,13 +88,18 @@ abstract final class Link26BffIntegrationsClient {
     return t.length > 420 ? '${t.substring(0, 420)}…' : t;
   }
 
-  static String get _base {
-    final b = NhisRuntimeConfig.baseUrl.trim();
-    if (b.isEmpty) return '';
-    return b.endsWith('/') ? b.substring(0, b.length - 1) : b;
-  }
+  static String get _basesDebug =>
+      NhisRuntimeConfig.baseUrlCandidates.join(' | ');
 
-  static bool get canCall => _base.isNotEmpty;
+  static List<String> get _baseList => NhisRuntimeConfig.baseUrlCandidates;
+
+  static bool get canCall => _baseList.isNotEmpty;
+
+  static bool _shouldRetryBffOn(Object e, int index, int total) {
+    if (index >= total - 1) return false;
+    if (e is TimeoutException) return true;
+    return link26ErrorLooksLikeUnreachableHost(e);
+  }
 
   static Future<Map<String, dynamic>?> searchEasyDrug({
     required String itemName,
@@ -100,35 +107,64 @@ abstract final class Link26BffIntegrationsClient {
     int numOfRows = 20,
   }) async {
     if (!canCall) return null;
-    final uri = Uri.parse('$_base/v1/public/easy-drug').replace(
-      queryParameters: {
-        'itemName': itemName,
-        'pageNo': '$pageNo',
-        'numOfRows': '$numOfRows',
-      },
-    );
-    final res = await http.get(uri);
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw StateError('easy-drug HTTP ${res.statusCode}: ${res.body}');
+    Object? lastErr;
+    final bases = _baseList;
+    for (var i = 0; i < bases.length; i++) {
+      final base = bases[i];
+      try {
+        final uri = Uri.parse('$base/v1/public/easy-drug').replace(
+          queryParameters: {
+            'itemName': itemName,
+            'pageNo': '$pageNo',
+            'numOfRows': '$numOfRows',
+          },
+        );
+        final res = await http
+            .get(uri)
+            .timeout(const Duration(seconds: 20));
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          throw StateError('easy-drug HTTP ${res.statusCode}: ${res.body}');
+        }
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } catch (e, st) {
+        lastErr = e;
+        if (_shouldRetryBffOn(e, i, bases.length)) continue;
+        Error.throwWithStackTrace(e, st);
+      }
     }
-    return jsonDecode(res.body) as Map<String, dynamic>;
+    throw lastErr ?? StateError('easy-drug: BFF 요청 실패 ($_basesDebug)');
   }
 
   static Future<Map<String, dynamic>?> tilkoHiraSimpleAuth(
     Map<String, dynamic> body,
   ) async {
     if (!canCall) return null;
-    final uri = Uri.parse('$_base/v1/tilko/hira-simple-auth');
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      final detail = _flowHttpErrorDetail(res.statusCode, res.body);
-      throw StateError('tilko HTTP ${res.statusCode}: $detail');
+    final encoded = jsonEncode(body);
+    Object? lastErr;
+    final bases = _baseList;
+    for (var i = 0; i < bases.length; i++) {
+      final base = bases[i];
+      try {
+        final uri = Uri.parse('$base/v1/tilko/hira-simple-auth');
+        final res = await http
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: encoded,
+            )
+            .timeout(const Duration(seconds: 25));
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          final detail = _flowHttpErrorDetail(res.statusCode, res.body);
+          throw StateError('tilko HTTP ${res.statusCode}: $detail');
+        }
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } catch (e, st) {
+        lastErr = e;
+        if (_shouldRetryBffOn(e, i, bases.length)) continue;
+        Error.throwWithStackTrace(e, st);
+      }
     }
-    return jsonDecode(res.body) as Map<String, dynamic>;
+    throw lastErr ?? StateError('tilko: BFF 요청 실패 ($_basesDebug)');
   }
 
   /// 틸코 간편인증 후 NHIS 진료·투약 정보 — BFF `POST /v1/flow/tilko-hira-medications`.
@@ -139,20 +175,35 @@ abstract final class Link26BffIntegrationsClient {
     Map<String, dynamic>? flowExtras,
   }) async {
     if (!canCall) return null;
-    final uri = Uri.parse('$_base/v1/flow/tilko-hira-medications');
     final extras = flowExtras ?? <String, dynamic>{};
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'tilko': tilko,
-        'flow_extras': extras,
-      }),
-    );
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      final detail = _flowHttpErrorDetail(res.statusCode, res.body);
-      throw StateError('flow HTTP ${res.statusCode}: $detail');
+    final body = jsonEncode({
+      'tilko': tilko,
+      'flow_extras': extras,
+    });
+    Object? lastErr;
+    final bases = _baseList;
+    for (var i = 0; i < bases.length; i++) {
+      final base = bases[i];
+      try {
+        final uri = Uri.parse('$base/v1/flow/tilko-hira-medications');
+        final res = await http
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: body,
+            )
+            .timeout(const Duration(seconds: 120));
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          final detail = _flowHttpErrorDetail(res.statusCode, res.body);
+          throw StateError('flow HTTP ${res.statusCode}: $detail');
+        }
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } catch (e, st) {
+        lastErr = e;
+        if (_shouldRetryBffOn(e, i, bases.length)) continue;
+        Error.throwWithStackTrace(e, st);
+      }
     }
-    return jsonDecode(res.body) as Map<String, dynamic>;
+    throw lastErr ?? StateError('flow: BFF 요청 실패 ($_basesDebug)');
   }
 }

@@ -21,9 +21,32 @@ abstract final class NhisRuntimeConfig {
   }
 
   static String get baseUrl {
+    final list = baseUrlCandidates;
+    if (list.isNotEmpty) return list.first;
+    return '';
+  }
+
+  /// BFF 베이스 URL 목록. `NHIS_BASE_URL`에 쉼표·세미콜론·공백으로 여러 개를 두면
+  /// [Link26BffIntegrationsClient] 가 연결 실패 시 순서대로 재시도합니다.
+  static List<String> get baseUrlCandidates {
     final v = _stripQuotes(dotenv.env['NHIS_BASE_URL']);
-    if (v.isNotEmpty) return v;
-    return ApiConfig.nhisBaseUrl.trim();
+    if (v.isNotEmpty) return _splitAndNormalizeBffBases(v);
+    return _splitAndNormalizeBffBases(ApiConfig.nhisBaseUrl.trim());
+  }
+
+  static List<String> _splitAndNormalizeBffBases(String raw) {
+    if (raw.isEmpty) return const [];
+    final parts = raw.split(RegExp(r'[\s,;]+'));
+    final out = <String>[];
+    for (final p in parts) {
+      var s = p.trim();
+      if (s.isEmpty) continue;
+      while (s.endsWith('/')) {
+        s = s.substring(0, s.length - 1);
+      }
+      if (s.isNotEmpty) out.add(s);
+    }
+    return out;
   }
 
   /// 회원가입 연동 POST 경로 (자체 BFF·공단 프록시 등 스펙에 맞게 변경).

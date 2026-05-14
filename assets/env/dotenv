@@ -18,9 +18,9 @@
 GEMINI_API_KEY="AIzaSyAH91tPYhoabPC7ffMl0CjY5O9PCk8Ge_g"
 GEMINI_MODEL_ID=gemini-2.5-flash
 NHIS_USE_MOCK=false
-# 실제 폰: PC와 같은 Wi-Fi 대역의 IPv4(ipconfig) + BFF 포트. 에뮬레이터는 http://10.0.2.2:8787
-# 이더넷만 192.168.193.x이고 폰은 Wi-Fi 192.168.150.x면 193 IP로는 폰이 BFF에 못 붙습니다.
-NHIS_BASE_URL=http://192.168.150.143:8787
+# 실제 폰: PC `ipconfig` IPv4 + BFF 포트. 에뮬레이터는 http://10.0.2.2:8787
+# Wi-Fi·이더넷 IP가 둘 다 있으면 쉼표로 나열 — 첫 주소에 연결 실패 시 앱이 다음 주소를 자동 시도합니다.
+NHIS_BASE_URL=http://192.168.150.143:8787,http://192.168.193.209:8787
 NHIS_SHOW_SYNC_SNACKBARS=false
 
 # 공공데이터포털에서 발급한 serviceKey — e약은요(/v1/public/easy-drug). 비우면 약 검색 503.

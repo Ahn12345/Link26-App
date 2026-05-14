@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -53,6 +54,7 @@ bool nhisFailureLooksLikeUnreachableHost(AppFailure failure) {
 
 /// `package:http` BFF 플로우 등 [catch (e)] 에서 동일 판별.
 bool link26ErrorLooksLikeUnreachableHost(Object e) {
+  if (e is TimeoutException) return true;
   if (e is SocketException) return true;
   if (e is HttpException) return true;
   final s = e.toString().toLowerCase();

@@ -162,7 +162,7 @@ abstract final class NhisTilkoHiraFlowSync {
         if (kDebugMode) {
           debugPrint('Tilko→HIRA: BFF 연결 불가 — $e');
         }
-        final base = NhisRuntimeConfig.baseUrl.trim();
+        final base = NhisRuntimeConfig.baseUrlCandidates.join(', ');
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail:
@@ -173,7 +173,9 @@ abstract final class NhisTilkoHiraFlowSync {
               '• 앱에 넣은 PC 주소의 IP가 PC에서 `ipconfig`로 본 IPv4와 같은지, '
               '폰과 PC가 같은 Wi-Fi인지 확인하세요.\n'
               '• PC에 Wi-Fi와 이더넷이 동시에 있으면 IPv4가 여러 개입니다. '
-              '폰이 쓰는 네트워크와 같은 대역의 IP를 넣어야 합니다(이더넷만의 IP로 넣으면 Wi-Fi 폰에서 실패할 수 있음).\n'
+              '`assets/env/dotenv`의 NHIS_BASE_URL에 쉼표로 여러 주소를 나열하면 '
+              '(예: Wi-Fi IP, 이더넷 IP) 연결 실패 시 앱이 자동으로 다음 주소를 시도합니다. '
+              '폰은 그중 폰과 같은 대역 주소로만 BFF에 닿을 수 있습니다.\n'
               '• Windows 방화벽에서 해당 포트(예: 8787) 인바운드 허용 여부를 확인하세요.\n'
               '• USB만 쓸 때: PC에서 `adb reverse tcp:8787 tcp:8787` 후 앱 주소를 '
               '`http://127.0.0.1:8787`로 맞추는 방법도 있습니다.',
