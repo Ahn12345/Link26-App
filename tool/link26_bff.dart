@@ -301,7 +301,9 @@ Future<void> _handle(HttpRequest request) async {
             'detail': 'NHIS 간편인증 토큰(CxId·ReqTxId·Token·TxId)을 받지 못했습니다.',
             'hint_ko':
                 '휴대폰에서 PASS·카카오 등 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
-                '서버가 약 1분간 logincheck로 완료 여부를 확인합니다.$errBit',
+                '서버가 약 1분간 logincheck로 완료 여부를 확인합니다.$errBit '
+                '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
+                '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.',
             'tilko': tilkoRes,
             'tilko_after_poll': tilkoAuth,
             'meta': {'awaiting_nhis_simple_auth': true},

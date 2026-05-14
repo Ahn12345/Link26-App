@@ -59,6 +59,27 @@ bool tilkoNhisAuthTokensComplete(dynamic root) {
   return true;
 }
 
+/// 틸코 NHIS 간편인증 응답에서 토큰이 [ResultData]·[Auth] 등 안쪽에만 있을 때 상위와 합쳐 조회에 쓰기 좋게 만듭니다.
+Map<String, dynamic> tilkoNhisLiftNestedSession(Map<String, dynamic> m) {
+  var out = Map<String, dynamic>.from(m);
+  for (final k in <String>[
+    'ResultData',
+    'resultData',
+    'Data',
+    'data',
+    'Auth',
+    'auth',
+  ]) {
+    final v = out[k];
+    if (v is Map<String, dynamic>) {
+      out = tilkoMergeJsonMaps(out, v);
+    } else if (v is Map) {
+      out = tilkoMergeJsonMaps(out, Map<String, dynamic>.from(v));
+    }
+  }
+  return out;
+}
+
 Map<String, dynamic> tilkoMergeJsonMaps(
   Map<String, dynamic> base,
   Map<String, dynamic> overlay,
@@ -396,7 +417,9 @@ class TilkoHiraSimpleAuthClient {
     int maxAttempts = 36,
     Duration interval = const Duration(seconds: 2),
   }) async {
-    var session = Map<String, dynamic>.from(initialSimpleAuthResponse);
+    var session = tilkoNhisLiftNestedSession(
+      Map<String, dynamic>.from(initialSimpleAuthResponse),
+    );
     if (tilkoNhisAuthTokensComplete(session)) {
       return session;
     }
@@ -421,6 +444,7 @@ class TilkoHiraSimpleAuthClient {
       } else {
         session = tilkoMergeJsonMaps(session, lc);
       }
+      session = tilkoNhisLiftNestedSession(session);
       if (tilkoNhisAuthTokensComplete(session)) {
         return session;
       }
@@ -557,6 +581,9 @@ class TilkoHiraSimpleAuthClient {
     if (apiKey.isEmpty) {
       throw StateError('TILKO_API_KEY 가 비어 있습니다.');
     }
+    final liftedAuth = tilkoNhisLiftNestedSession(
+      Map<String, dynamic>.from(tilkoAuthResponse),
+    );
     String pickReq(String k) =>
         (tilkoFindPlainString(tilkoRequestMap, k) ?? '').trim();
 
@@ -566,7 +593,7 @@ class TilkoHiraSimpleAuthClient {
     final pat = pickReq('PrivateAuthType');
 
     String pickAuth(String k) =>
-        (tilkoFindPlainString(tilkoAuthResponse, k) ?? '').trim();
+        (tilkoFindPlainString(liftedAuth, k) ?? '').trim();
 
     final cx = pickAuth('CxId');
     final reqTx = pickAuth('ReqTxId');

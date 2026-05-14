@@ -192,7 +192,7 @@ abstract final class Link26BffIntegrationsClient {
               headers: {'Content-Type': 'application/json'},
               body: body,
             )
-            .timeout(const Duration(seconds: 120));
+            .timeout(const Duration(seconds: 200));
         if (res.statusCode < 200 || res.statusCode >= 300) {
           final detail = _flowHttpErrorDetail(res.statusCode, res.body);
           throw StateError('flow HTTP ${res.statusCode}: $detail');
