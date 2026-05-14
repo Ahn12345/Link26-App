@@ -1,0 +1,12 @@
+---
+description: Link26 Flutter 앱은 이 저장소 루트에서만 편집·실행한다
+alwaysApply: true
+---
+
+# Link26-App 작업 경로 (고정)
+
+- **이 모바일(Flutter) 앱의 유일한 작업 루트**는 다음 절대 경로입니다.  
+  `C:\Users\byeon\OneDrive\문서\GitHub\Link26-App`
+- 터미널 명령(`flutter`, `dart`, `.\tool\*.ps1`), 파일 읽기/쓰기, `dart analyze`·테스트·APK 빌드는 **항상 위 경로를 `Set-Location`(또는 `cd`)한 뒤** 실행한다.
+- `Desktop\Work\...`, `link26-web-app\backend` 등 **다른 폴더의 동명 `Link26-App`이나 복제본**은 기본적으로 사용하지 않는다. 사용자가 다른 경로를 **명시적으로** 줄 때만 예외.
+- 경로에 한글이 있으면 Android 빌드는 `.\tool\run_with_ascii_path.ps1` 패턴을 따른다. `flutter test`는 `.\tool\flutter_test_safe.ps1`을 사용한다.
