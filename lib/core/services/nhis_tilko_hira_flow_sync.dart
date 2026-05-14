@@ -88,11 +88,13 @@ abstract final class NhisTilkoHiraFlowSync {
       if (!ok) {
         final hint = res['hint_ko'];
         final detail = res['detail'];
-        final msg = (hint is String && hint.trim().isNotEmpty)
-            ? hint.trim()
-            : (detail is String && detail.trim().isNotEmpty)
-                ? detail.trim()
-                : 'BFF 틸코·건강보험공단(NHIS) 연동에 실패했습니다.';
+        final msg = Link26BffIntegrationsClient.polishFlowUserMessage(
+          (hint is String && hint.trim().isNotEmpty)
+              ? hint.trim()
+              : (detail is String && detail.trim().isNotEmpty)
+                  ? detail.trim()
+                  : 'BFF 틸코·건강보험공단(NHIS) 연동에 실패했습니다.',
+        );
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail: msg,

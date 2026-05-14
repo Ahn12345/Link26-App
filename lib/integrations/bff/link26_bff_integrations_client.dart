@@ -22,6 +22,24 @@ String _stripBom(String s) {
   return t;
 }
 
+/// BFF가 `StateError('TILKO_API_KEY 가 비어 있습니다.')` 등을 JSON detail로 돌릴 때
+/// 앱만 `.env`를 채웠다고 오해하지 않도록 안내합니다.
+String _tilkoKeyMissingHintKo() =>
+    '틸코 API 키가 없습니다. 심평원·복약 플로우는 PC에서 실행하는 BFF가 틸코를 호출하므로, '
+    '프로젝트 루트 .env(BFF와 같은 폴더)에 TILKO_API_KEY=… 를 넣고 '
+    'dart run tool/link26_bff.dart 를 다시 실행하세요. '
+    '(선택) TILKO_API_HOST 기본값은 dev.tilko.net 입니다. '
+    '앱 쪽 assets/env/dotenv에는 주로 NHIS_BASE_URL만 맞으면 됩니다.';
+
+String _rewriteTilkoEnvHint(String msg) {
+  final s = msg.trim();
+  if (s.contains('TILKO_API_KEY') &&
+      (s.contains('비어') || s.toLowerCase().contains('empty'))) {
+    return _tilkoKeyMissingHintKo();
+  }
+  return msg;
+}
+
 String _flowHttpErrorDetail(int statusCode, String body) {
   final flat = _stripBom(body);
   if (flat.isNotEmpty && _codfRedirectRe.hasMatch(flat)) {
@@ -79,13 +97,14 @@ abstract final class Link26BffIntegrationsClient {
       final code = int.tryParse(m.group(1) ?? '') ?? 0;
       final rest = t.substring(m.end).trim();
       if (rest.startsWith('{')) {
-        return _flowHttpErrorDetail(code, rest);
+        return _rewriteTilkoEnvHint(_flowHttpErrorDetail(code, rest));
       }
       if (rest.isNotEmpty) {
-        return rest;
+        return _rewriteTilkoEnvHint(rest);
       }
     }
-    return t.length > 420 ? '${t.substring(0, 420)}…' : t;
+    final clipped = t.length > 420 ? '${t.substring(0, 420)}…' : t;
+    return _rewriteTilkoEnvHint(clipped);
   }
 
   static String get _basesDebug =>
@@ -206,4 +225,7 @@ abstract final class Link26BffIntegrationsClient {
     }
     throw lastErr ?? StateError('flow: BFF 요청 실패 ($_basesDebug)');
   }
+
+  /// BFF가 HTTP 200 + `ok:false` 로 준 `hint_ko` / `detail` 을 스낵바에 넣기 전에 가공합니다.
+  static String polishFlowUserMessage(String msg) => _rewriteTilkoEnvHint(msg);
 }
