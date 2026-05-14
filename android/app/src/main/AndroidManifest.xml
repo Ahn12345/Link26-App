@@ -2,7 +2,7 @@
      아래 uses-sdk 는 Android Studio 매니페스트 검사기가 minSdk=1 로 보이며
      속성을 "Unknown" 으로 처리하는 경우를 줄이기 위한 힌트입니다. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.link26_app"
+    package="com.link26.app"
     android:versionCode="1"
     android:versionName="1.0.0">
 
@@ -25,7 +25,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher">
         <activity
-            android:name="com.example.link26_app.MainActivity"
+            android:name="com.link26.app.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""

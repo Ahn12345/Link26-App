@@ -1,4 +1,4 @@
-package com.example.link26_app
+package com.link26.app
 
 import android.os.Bundle
 import androidx.core.view.WindowCompat
