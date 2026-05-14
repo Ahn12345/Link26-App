@@ -55,7 +55,7 @@ String _flowHttpErrorDetail(int statusCode, String body) {
 /// `NHIS_BASE_URL`은 위 BFF의 베이스(예: `http://10.0.2.2:8787`)여야 하며,
 /// 다른 백엔드(FastAPI 등) URL을 넣으면 경로·오류 형식이 맞지 않을 수 있습니다.
 ///
-/// 틸코·CODEF 비밀키는 BFF 루트 `.env`에 두고, 앱은 URL만 알면 됩니다.
+/// 틸코·CODEF 비밀키는 BFF 루트 `.env`에 두고, 앱은 NHIS_BASE_URL만 알면 됩니다.
 ///
 /// [NhisRuntimeConfig.useMock] 은 가입·로그인·복약 동기화용 목 데이터에만 쓰이고,
 /// 여기 BFF 프록시(e약은요·틸코·플로우)는 막지 않습니다.

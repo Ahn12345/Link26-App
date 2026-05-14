@@ -417,18 +417,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFamilyAddEntry => '가족 구성원 추가';
 
   @override
-  String get settingsCodefConnectionTitle => '건강·복약 연동 (CODEF)';
+  String get settingsCodefConnectionTitle => '복약 추가 설정 (선택)';
 
   @override
   String get settingsCodefConnectionSubtitle =>
-      '기관 연동 후 받은 connectedId를 저장하면 BFF가 본인 진료·투약 조회에 사용합니다.';
+      '심평원 복약은 틸코 간편인증(BFF)으로 불러옵니다. 아래 connectedId는 BFF에서 예전 CODEF GET 복약만 쓸 때 필요합니다.';
 
   @override
-  String get settingsCodefConnectedIdLabel => 'connectedId';
+  String get settingsCodefConnectedIdLabel => 'connectedId (선택)';
 
   @override
   String get settingsCodefConnectionHint =>
-      'CODEF 콘솔·연동 API에서 발급된 값';
+      'CODEF 기관 연동을 쓰는 경우에만 콘솔·API에서 발급된 값';
 
   @override
   String get settingsCodefConnectionSaved =>
@@ -607,15 +607,15 @@ class AppLocalizationsKo extends AppLocalizations {
       '회원가입 처리 중 오류가 발생했습니다. 입력 내용을 확인하거나 앱을 다시 시작해 주세요.';
 
   @override
-  String get healthLinkTitle => '건강iN 연동 (Tilko → CODEF)';
+  String get healthLinkTitle => '심평원 복약 연동 (틸코)';
 
   @override
   String get healthLinkSubtitle =>
-      'BFF(NHIS_BASE_URL)에 틸코·CODEF 키를 두면 서버 경유로 호출합니다. '
-      'BFF가 없을 때만 앱 .env의 TILKO_API_KEY로 직접 요청합니다(개발용).';
+      'BFF(NHIS_BASE_URL)에 TILKO_API_KEY를 두면 틸코 간편인증 후 심평원 「내가 먹는 약」조회를 서버에서 처리합니다. '
+      'BFF가 없을 때만 앱 .env의 TILKO_API_KEY로 간편인증만 직접 호출할 수 있습니다(개발용).';
 
   @override
-  String get healthLinkFlowCta => '간편인증 후 CODEF 조회';
+  String get healthLinkFlowCta => '간편인증 후 복약 조회';
 
   @override
   String get healthLinkTilkoOnlyCta => '틸코 간편인증만';
@@ -630,7 +630,7 @@ class AppLocalizationsKo extends AppLocalizations {
       'BFF를 쓰지 않을 때는 TILKO_API_KEY가 있어야 합니다.';
 
   @override
-  String get healthLinkJsonLabel => 'CODEF 추가 JSON(객체)';
+  String get healthLinkJsonLabel => 'BFF 추가 JSON(객체 · 선택)';
 
   @override
   String get pillSearchPublicDataTitle => '공공데이터 e약은요 (BFF)';
@@ -644,11 +644,11 @@ class AppLocalizationsKo extends AppLocalizations {
       '.env에 NHIS_BASE_URL을 BFF 주소로 넣고(예: 에뮬 http://10.0.2.2:8787), sync 후 BFF 실행·앱 재빌드하세요.';
 
   @override
-  String get tilkoNhisLinkTitle => '국민건강보험 진료·투약 연동';
+  String get tilkoNhisLinkTitle => '심평원 복약 불러오기';
 
   @override
   String get tilkoNhisLinkBody =>
-      '틸코 간편인증 후 CODEF를 통해 건강보험 진료·투약 정보를 불러옵니다. 주민등록번호 13자리는 기기에 저장되지 않으며, 이번 조회에만 사용됩니다.';
+      '틸코 간편인증 후 건강보험심사평가원 「내가 먹는 약」처방·투약 이력을 불러옵니다. 주민등록번호 13자리는 기기에 저장되지 않으며, 이번 조회에만 사용됩니다.';
 
   @override
   String get tilkoNhisLinkRrnLabel => '주민등록번호(숫자 13자리)';

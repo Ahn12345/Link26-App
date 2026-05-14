@@ -426,18 +426,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFamilyAddEntry => 'Add family member';
 
   @override
-  String get settingsCodefConnectionTitle => 'Health data link (CODEF)';
+  String get settingsCodefConnectionTitle => 'Medication extras (optional)';
 
   @override
   String get settingsCodefConnectionSubtitle =>
-      'Save the connectedId from CODEF institutional linking so the BFF can query your treatment data.';
+      'HIRA “my medications” uses Tilko easy auth via the BFF. connectedId below is only if your BFF still uses the legacy CODEF GET medications path.';
 
   @override
-  String get settingsCodefConnectedIdLabel => 'connectedId';
+  String get settingsCodefConnectedIdLabel => 'connectedId (optional)';
 
   @override
   String get settingsCodefConnectionHint =>
-      'Value from CODEF console or account-link API';
+      'Only if you use CODEF institutional linking';
 
   @override
   String get settingsCodefConnectionSaved =>
@@ -620,15 +620,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign-up failed. Check your input or restart the app.';
 
   @override
-  String get healthLinkTitle => 'Health iN link (Tilko → CODEF)';
+  String get healthLinkTitle => 'HIRA medications (Tilko)';
 
   @override
   String get healthLinkSubtitle =>
-      'With keys on the BFF (NHIS_BASE_URL), requests go through the server. '
-      'Without BFF, the app can call Tilko directly if TILKO_API_KEY is set (dev only).';
+      'With TILKO_API_KEY on the BFF (NHIS_BASE_URL), easy auth then HIRA “my medications” runs on the server. '
+      'Without BFF, the app can call Tilko easy-auth only if TILKO_API_KEY is set (dev only).';
 
   @override
-  String get healthLinkFlowCta => 'Easy auth + CODEF';
+  String get healthLinkFlowCta => 'Easy auth + fetch medications';
 
   @override
   String get healthLinkTilkoOnlyCta => 'Tilko easy auth only';
@@ -643,7 +643,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Direct mode requires TILKO_API_KEY in .env.';
 
   @override
-  String get healthLinkJsonLabel => 'Extra CODEF JSON object';
+  String get healthLinkJsonLabel => 'Extra JSON for BFF (optional)';
 
   @override
   String get pillSearchPublicDataTitle => 'Public e-약은요 (via BFF)';
@@ -657,11 +657,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set NHIS_BASE_URL in .env to your PC BFF (e.g. http://10.0.2.2:8787), run sync + BFF, then rebuild the app.';
 
   @override
-  String get tilkoNhisLinkTitle => 'NHIS treatment & prescription link';
+  String get tilkoNhisLinkTitle => 'Load HIRA medications';
 
   @override
   String get tilkoNhisLinkBody =>
-      'We use Tilko easy auth, then CODEF to fetch NHIS treatment and prescription data. '
+      'After Tilko easy auth we request HIRA “my medications” (prescription/taking history) via the BFF. '
       'Your resident ID is not stored on device and is used only for this request.';
 
   @override

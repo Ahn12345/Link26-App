@@ -52,7 +52,7 @@ class NhisMedicinesSyncOutcome {
 
   bool get isTilkoHiraMyMedications => metaSource == 'tilko_hira_my_medications';
 
-  /// 틸코 간편인증 기반 복약 플로우(CODEF 건보 또는 HIRA 직접).
+  /// 틸코 간편인증 기반 복약 플로우(심평원 HIRA 또는 레거시 CODEF 건보).
   bool get isTilkoBackedMedicationsFlow =>
       isTilkoCodefNhis || isTilkoHiraMyMedications;
 
@@ -103,7 +103,8 @@ class NhisMedicinesSyncOutcome {
               '설정의 「건강·복약 연동」에서 저장하거나 BFF .env의 CODEF_CONNECTED_ID를 설정하세요.';
         }
         if (isStubDemo) {
-          return '지금 보이는 복약 목록은 데모입니다. 실제 본인 데이터는 BFF에서 CODEF(또는 공단) 상품·connectedId·추가인증까지 완료해야 합니다.';
+          return '지금 보이는 복약 목록은 데모입니다. 실제 본인 데이터는 BFF에서 틸코 간편인증 후 '
+              '심평원「내가 먹는 약」조회(또는 설정의 복약 연동)까지 완료해야 합니다.';
         }
         if (metaSource == 'codef' && remoteItemCount == 0) {
           if ((metaNote ?? '').trim().isNotEmpty) {
@@ -122,7 +123,7 @@ class NhisMedicinesSyncOutcome {
           final c = codefResultCode ?? '';
           final m = codefResultMessage ?? '';
           return '틸코 간편인증 후 조회했지만 복약 항목이 0건입니다. '
-              'BFF .env의 CODEF 건보 진료·투약 상품 경로·connectedId를 확인하세요. ($c ${m.isNotEmpty ? m : ''})';
+              '레거시 건보(CODEF) 경로를 쓰는 경우 BFF·connectedId를 확인하세요. ($c ${m.isNotEmpty ? m : ''})';
         }
         if (metaSource == 'tilko_only' &&
             (metaNote ?? '').trim().isNotEmpty) {

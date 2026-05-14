@@ -75,7 +75,7 @@ abstract final class NhisRuntimeConfig {
     return null;
   }
 
-  /// 기본 **끔**. 홈 부팅·당겨서 새로고침 시 복약 동기화 스낵바(CODEF 안내 등)를 보려면 `.env`에
+  /// 기본 **끔**. 홈 부팅·당겨서 새로고침 시 복약 동기화 스낵바(연동 안내)를 보려면 `.env`에
   /// `NHIS_SHOW_SYNC_SNACKBARS=true` 를 넣으세요.
   static bool get showMedicationSyncSnackbars {
     final s = _stripQuotes(dotenv.env['NHIS_SHOW_SYNC_SNACKBARS']).toLowerCase();

@@ -5,7 +5,8 @@ import 'package:link26_app/core/navigation/link26_route_observer.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-/// CODEF `connectedId` 저장 — BFF `/v1/medications` 쿼리로 전달됩니다.
+/// 선택: BFF `GET /v1/medications?connectedId=` 용 CODEF `connectedId` 저장.
+/// 심평원「내가 먹는 약」실데이터는 틸코 간편인증 BFF 플로우로 가져오며 connectedId와 무관합니다.
 class CodefConnectionScreen extends StatefulWidget {
   const CodefConnectionScreen({super.key});
 
@@ -147,24 +148,16 @@ class _CodefConnectionScreenState extends State<CodefConnectionScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'assets/env/dotenv 및 PC BFF .env 에서 '
-                  'NHIS_USE_MOCK=false, NHIS_BASE_URL, CODEF_CONNECTED_ID 를 맞춘 뒤 '
-                  '앱을 다시 빌드하거나, 위 입력란에 connectedId 를 저장하고 홈에서 '
-                  '당겨서 새로고침해 보세요.\n\n'
-                  '키를 넣었는데도 안 되면 CODEF·틸코 권한 환경(샌드박스 vs 실연동)을 '
-                  '다시 확인하세요. CODEF 콘솔에서 발급받은 클라이언트가 개발용이면 '
-                  'BFF .env 의 CODEF_BASE_URL 을 development.codef.io(또는 문서의 개발 호스트)에, '
-                  '운영·실연동용이면 api.codef.io 등 운영 호스트에 맞춥니다. '
-                  '호스트와 키 종류가 어긋나면 CF-00404/404·인증 오류가 날 수 있고, '
-                  'connectedId 도 같은 환경에서 발급·저장된 값이어야 합니다. '
-                  '틸코는 TILKO_API_HOST 가 dev.tilko.net 인지 api.tilko.net 인지 가입·플로우와 맞는지 점검하세요.\n\n'
-                  'apidemo.tilko.net 문서 URL에 API_VERSION=v2.0 이 보여도, '
-                  '「진료 및 투약 정보(공동인증)」본문의 실제 주소는 /api/v1.0/Nhis/... 입니다. '
-                  '그 API는 공동인증서(CertFile·KeyFile)용이고, 이 앱이 쓰는 심평원 간편인증(/api/v1.0/hirasimpleauth/...)·CODEF 건보 상품과는 다른 제품입니다. '
-                  '데모 페이지의 빈 API KEY 칸에는 콘솔에 발급된 일반용 키(표에 있는 값)를 넣어야 하며, 빈 칸 그대로는 호출되지 않습니다.\n\n'
-                  'CF-00003(요청 서비스 상품 정보 없음)은 CODEF 쪽 상품 구독·CODEF_BASE_URL·상품 경로 이슈이며, '
-                  '틸코 API KEY만 바꿔서는 해결되지 않을 수 있습니다.\n\n'
-                  '문제가 계속되면 NHIS_SHOW_SYNC_SNACKBARS=true 로 스낵바 원인을 켤 수 있습니다.',
+                  'assets/env/dotenv 및 PC BFF .env 에서 NHIS_USE_MOCK=false, '
+                  'NHIS_BASE_URL, TILKO_API_KEY·TILKO_API_HOST 를 맞춘 뒤 앱을 다시 빌드하세요. '
+                  '실제 복약 목록은 로그인·가입 시 주민번호 입력 후 틸코 간편인증 → '
+                  'BFF 심평원「내가 먹는 약」조회가 성공하면 채워집니다.\n\n'
+                  '아래 connectedId 는 BFF가 예전 방식(CODEF GET 복약)을 쓸 때만 필요합니다. '
+                  '그 경로를 쓰지 않으면 비워 두어도 됩니다.\n\n'
+                  'apidemo.tilko.net 문서에 v2.0 이 보여도, 간편인증 복약 API는 '
+                  '/api/v1.0/hirasimpleauth/hiraa050300000100 등 문서의 v1.0 경로를 따릅니다. '
+                  '공동인증서용 /api/v1.0/Nhis/... 상품과는 다른 흐름입니다.\n\n'
+                  '문제가 계속되면 NHIS_SHOW_SYNC_SNACKBARS=true 로 홈 동기화 안내를 켤 수 있습니다.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF64748B),
                         height: 1.45,
@@ -196,8 +189,8 @@ class _NhisSyncChecklistCard extends StatelessWidget {
     final fieldCid = fieldConnectedId.trim();
     final cidOk = envCid.isNotEmpty || fieldCid.isNotEmpty;
     final cidLine = cidOk
-        ? 'connectedId: 설정됨 (앱 저장값 또는 빌드 .env)'
-        : 'connectedId: 없음 — CODEF 본인조회에 필요 (아래 입력 후 저장, 또는 .env의 CODEF_CONNECTED_ID)';
+        ? 'connectedId: 설정됨 (레거시 CODEF GET 복약용 · 선택)'
+        : 'connectedId: 없음 — 레거시 CODEF GET 복약만 쓸 때 입력(.env의 CODEF_CONNECTED_ID)';
 
     return Container(
       width: double.infinity,
@@ -211,7 +204,7 @@ class _NhisSyncChecklistCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '공단·BFF 복약 동기화 점검',
+            'BFF·복약 동기화 점검',
             style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
           ),
           const SizedBox(height: 10),
@@ -245,7 +238,7 @@ class _NhisSyncChecklistCard extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
-                '→ CODEF connectedId 가 없으면 본인 진료·투약 조회가 막힐 수 있습니다.',
+                '→ 레거시 CODEF GET 복약만 쓸 때 connectedId 가 없으면 그 경로 조회가 막힐 수 있습니다.',
                 style: TextStyle(
                   color: Color(0xFFB45309),
                   fontWeight: FontWeight.w600,

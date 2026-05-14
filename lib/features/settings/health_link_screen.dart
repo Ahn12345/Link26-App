@@ -1,13 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
+import 'package:link26_app/models/medicine.dart';
 
-/// 틸코 간편인증 → (BFF에서) CODEF 건강iN 진료·투약 조회 플로우.
+/// 틸코 간편인증 → BFF 심평원 **내가 먹는 약** 등 복약 플로우(개발·설정 화면).
 class HealthLinkScreen extends StatefulWidget {
   const HealthLinkScreen({super.key});
 
@@ -23,7 +25,7 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
   final _birthDate = TextEditingController();
   final _phone = TextEditingController();
   final _rrn = TextEditingController();
-  final _codefJson = TextEditingController(text: '{}');
+  final _bffExtraJson = TextEditingController(text: '{}');
   String? _result;
   bool _busy = false;
 
@@ -34,7 +36,7 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
     _birthDate.dispose();
     _phone.dispose();
     _rrn.dispose();
-    _codefJson.dispose();
+    _bffExtraJson.dispose();
     super.dispose();
   }
 
@@ -46,7 +48,37 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
         'IdentityNumber': _rrn.text.trim(),
       };
 
-  Future<void> _runFlow(bool codefToo) async {
+  /// BFF 전체 플로우가 성공하면 로컬 복약 캐시에 반영합니다(홈 목록과 동일).
+  Future<void> _persistMedicinesIfFlowOk(Map<String, dynamic>? res) async {
+    if (res == null || res['ok'] != true) return;
+    Map<String, dynamic>? metaMap;
+    final meta = res['meta'];
+    if (meta is Map) {
+      metaMap = Map<String, dynamic>.from(
+        meta.map((k, v) => MapEntry('$k', v)),
+      );
+    }
+    final source = metaMap?['source'] as String?;
+    final itemsRaw = res['items'];
+    final list = itemsRaw is List ? itemsRaw : const <dynamic>[];
+    final medicines = <Medicine>[];
+    for (final e in list) {
+      if (e is Map) {
+        medicines.add(Medicine.fromJson(Map<String, dynamic>.from(e)));
+      }
+    }
+    final noteRaw = metaMap?['note'] ?? metaMap?['notice'];
+    final noteStr = noteRaw is String ? noteRaw.trim() : '';
+    await NhisMedicinesSync.applyRemoteMedicines(
+      medicines: medicines,
+      metaSource: source,
+      codefResultCode: metaMap?['codefResultCode'] as String?,
+      codefResultMessage: metaMap?['codefResultMessage'] as String?,
+      metaNote: noteStr.isEmpty ? null : noteStr,
+    );
+  }
+
+  Future<void> _runFlow(bool fullMedicationFlow) async {
     final l10n = AppLocalizations.of(context);
     setState(() {
       _busy = true;
@@ -55,14 +87,14 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
     try {
       Map<String, dynamic>? codefPayload;
       try {
-        final decoded = jsonDecode(_codefJson.text.trim());
+        final decoded = jsonDecode(_bffExtraJson.text.trim());
         if (decoded is Map<String, dynamic>) {
           codefPayload = decoded;
         }
       } catch (_) {
-        if (codefToo) {
+        if (fullMedicationFlow) {
           setState(() {
-            _result = 'CODEF JSON 파싱 실패';
+            _result = '추가 JSON 파싱 실패(BFF codef_payload 형식을 확인하세요)';
             _busy = false;
           });
           return;
@@ -70,11 +102,21 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
       }
 
       if (Link26BffIntegrationsClient.canCall) {
-        if (codefToo) {
+        if (fullMedicationFlow) {
           final res = await Link26BffIntegrationsClient.flowTilkoCodefTreatment(
             tilko: _tilkoBody(),
             codefPayload: codefPayload,
           );
+          if (mounted) {
+            await _persistMedicinesIfFlowOk(res);
+            if (res != null && res['ok'] == true && mounted) {
+              final list = res['items'];
+              final n = list is List ? list.length : 0;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('내 약 목록 갱신: $n건 (홈에서 확인)')),
+              );
+            }
+          }
           setState(() => _result = res == null
               ? '응답 없음'
               : const JsonEncoder.withIndent('  ').convert(res));
@@ -98,11 +140,11 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
         apiHost: TilkoEnv.apiHost,
       );
       final tilkoRes = await client.requestFromJsonMap(_tilkoBody());
-      if (codefToo) {
+      if (fullMedicationFlow) {
         setState(() {
           _result =
               '${const JsonEncoder.withIndent('  ').convert(tilkoRes)}\n\n'
-              '(CODEF는 BFF(NHIS_BASE_URL)에서만 연동합니다.)';
+              '(심평원 복약 전체 조회는 BFF(NHIS_BASE_URL)에서만 가능합니다.)';
         });
       } else {
         setState(() => _result = const JsonEncoder.withIndent('  ').convert(tilkoRes));
@@ -157,7 +199,7 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: _codefJson,
+            controller: _bffExtraJson,
             decoration: InputDecoration(labelText: l10n.healthLinkJsonLabel),
             maxLines: 5,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
