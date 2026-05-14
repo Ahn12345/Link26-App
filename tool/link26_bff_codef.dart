@@ -20,7 +20,8 @@ import 'package:path/path.dart' as p;
 /// 프로젝트 루트 환경을 읽습니다.
 ///
 /// 1) `assets/env/dotenv` — Flutter 빌드 전 `sync_dotenv_asset.ps1` 가 루트 `.env` 를 복사한 파일.
-/// 2) `.env` — 루트(덮어쓰기 우선).
+/// 2) `.env` — 루트(덮어쓰기 우선). 단, **같은 키에 값이 비어 있으면** 1)에서 이미 채워진 값을
+///    지우지 않습니다(`.env`에 `TILKO_API_KEY=` 플레이스홀만 있을 때 dotenv의 키가 날아가던 버그 방지).
 ///
 /// 예전에는 BFF가 `.env` 만 봐서, 키를 `dotenv` 쪽에만 맞춰 둔 경우(또는 동기화만 한 경우)
 /// e약은요·틸코 키가 "비어 있다"고 나왔습니다. 두 파일을 병합합니다.
@@ -34,8 +35,22 @@ Map<String, String> loadBffDotEnv() {
       merged.addAll(_parseDotEnv(f.readAsStringSync()));
     }
   }
+
+  /// `.env` 전용: 빈 문자열로 기존 비어 있지 않은 값을 덮어쓰지 않음.
+  void mergeEnvFileNoEmptyWipe(String relativePath) {
+    final f = File(p.join(root, relativePath));
+    if (!f.existsSync()) return;
+    final parsed = _parseDotEnv(f.readAsStringSync());
+    for (final e in parsed.entries) {
+      final incoming = e.value.trim();
+      final existing = (merged[e.key] ?? '').trim();
+      if (incoming.isEmpty && existing.isNotEmpty) continue;
+      merged[e.key] = e.value;
+    }
+  }
+
   mergeFile(p.join('assets', 'env', 'dotenv'));
-  mergeFile('.env');
+  mergeEnvFileNoEmptyWipe('.env');
 
   for (final e in Platform.environment.entries) {
     final k = e.key;
