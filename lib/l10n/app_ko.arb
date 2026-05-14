@@ -132,5 +132,17 @@
   "homeHiraMedicationsImport": "심평원에서 불러오기",
   "homeHiraMedicationsBffRequired": "PC BFF가 실행 중이고 앱에 NHIS_BASE_URL(BFF 주소)이 있어야 합니다.",
   "homeHiraMedicationsLoginRequired": "로그인된 계정이 필요합니다.",
-  "homeHiraMedicationsLoadSuccess": "심평원 복약을 내 약 목록에 반영했습니다."
+  "homeHiraMedicationsLoadSuccess": "심평원 복약을 내 약 목록에 반영했습니다.",
+  "myMedicinesFullViewCta": "전체보기",
+  "myMedicinesPeriod1m": "1개월",
+  "myMedicinesPeriod3m": "3개월",
+  "myMedicinesPeriod6m": "6개월",
+  "myMedicinesPeriod1y": "1년",
+  "myMedicinesPeriodLabel": "조회 기간:",
+  "myMedicinesPeriodHint": "복약 목록은 동기화 시점의 전체입니다. 아래 기간 칩은 「복용 완료」 기록만 해당 기간으로 집계합니다.",
+  "myMedicinesSyncedSectionTitle": "동기화된 약",
+  "myMedicinesCompletionsSectionTitle": "기간 내 복용 완료",
+  "myMedicinesNoMedicines": "동기화된 약이 없습니다. 홈에서 「심평원에서 불러오기」를 이용하거나 약을 추가해 보세요.",
+  "myMedicinesNoCompletions": "이 기간에 복용 완료 기록이 없습니다.",
+  "myMedicinesAddMedicineFab": "약 추가"
 }

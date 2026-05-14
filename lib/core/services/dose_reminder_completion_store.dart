@@ -47,6 +47,46 @@ abstract final class DoseReminderCompletionStore {
     return list.map(_norm).where((s) => s.isNotEmpty).toSet();
   }
 
+  /// [fromInclusive]·[toInclusive] 의 **날짜**만 사용합니다(시각 무시).
+  static Future<Map<String, int>> completionCountsByNormInRange({
+    required DateTime fromInclusive,
+    required DateTime toInclusive,
+  }) async {
+    final all = await _loadRaw();
+    final a = DateTime(
+      fromInclusive.year,
+      fromInclusive.month,
+      fromInclusive.day,
+    );
+    final b = DateTime(
+      toInclusive.year,
+      toInclusive.month,
+      toInclusive.day,
+    );
+    final counts = <String, int>{};
+    for (final e in all.entries) {
+      final day = _parseDayKey(e.key);
+      if (day == null) continue;
+      if (day.isBefore(a) || day.isAfter(b)) continue;
+      for (final name in e.value) {
+        final k = _norm(name);
+        if (k.isEmpty) continue;
+        counts[k] = (counts[k] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+
+  static DateTime? _parseDayKey(String dayKey) {
+    final parts = dayKey.split('-');
+    if (parts.length != 3) return null;
+    final y = int.tryParse(parts[0]);
+    final mo = int.tryParse(parts[1]);
+    final d = int.tryParse(parts[2]);
+    if (y == null || mo == null || d == null) return null;
+    return DateTime(y, mo, d);
+  }
+
   static Future<void> markCompleted(String medicineName) async {
     final k = _norm(medicineName);
     if (k.isEmpty) return;

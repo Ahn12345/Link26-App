@@ -76,6 +76,10 @@ const _medicineNameKeys = [
   'ByungEuiwonYakGukMyung',
   // HIRAA050300000100 DrugList
   'Name',
+  'PrscNm',
+  'PrscPrepNm',
+  'GenNm',
+  'MediNm',
 ];
 
 const _doseKeys = [

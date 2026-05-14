@@ -249,6 +249,19 @@ abstract class AppLocalizations {
   String get homeHiraMedicationsBffRequired;
   String get homeHiraMedicationsLoginRequired;
   String get homeHiraMedicationsLoadSuccess;
+  String get myMedicinesFullViewCta;
+  String get myMedicinesPeriod1m;
+  String get myMedicinesPeriod3m;
+  String get myMedicinesPeriod6m;
+  String get myMedicinesPeriod1y;
+  String get myMedicinesPeriodLabel;
+  String get myMedicinesPeriodHint;
+  String get myMedicinesSyncedSectionTitle;
+  String get myMedicinesCompletionsSectionTitle;
+  String get myMedicinesNoMedicines;
+  String get myMedicinesNoCompletions;
+  String get myMedicinesAddMedicineFab;
+  String myMedicinesCompletionCountLabel(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

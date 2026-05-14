@@ -132,5 +132,17 @@
   "homeHiraMedicationsImport": "Load from HIRA",
   "homeHiraMedicationsBffRequired": "Start the PC BFF and set NHIS_BASE_URL in the app .env.",
   "homeHiraMedicationsLoginRequired": "Please sign in first.",
-  "homeHiraMedicationsLoadSuccess": "HIRA medications saved to your list."
+  "homeHiraMedicationsLoadSuccess": "HIRA medications saved to your list.",
+  "myMedicinesFullViewCta": "View all",
+  "myMedicinesPeriod1m": "1 month",
+  "myMedicinesPeriod3m": "3 months",
+  "myMedicinesPeriod6m": "6 months",
+  "myMedicinesPeriod1y": "1 year",
+  "myMedicinesPeriodLabel": "Period:",
+  "myMedicinesPeriodHint": "The medication list is the full set from your last sync. The chips filter “dose completed” counts by period only.",
+  "myMedicinesSyncedSectionTitle": "Synced medications",
+  "myMedicinesCompletionsSectionTitle": "Completed doses in period",
+  "myMedicinesNoMedicines": "No medications yet. Use “Load from HIRA” on Home or add a medicine.",
+  "myMedicinesNoCompletions": "No completed doses in this period.",
+  "myMedicinesAddMedicineFab": "Add medicine"
 }

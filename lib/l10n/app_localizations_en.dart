@@ -691,4 +691,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeHiraMedicationsLoadSuccess =>
       'HIRA medications saved to your list.';
+
+  @override
+  String get myMedicinesFullViewCta => 'View all';
+
+  @override
+  String get myMedicinesPeriod1m => '1 month';
+
+  @override
+  String get myMedicinesPeriod3m => '3 months';
+
+  @override
+  String get myMedicinesPeriod6m => '6 months';
+
+  @override
+  String get myMedicinesPeriod1y => '1 year';
+
+  @override
+  String get myMedicinesPeriodLabel => 'Period:';
+
+  @override
+  String get myMedicinesPeriodHint =>
+      'The medication list is the full set from your last sync. The chips filter “dose completed” counts by period only.';
+
+  @override
+  String get myMedicinesSyncedSectionTitle => 'Synced medications';
+
+  @override
+  String get myMedicinesCompletionsSectionTitle =>
+      'Completed doses in period';
+
+  @override
+  String get myMedicinesNoMedicines =>
+      'No medications yet. Use “Load from HIRA” on Home or add a medicine.';
+
+  @override
+  String get myMedicinesNoCompletions =>
+      'No completed doses in this period.';
+
+  @override
+  String get myMedicinesAddMedicineFab => 'Add medicine';
+
+  @override
+  @override
+  String myMedicinesCompletionCountLabel(int count) => '$count done';
 }

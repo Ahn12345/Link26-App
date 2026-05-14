@@ -140,11 +140,14 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
 
-      await HiraLinkService.afterLogin(context: context, user: user);
       await AuthSession.signIn(
         phoneDigits: user.phoneDigits,
         localUserId: user.id,
       );
+      if (!context.mounted) return;
+
+      await HiraLinkService.afterLogin(context: context, user: user);
+
       if (context.mounted) {
         await Navigator.of(context).pushNamedAndRemoveUntil(
           MainShell.routeName,
@@ -165,24 +168,9 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _socialStub(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(AppLocalizations.of(context).socialLoginComingSoon)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final outlineBtn = OutlinedButton.styleFrom(
-      minimumSize: const Size.fromHeight(48),
-      foregroundColor: Link26Surface.textPrimary,
-      side: const BorderSide(color: Link26Surface.outline),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Link26Surface.radiusButton),
-      ),
-    );
     final w = MediaQuery.sizeOf(context).width;
     final nameOk = _nameCtrl.text.trim().isNotEmpty;
     final phoneOk = SignupValidators.isPhoneKr(_phoneCtrl.text);
@@ -239,54 +227,6 @@ class _LoginPageState extends State<LoginPage> {
                             height: 1.4,
                             fontWeight: FontWeight.w600,
                           ),
-                        ),
-                        SizedBox(height: Link26ResponsiveUi.gapXl(w)),
-                        Semantics(
-                          button: true,
-                          label: l10n.socialLoginGoogle,
-                          child: OutlinedButton.icon(
-                            style: outlineBtn,
-                            onPressed: () => _socialStub(context),
-                            icon: const Icon(Icons.g_mobiledata,
-                                size: 28, color: Link26Surface.textPrimary),
-                            label: Text(l10n.socialLoginGoogle),
-                          ),
-                        ),
-                        SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                        Semantics(
-                          button: true,
-                          label: l10n.socialLoginApple,
-                          child: OutlinedButton.icon(
-                            style: outlineBtn,
-                            onPressed: () => _socialStub(context),
-                            icon: const Icon(Icons.apple,
-                                size: 22, color: Link26Surface.textPrimary),
-                            label: Text(l10n.socialLoginApple),
-                          ),
-                        ),
-                        SizedBox(
-                          height: Link26ResponsiveUi.chatHeaderTitleGap(w) +
-                              Link26ResponsiveUi.gapXs(w),
-                        ),
-                        Row(
-                          children: [
-                            const Expanded(
-                                child: Divider(color: Link26Surface.outline)),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                l10n.loginDividerLocalAccount,
-                                style: TextStyle(
-                                  color: Link26Surface.textMuted,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: Link26ResponsiveUi.bodySmall(w),
-                                ),
-                              ),
-                            ),
-                            const Expanded(
-                                child: Divider(color: Link26Surface.outline)),
-                          ],
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapXl(w)),
                         TextField(

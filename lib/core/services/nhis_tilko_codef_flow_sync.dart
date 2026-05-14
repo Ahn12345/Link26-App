@@ -5,6 +5,7 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
+import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_env.dart';
@@ -131,6 +132,20 @@ abstract final class NhisTilkoCodefFlowSync {
           medicines.add(
             Medicine.fromJson(Map<String, dynamic>.from(e)),
           );
+        }
+      }
+
+      // BFF가 CODEF용 매퍼로 `items`를 비우고 줬지만 `hira_medications` 원문에는
+      // 약 행이 있는 경우 — 앱에서 동일 매퍼로 한 번 더 시도합니다.
+      if (medicines.isEmpty) {
+        final hiraRaw = res['hira_medications'];
+        if (hiraRaw is Map) {
+          final hiraMap = Map<String, dynamic>.from(
+            hiraRaw.map((k, v) => MapEntry('$k', v)),
+          );
+          for (final row in codefRootToMedicationItems(hiraMap)) {
+            medicines.add(Medicine.fromJson(row));
+          }
         }
       }
 

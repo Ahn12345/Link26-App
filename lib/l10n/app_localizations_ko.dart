@@ -675,4 +675,47 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeHiraMedicationsLoadSuccess => '심평원 복약을 내 약 목록에 반영했습니다.';
+
+  @override
+  String get myMedicinesFullViewCta => '전체보기';
+
+  @override
+  String get myMedicinesPeriod1m => '1개월';
+
+  @override
+  String get myMedicinesPeriod3m => '3개월';
+
+  @override
+  String get myMedicinesPeriod6m => '6개월';
+
+  @override
+  String get myMedicinesPeriod1y => '1년';
+
+  @override
+  String get myMedicinesPeriodLabel => '조회 기간:';
+
+  @override
+  String get myMedicinesPeriodHint =>
+      '복약 목록은 동기화 시점의 전체입니다. 아래 기간 칩은 「복용 완료」 기록만 해당 기간으로 집계합니다.';
+
+  @override
+  String get myMedicinesSyncedSectionTitle => '동기화된 약';
+
+  @override
+  String get myMedicinesCompletionsSectionTitle => '기간 내 복용 완료';
+
+  @override
+  String get myMedicinesNoMedicines =>
+      '동기화된 약이 없습니다. 홈에서 「심평원에서 불러오기」를 이용하거나 약을 추가해 보세요.';
+
+  @override
+  String get myMedicinesNoCompletions =>
+      '이 기간에 복용 완료 기록이 없습니다.';
+
+  @override
+  String get myMedicinesAddMedicineFab => '약 추가';
+
+  @override
+  @override
+  String myMedicinesCompletionCountLabel(int count) => '$count회';
 }

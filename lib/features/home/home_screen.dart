@@ -24,7 +24,7 @@ import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/features/alarms/all_alarms_screen.dart';
-import 'package:link26_app/features/medicine/add_medicine_sheet.dart';
+import 'package:link26_app/features/home/my_medicines_period_screen.dart';
 import 'package:link26_app/features/search/pill_search_screen.dart';
 import 'package:link26_app/models/alarm_item.dart';
 import 'package:link26_app/models/medicine.dart';
@@ -346,19 +346,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     await _reloadMedicinesFromStores();
   }
 
-  Future<void> _openAddMedicine() async {
-    final result = await showModalBottomSheet<Medicine>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AddMedicineSheet(),
-    );
-    if (result == null) return;
-    await LocalMedicineListStore.add(result.name);
-    await NhisMedicineCacheStore.upsert(result);
-    await _reloadMedicinesFromStores();
-  }
-
   String _shortTime(DateTime? t) {
     if (t == null) return '';
     final h = t.hour;
@@ -570,9 +557,19 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       .map((e) => _CompletedTile(item: e)),
                   SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                   Link26SectionHeader(
-                    title: '내 약 목록',
-                    action: '+ 추가',
-                    onAction: _openAddMedicine,
+                    title: l10n.homeMyMedicinesTitle,
+                    action: l10n.myMedicinesFullViewCta,
+                    icon: Icons.calendar_month_outlined,
+                    onAction: () => Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => MyMedicinesPeriodScreen(
+                          onMedicinesChanged: () {
+                            unawaited(_reloadMedicinesFromStores());
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                   if (medicines.isEmpty)
