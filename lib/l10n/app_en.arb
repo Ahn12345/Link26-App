@@ -128,5 +128,9 @@
   "tilkoNhisLinkRrnLabel": "Resident registration number (13 digits)",
   "tilkoNhisLinkConfirm": "Authenticate & fetch",
   "tilkoNhisLinkSkip": "Not now",
-  "tilkoNhisLinkRrnInvalid": "Enter a valid 13-digit resident registration number."
+  "tilkoNhisLinkRrnInvalid": "Enter a valid 13-digit resident registration number.",
+  "homeHiraMedicationsImport": "Load from HIRA",
+  "homeHiraMedicationsBffRequired": "Start the PC BFF and set NHIS_BASE_URL in the app .env.",
+  "homeHiraMedicationsLoginRequired": "Please sign in first.",
+  "homeHiraMedicationsLoadSuccess": "HIRA medications saved to your list."
 }

@@ -10,7 +10,7 @@ import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart'
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-/// 가입·로그인 후 틸코 간편인증 → BFF 심평원 복약(hiraa050300000100) 조회.
+/// 가입·로그인·홈에서 틸코 간편인증 → BFF 심평원 복약(hiraa050300000100) 조회.
 abstract final class HiraLinkService {
   /// 회원가입 직후 — 주민번호는 이미 입력된 값으로 한 번만 BFF 플로우에 사용합니다.
   static Future<void> afterRegistration({
@@ -43,45 +43,60 @@ abstract final class HiraLinkService {
     }
   }
 
-  /// 로그인 직후 — 주민번호는 기기에 저장하지 않으므로, 건보 조회 시 한 번 입력받습니다.
+  /// 로그인 직후 — 주민번호는 기기에 저장하지 않으므로, 조회 시 한 번 입력받습니다.
   static Future<void> afterLogin({
     required BuildContext context,
     required LocalUserRecord user,
   }) async {
-    if (!context.mounted) return;
+    await promptRrnAndSyncHiraMedications(
+      context: context,
+      user: user,
+      announceSuccess: false,
+    );
+  }
+
+  /// 홈·기타: 주민번호 입력 후 심평원 복약(BFF) 동기화.
+  ///
+  /// 성공 시 [announceSuccess] 가 true 이면 간단한 완료 스낵바를 띄웁니다.
+  static Future<NhisMedicinesSyncOutcome?> promptRrnAndSyncHiraMedications({
+    required BuildContext context,
+    required LocalUserRecord user,
+    bool announceSuccess = false,
+  }) async {
+    if (!context.mounted) return null;
     try {
       await dotenv.load(fileName: 'assets/env/dotenv');
     } catch (_) {}
 
-    if (!context.mounted) return;
+    if (!context.mounted) return null;
 
     if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
       if (kDebugMode) {
         debugPrint(
-          'HIRA: 틸코→건보 플로우 생략 (mock 또는 NHIS_BASE_URL 없음)',
+          'HIRA: 틸코·심평원 플로우 생략 (mock 또는 NHIS_BASE_URL 없음)',
         );
       }
-      return;
+      return null;
     }
 
     final l10n = AppLocalizations.of(context);
     final submitted = await showDialog<String>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => _TilkoNhisRrnDialog(l10n: l10n),
+      builder: (ctx) => TilkoNhisRrnDialog(l10n: l10n),
     );
 
     if (submitted == null || submitted.trim().isEmpty) {
-      return;
+      return null;
     }
-    if (!context.mounted) return;
+    if (!context.mounted) return null;
 
     final rrn = SignupValidators.digitsOnly(submitted);
     if (!SignupValidators.isRrn13Digits(rrn)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.tilkoNhisLinkRrnInvalid)),
       );
-      return;
+      return null;
     }
 
     final out = await NhisTilkoCodefFlowSync.runTilkoThenNhisWithMedicationsFallback(
@@ -91,9 +106,15 @@ abstract final class HiraLinkService {
       residentRegistrationDigits13: rrn,
       codefConnectedId: user.codefConnectedId,
     );
-    if (!context.mounted || out == null) return;
+    if (!context.mounted || out == null) return null;
 
-    if (out.result == NhisMedicinesSyncResult.failed ||
+    if (announceSuccess &&
+        out.result == NhisMedicinesSyncResult.success &&
+        !out.showBannerOnBootstrap) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeHiraMedicationsLoadSuccess)),
+      );
+    } else if (out.result == NhisMedicinesSyncResult.failed ||
         out.showBannerOnBootstrap) {
       final msg = out.userMessageKo.trim();
       if (msg.isNotEmpty) {
@@ -105,6 +126,7 @@ abstract final class HiraLinkService {
         );
       }
     }
+    return out;
   }
 
   static Future<void> afterMonthlyEasyAuth() async {
@@ -113,16 +135,16 @@ abstract final class HiraLinkService {
 }
 
 /// [TextEditingController] 를 다이얼로그가 소유해, pop 직후 dispose 레이스를 피합니다.
-class _TilkoNhisRrnDialog extends StatefulWidget {
-  const _TilkoNhisRrnDialog({required this.l10n});
+class TilkoNhisRrnDialog extends StatefulWidget {
+  const TilkoNhisRrnDialog({super.key, required this.l10n});
 
   final AppLocalizations l10n;
 
   @override
-  State<_TilkoNhisRrnDialog> createState() => _TilkoNhisRrnDialogState();
+  State<TilkoNhisRrnDialog> createState() => _TilkoNhisRrnDialogState();
 }
 
-class _TilkoNhisRrnDialogState extends State<_TilkoNhisRrnDialog> {
+class _TilkoNhisRrnDialogState extends State<TilkoNhisRrnDialog> {
   late final TextEditingController _controller;
 
   @override

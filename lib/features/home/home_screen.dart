@@ -13,11 +13,13 @@ import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
+import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
+import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -302,6 +304,48 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
   }
 
+  /// 홈에서 심평원(BFF 틸코 플로우) 복약을 바로 반영합니다.
+  Future<void> _importHiraMedicationsFromHome() async {
+    try {
+      await dotenv.load(fileName: 'assets/env/dotenv');
+    } catch (_) {}
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    if (!await AuthSession.isSignedIn()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeHiraMedicationsLoginRequired)),
+      );
+      return;
+    }
+    if (!mounted) return;
+    if (NhisRuntimeConfig.useMock) {
+      return;
+    }
+    if (!Link26BffIntegrationsClient.canCall) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeHiraMedicationsBffRequired)),
+      );
+      return;
+    }
+    final user = await UserLocalRepository.loadSignedInUserRecord();
+    if (!mounted) return;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.homeHiraMedicationsLoginRequired)),
+      );
+      return;
+    }
+    await HiraLinkService.promptRrnAndSyncHiraMedications(
+      context: context,
+      user: user,
+      announceSuccess: true,
+    );
+    if (!mounted) return;
+    await _reloadMedicinesFromStores();
+  }
+
   Future<void> _openAddMedicine() async {
     final result = await showModalBottomSheet<Medicine>(
       context: context,
@@ -537,13 +581,26 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                         top: Link26ResponsiveUi.gapMd(w),
                         bottom: Link26ResponsiveUi.gapSm(w),
                       ),
-                      child: Text(
-                        '검색·동기화로 약을 추가해 보세요',
-                        style: TextStyle(
-                          color: Link26Surface.textMuted,
-                          fontSize: Link26ResponsiveUi.bodySmall(w),
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '검색·동기화로 약을 추가해 보세요',
+                            style: TextStyle(
+                              color: Link26Surface.textMuted,
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (!NhisRuntimeConfig.useMock) ...[
+                            SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                            FilledButton.tonal(
+                              onPressed: () =>
+                                  unawaited(_importHiraMedicationsFromHome()),
+                              child: Text(l10n.homeHiraMedicationsImport),
+                            ),
+                          ],
+                        ],
                       ),
                     )
                   else

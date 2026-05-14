@@ -245,6 +245,10 @@ abstract class AppLocalizations {
   String get tilkoNhisLinkConfirm;
   String get tilkoNhisLinkSkip;
   String get tilkoNhisLinkRrnInvalid;
+  String get homeHiraMedicationsImport;
+  String get homeHiraMedicationsBffRequired;
+  String get homeHiraMedicationsLoginRequired;
+  String get homeHiraMedicationsLoadSuccess;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -263,12 +263,24 @@ abstract final class NhisMedicinesSync {
     }
     await _maybePersistConnectedIdFromMedicationsBody(body, resolvedPhone);
     var fromApi = NhisMedicationsParser.parseResponseBody(body);
-    // Dart BFF 스텁: 데모 행을 로컬에 쌓지 않음(매 동기화마다 다시 들어가 “실데이터처럼” 보이는 문제 방지).
-    if (src == 'link26-bff-dart-stub' || src == 'link26-bff-dart') {
+    final isBffStubMeta = src == 'link26-bff-dart-stub' || src == 'link26-bff-dart';
+    if (isBffStubMeta) {
       await _purgeLink26BffStubDemosFromCache();
       fromApi = fromApi
           .where((m) => !_isLink26BffStubMedicineName(m.name))
           .toList();
+      if (fromApi.isEmpty) {
+        final stubNote = (meta?['note'] as String?)?.trim();
+        const hint = '실제 복약 목록은 로그인 시 주민번호 입력 후 틸코·심평원 조회를 마치거나, '
+            '설정의 심평원 복약 연동을 사용하세요.';
+        return NhisMedicinesSyncOutcome(
+          result: NhisMedicinesSyncResult.success,
+          remoteItemCount: 0,
+          metaSource: src,
+          metaNote:
+              stubNote != null && stubNote.isNotEmpty ? '$stubNote\n\n$hint' : hint,
+        );
+      }
     }
     if (isAuthoritativeMedicationsMetaSource(src)) {
       await _replaceLocalWithRemote(fromApi);
@@ -287,7 +299,7 @@ abstract final class NhisMedicinesSync {
     );
   }
 
-  /// 틸코→CODEF(건보) 플로우 등에서 이미 파싱된 목록을 반영할 때 사용합니다.
+  /// 틸코·BFF 플로우 등에서 이미 파싱된 목록을 반영할 때 사용합니다.
   static Future<NhisMedicinesSyncOutcome> applyRemoteMedicines({
     required List<Medicine> medicines,
     String? metaSource,

@@ -677,4 +677,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tilkoNhisLinkRrnInvalid =>
       'Enter a valid 13-digit resident registration number.';
+
+  @override
+  String get homeHiraMedicationsImport => 'Load from HIRA';
+
+  @override
+  String get homeHiraMedicationsBffRequired =>
+      'Start the PC BFF and set NHIS_BASE_URL in the app .env.';
+
+  @override
+  String get homeHiraMedicationsLoginRequired => 'Please sign in first.';
+
+  @override
+  String get homeHiraMedicationsLoadSuccess =>
+      'HIRA medications saved to your list.';
 }

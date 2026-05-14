@@ -76,6 +76,16 @@ String _rsaEncryptAesKeyB64(String tilkoPublicKeyB64, Uint8List aesKey) {
   return enc.base64;
 }
 
+/// Tilko `GetPublicKey` 는 호출마다 지연이 크므로 짧게 재사용합니다(BFF가 연속 두 API를 부를 때 체감 속도 개선).
+class _TilkoPkCacheEntry {
+  _TilkoPkCacheEntry(this.pk, this.at);
+  final String pk;
+  final DateTime at;
+}
+
+final Map<String, _TilkoPkCacheEntry> _tilkoPublicKeyCache = {};
+const Duration _tilkoPublicKeyTtl = Duration(minutes: 5);
+
 class TilkoHiraSimpleAuthClient {
   TilkoHiraSimpleAuthClient({
     required this.apiKey,
@@ -94,9 +104,17 @@ class TilkoHiraSimpleAuthClient {
 
   String get _root => apiHost.endsWith('/') ? apiHost.substring(0, apiHost.length - 1) : apiHost;
 
+  String _publicKeyCacheKey() => '$_root\u0001$apiKey';
+
   Future<String> fetchPublicKey() async {
     if (apiKey.isEmpty) {
       throw StateError('TILKO_API_KEY 가 비어 있습니다.');
+    }
+    final key = _publicKeyCacheKey();
+    final now = DateTime.now();
+    final cached = _tilkoPublicKeyCache[key];
+    if (cached != null && now.difference(cached.at) < _tilkoPublicKeyTtl) {
+      return cached.pk;
     }
     final uri = Uri.parse('$_root/api/Auth/GetPublicKey').replace(
       queryParameters: {'APIkey': apiKey},
@@ -110,6 +128,7 @@ class TilkoHiraSimpleAuthClient {
     if (pk == null || pk.isEmpty) {
       throw StateError('Tilko 응답에 PublicKey 없음');
     }
+    _tilkoPublicKeyCache[key] = _TilkoPkCacheEntry(pk, now);
     return pk;
   }
 

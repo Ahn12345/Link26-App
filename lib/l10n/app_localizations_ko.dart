@@ -662,4 +662,17 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get tilkoNhisLinkRrnInvalid =>
       '주민등록번호 13자리를 올바르게 입력해 주세요.';
+
+  @override
+  String get homeHiraMedicationsImport => '심평원에서 불러오기';
+
+  @override
+  String get homeHiraMedicationsBffRequired =>
+      'PC BFF가 실행 중이고 앱에 NHIS_BASE_URL(BFF 주소)이 있어야 합니다.';
+
+  @override
+  String get homeHiraMedicationsLoginRequired => '로그인된 계정이 필요합니다.';
+
+  @override
+  String get homeHiraMedicationsLoadSuccess => '심평원 복약을 내 약 목록에 반영했습니다.';
 }

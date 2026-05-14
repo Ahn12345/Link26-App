@@ -1,31 +1,40 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+
 import '../../core/domain/failure.dart';
 import '../../core/domain/result.dart';
-import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/network/auth_interceptor.dart';
+import '../../core/network/network_error_mapper.dart';
 import '../../core/network/nhis_token_manager.dart';
 import 'nhis_runtime_config.dart';
 
 /// NHIS/BFF에서 로그인 사용자 복약 목록을 가져옵니다.
+///
+/// 홈 부팅 시 자주 호출되므로 [ApiClient] 기본(30/45초)보다 짧은 타임아웃을 씁니다.
 class NhisMedicationsClient {
   NhisMedicationsClient({
-    ApiClient? api,
     NhisTokenManager? tokens,
-  })  : _api = api ?? ApiClient(),
-        _headers = AuthHeaderBuilder(tokens ?? NhisTokenManager());
+  }) : _headers = AuthHeaderBuilder(tokens ?? NhisTokenManager());
 
-  final ApiClient _api;
   final AuthHeaderBuilder _headers;
+
+  static final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 18),
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
 
   static const AppFailure _missing =
       AppFailure('NHIS_BASE_URL 이 비어 있습니다.', code: 'NHIS_CONFIG');
 
   Future<Result<String>> fetchMedicationsRaw({
     required String phoneDigits,
-    /// 로컬 DB 사용자 — BFF·CODEF가 상품 스펙에 따라 본인 매칭에 쓸 수 있음
     String? displayName,
     String? gender,
-    /// CODEF 기관 연동 식별자 — BFF가 상품 POST에 넣습니다.
     String? connectedId,
   }) async {
     final base = NhisRuntimeConfig.baseUrl;
@@ -48,6 +57,18 @@ class NhisMedicationsClient {
     }
     uri = uri.replace(queryParameters: q);
 
-    return _api.get(uri, headers: await _headers.headers());
+    try {
+      final response = await _dio.getUri<dynamic>(
+        uri,
+        options: Options(headers: await _headers.headers()),
+      );
+      final data = response.data;
+      if (data is String) return Success(data);
+      return Success(jsonEncode(data));
+    } on DioException catch (e) {
+      return Failure(AppFailure('GET 오류: ${e.message}', cause: e));
+    } catch (e, st) {
+      return Failure(mapHttpException(e, st));
+    }
   }
 }
