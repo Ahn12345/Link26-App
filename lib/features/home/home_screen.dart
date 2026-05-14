@@ -309,6 +309,17 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
     if (!mounted) return;
     if (NhisRuntimeConfig.useMock) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'NHIS_USE_MOCK=true 입니다. 실제 심평원·복약 데이터를 쓰려면 루트 .env에서 '
+            'NHIS_USE_MOCK=false 로 바꾼 뒤 tool/sync_dotenv_asset.ps1 실행·앱 재빌드하고, '
+            'PC에서 BFF를 띄운 뒤 다시 시도하세요.',
+          ),
+          duration: Duration(seconds: 8),
+        ),
+      );
       return;
     }
     if (!Link26BffIntegrationsClient.canCall) {
