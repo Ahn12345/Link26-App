@@ -53,11 +53,18 @@ Map<String, String> loadBffDotEnv() {
   return merged;
 }
 
-/// `dart run tool/link26_bff.dart` 기준 상위 폴더, 또는 cwd 가 레포 루트일 때 그 경로.
+/// `dart run tool/link26_bff.dart` 가 들어 있는 레포 루트를 우선합니다.
+///
+/// 예전에는 cwd 에 아무 `.env`만 있어도 그 폴더를 썼는데, 다른 프로젝트 터미널에서
+/// BFF를 실행하면 Link26 의 틸코 키가 아닌 빈 `.env`를 읽어 `TILKO_API_KEY` 가
+/// 비는 문제가 생길 수 있어, [pubspec.yaml] 이 보이는 script 기준 루트를 먼저 씁니다.
 String _link26ProjectRoot() {
   final scriptRoot = p.normalize(
     p.join(p.dirname(Platform.script.toFilePath()), '..'),
   );
+  if (File(p.join(scriptRoot, 'pubspec.yaml')).existsSync()) {
+    return scriptRoot;
+  }
   final cwd = Directory.current.path;
   if (File(p.join(cwd, '.env')).existsSync() ||
       File(p.join(cwd, 'assets', 'env', 'dotenv')).existsSync()) {
@@ -68,6 +75,37 @@ String _link26ProjectRoot() {
     return scriptRoot;
   }
   return scriptRoot;
+}
+
+/// BFF 기동 로그용. 키 **값**은 출력하지 않습니다.
+void logBffDotEnvBootstrap(Map<String, String> env) {
+  final root = _link26ProjectRoot();
+  // ignore: avoid_print
+  stdout.writeln('  [BFF env] resolved repo root:');
+  // ignore: avoid_print
+  stdout.writeln('    $root');
+  final dotPath = p.join(root, 'assets', 'env', 'dotenv');
+  final envPath = p.join(root, '.env');
+  // ignore: avoid_print
+  stdout.writeln(
+    '  [BFF env] assets/env/dotenv: ${File(dotPath).existsSync() ? "exists" : "MISSING"}',
+  );
+  // ignore: avoid_print
+  stdout.writeln(
+    '  [BFF env] .env: ${File(envPath).existsSync() ? "exists" : "MISSING"}',
+  );
+  final tilkoLen = (env['TILKO_API_KEY'] ?? '').trim().length;
+  // ignore: avoid_print
+  stdout.writeln(
+    '  [BFF env] TILKO_API_KEY loaded length: $tilkoLen (0이면 심평원·틸코 플로우 불가)',
+  );
+  if (tilkoLen == 0) {
+    // ignore: avoid_print
+    stderr.writeln(
+      '  [BFF env] 경고: TILKO_API_KEY 비어 있음 — 위 경로의 .env / assets/env/dotenv 를 확인하고, '
+      '앱 NHIS_BASE_URL 포트와 실제 떠 있는 BFF 포트가 같은지(중복 실행)도 확인하세요.',
+    );
+  }
 }
 
 /// 공공데이터포털 `serviceKey`(e약은요 등). `.env` 에 이름이 여러 가지로 흔해 한 함수로 묶습니다.

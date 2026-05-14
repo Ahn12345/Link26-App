@@ -40,6 +40,7 @@ Future<void> main() async {
     '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-hira-medications',
   );
   final bootEnv = loadBffDotEnv();
+  logBffDotEnvBootstrap(bootEnv);
   final pSu = (bootEnv['NHIS_PROXY_SIGNUP_URL'] ?? '').trim();
   final pLo = (bootEnv['NHIS_PROXY_LOGIN_URL'] ?? '').trim();
   if (pSu.isNotEmpty || pLo.isNotEmpty) {
