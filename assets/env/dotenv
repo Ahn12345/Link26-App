@@ -1,8 +1,5 @@
 # =============================================================================
-# 앱 번들: assets/env/dotenv
-# - AI(Gemini)·틸코·공공데이터 키는 기본 사용(주석 없음).
-# - PC BFF 없이 홈만 목으로 보려면: NHIS_USE_MOCK=true, NHIS_BASE_URL 은 비우거나 주석.
-# - 실연동: NHIS_USE_MOCK=false + NHIS_BASE_URL + PC에서 dart run tool/link26_bff.dart
+# 루트 .env — BFF(dart run tool/link26_bff.dart)와 병합. 앱은 assets/env/dotenv 를 함께 봄.
 # =============================================================================
 
 NHIS_USE_MOCK=false
@@ -18,6 +15,6 @@ TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_HOST=https://dev.tilko.net
 TILKO_PRIVATE_AUTH_TYPE=KAKAO
 
-# --- CODEF (비활성, 예시는 .env.example) ---
+# --- CODEF (비활성) ---
 # CODEF_CLIENT_ID=
 # CODEF_CLIENT_SECRET=
