@@ -49,6 +49,39 @@ String? tilkoFindPlainString(dynamic root, String want) {
   return hit;
 }
 
+/// NHIS 간편인증 후 진료·투약 조회에 필요한 4필드가 [root] JSON 안에 모두 있는지.
+bool tilkoNhisAuthTokensComplete(dynamic root) {
+  for (final k in ['CxId', 'ReqTxId', 'Token', 'TxId']) {
+    if ((tilkoFindPlainString(root, k) ?? '').trim().isEmpty) {
+      return false;
+    }
+  }
+  return true;
+}
+
+Map<String, dynamic> tilkoMergeJsonMaps(
+  Map<String, dynamic> base,
+  Map<String, dynamic> overlay,
+) {
+  final out = Map<String, dynamic>.from(base);
+  for (final e in overlay.entries) {
+    final k = e.key;
+    final v = e.value;
+    final ex = out[k];
+    if (v is Map<String, dynamic> && ex is Map<String, dynamic>) {
+      out[k] = tilkoMergeJsonMaps(ex, v);
+    } else if (v is Map && ex is Map) {
+      out[k] = tilkoMergeJsonMaps(
+        Map<String, dynamic>.from(ex),
+        Map<String, dynamic>.from(v),
+      );
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 /// RSA 공개키(Base64 DER) → PEM 래핑 ([RSAKeyParser]용).
 String tilkoPublicKeyToPem(String tilkoPublicKeyB64) {
   final cleaned = tilkoPublicKeyB64.replaceAll(RegExp(r'\s+'), '');
@@ -240,6 +273,160 @@ class TilkoHiraSimpleAuthClient {
       return {'http_status': res.statusCode, 'body': decoded};
     }
     return decoded;
+  }
+
+  /// NHIS **[간편인증 완료여부 확인]** — `POST …/nhissimpleauth/logincheck`
+  /// (틸코 API 상태: `/api/v1.0/nhissimpleauth/logincheck`).
+  ///
+  /// [sessionTokens]: `simpleauthrequest` 응답(및 이전 logincheck 응답)을 합친 맵. 토큰 필드는 비어 있어도 됨.
+  Future<Map<String, dynamic>> requestNhisLoginCheck({
+    required Map<String, dynamic> tilkoRequestMap,
+    required Map<String, dynamic> sessionTokens,
+  }) async {
+    if (apiKey.isEmpty) {
+      throw StateError('TILKO_API_KEY 가 비어 있습니다.');
+    }
+    String pickReq(String k) =>
+        (tilkoFindPlainString(tilkoRequestMap, k) ?? '').trim();
+    String pickTok(String k) =>
+        (tilkoFindPlainString(sessionTokens, k) ?? '').trim();
+
+    final userName = pickReq('UserName');
+    final birth = pickReq('BirthDate');
+    final cell = pickReq('UserCellphoneNumber');
+    final pat = pickReq('PrivateAuthType');
+    if ([userName, birth, cell, pat].any((e) => e.isEmpty)) {
+      throw StateError(
+        'NHIS logincheck: 요청맵에 이름·생년월일·휴대폰·인증채널이 필요합니다.',
+      );
+    }
+
+    final cx = pickTok('CxId');
+    final reqTx = pickTok('ReqTxId');
+    final token = pickTok('Token');
+    final tx = pickTok('TxId');
+
+    final pub = await fetchPublicKey();
+    final rnd = Random.secure();
+    final aesKey = Uint8List(16);
+    for (var i = 0; i < 16; i++) {
+      aesKey[i] = rnd.nextInt(256);
+    }
+    final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
+
+    final flatAuth = <String, dynamic>{
+      'BirthDate': _aesEncryptField(aesKey, birth),
+      'PrivateAuthType': _aesEncryptField(aesKey, pat),
+      'UserName': _aesEncryptField(aesKey, userName),
+      'UserCellphoneNumber': _aesEncryptField(aesKey, cell),
+      'Token': _aesEncryptField(aesKey, token),
+      'CxId': _aesEncryptField(aesKey, cx),
+      'TxId': _aesEncryptField(aesKey, tx),
+      'ReqTxId': _aesEncryptField(aesKey, reqTx),
+    };
+
+    Future<Map<String, dynamic>> postLogin(
+      String path,
+      Map<String, dynamic> jsonBody,
+      String bodyEncKeyHeader,
+    ) async {
+      final uri = Uri.parse('$_root$path');
+      final res = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'API-KEY': apiKey,
+          'ENC-KEY': bodyEncKeyHeader,
+        },
+        body: jsonEncode(jsonBody),
+      );
+      final text = res.body;
+      Map<String, dynamic> decoded;
+      try {
+        decoded = jsonDecode(text) as Map<String, dynamic>;
+      } catch (_) {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          throw StateError('Tilko NHIS logincheck HTTP ${res.statusCode}: $text');
+        }
+        rethrow;
+      }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        return {'http_status': res.statusCode, 'body': decoded};
+      }
+      return decoded;
+    }
+
+    var out = await postLogin(
+      '/api/v1.0/nhissimpleauth/logincheck',
+      flatAuth,
+      encKeyHeader,
+    );
+    if (out['http_status'] == 404) {
+      final pub2 = await fetchPublicKey();
+      final rnd2 = Random.secure();
+      final aesKey2 = Uint8List(16);
+      for (var i = 0; i < 16; i++) {
+        aesKey2[i] = rnd2.nextInt(256);
+      }
+      final enc2 = _rsaEncryptAesKeyB64(pub2, aesKey2);
+      final flat2 = <String, dynamic>{
+        'BirthDate': _aesEncryptField(aesKey2, birth),
+        'PrivateAuthType': _aesEncryptField(aesKey2, pat),
+        'UserName': _aesEncryptField(aesKey2, userName),
+        'UserCellphoneNumber': _aesEncryptField(aesKey2, cell),
+        'Token': _aesEncryptField(aesKey2, token),
+        'CxId': _aesEncryptField(aesKey2, cx),
+        'TxId': _aesEncryptField(aesKey2, tx),
+        'ReqTxId': _aesEncryptField(aesKey2, reqTx),
+      };
+      out = await postLogin(
+        '/api/v2.0/NhisSimpleAuth/LoginCheck',
+        <String, dynamic>{'Auth': flat2},
+        enc2,
+      );
+    }
+    return out;
+  }
+
+  /// `simpleauthrequest` 직후 토큰이 없을 수 있으므로, `logincheck`를 두고 간격을 두며
+  /// 응답을 누적해 [CxId]·[ReqTxId]·[Token]·[TxId]가 생길 때까지 기다립니다.
+  Future<Map<String, dynamic>> waitForNhisAuthForTreatmentInjection({
+    required Map<String, dynamic> tilkoRequestMap,
+    required Map<String, dynamic> initialSimpleAuthResponse,
+    int maxAttempts = 36,
+    Duration interval = const Duration(seconds: 2),
+  }) async {
+    var session = Map<String, dynamic>.from(initialSimpleAuthResponse);
+    if (tilkoNhisAuthTokensComplete(session)) {
+      return session;
+    }
+    for (var i = 0; i < maxAttempts; i++) {
+      Map<String, dynamic> lc;
+      try {
+        lc = await requestNhisLoginCheck(
+          tilkoRequestMap: tilkoRequestMap,
+          sessionTokens: session,
+        );
+      } catch (e) {
+        return {
+          ...session,
+          '_link26_poll_error': '$e',
+        };
+      }
+      if (lc['http_status'] != null) {
+        final inner = lc['body'];
+        if (inner is Map<String, dynamic>) {
+          session = tilkoMergeJsonMaps(session, inner);
+        }
+      } else {
+        session = tilkoMergeJsonMaps(session, lc);
+      }
+      if (tilkoNhisAuthTokensComplete(session)) {
+        return session;
+      }
+      await Future<void>.delayed(interval);
+    }
+    return session;
   }
 
   Future<Map<String, dynamic>> requestNhisSimpleAuthFromJsonMap(

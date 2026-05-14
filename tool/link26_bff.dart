@@ -287,10 +287,32 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
 
+        final tilkoAuth = await tilkoClient.waitForNhisAuthForTreatmentInjection(
+          tilkoRequestMap: tilkoMap,
+          initialSimpleAuthResponse: tilkoRes,
+        );
+        if (!tilkoNhisAuthTokensComplete(tilkoAuth)) {
+          final pollErr = tilkoAuth['_link26_poll_error'];
+          final errBit = pollErr is String && pollErr.trim().isNotEmpty
+              ? ' ($pollErr)'
+              : '';
+          await _json(request, 200, {
+            'ok': false,
+            'detail': 'NHIS 간편인증 토큰(CxId·ReqTxId·Token·TxId)을 받지 못했습니다.',
+            'hint_ko':
+                '휴대폰에서 PASS·카카오 등 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
+                '서버가 약 1분간 logincheck로 완료 여부를 확인합니다.$errBit',
+            'tilko': tilkoRes,
+            'tilko_after_poll': tilkoAuth,
+            'meta': {'awaiting_nhis_simple_auth': true},
+          });
+          return;
+        }
+
         final nhisRes =
             await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
           tilkoRequestMap: tilkoMap,
-          tilkoAuthResponse: tilkoRes,
+          tilkoAuthResponse: tilkoAuth,
         );
         if (nhisRes['http_status'] != null) {
           final inner = nhisRes['body'];
@@ -300,7 +322,7 @@ Future<void> _handle(HttpRequest request) async {
             'hint_ko':
                 '공단 간편인증이 완료된 뒤 호출했는지, '
                 '문서(https://apidemo.tilko.net … NhisSimpleAuth-RetrieveTreatmentInjectionInformationPerson)와 대조하세요.',
-            'tilko': tilkoRes,
+            'tilko': tilkoAuth,
             'nhis_treatment_injection':
                 inner is Map<String, dynamic> ? inner : nhisRes,
           });
@@ -311,7 +333,7 @@ Future<void> _handle(HttpRequest request) async {
         final emptyParsed = items.isEmpty;
         await _json(request, 200, {
           'ok': true,
-          'tilko': tilkoRes,
+          'tilko': tilkoAuth,
           'nhis_treatment_injection': nhisRes,
           'hira_medications': nhisRes,
           'items': items,
