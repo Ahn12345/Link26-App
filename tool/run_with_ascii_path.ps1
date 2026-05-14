@@ -2,6 +2,7 @@
 # 사용:  .\tool\run_with_ascii_path.ps1 run
 #       .\tool\run_with_ascii_path.ps1 -CleanBuild run   # cleanMergeDebugAssets 잠금 시 build\ 비우기
 #       .\tool\run_with_ascii_path.ps1 build apk
+# `flutter test` 는 SUBST(L:) 잔여 환경에서 깨질 수 있어 `.\tool\flutter_test_safe.ps1` 를 쓰세요.
 param(
   [switch] $CleanBuild,
   [Parameter(ValueFromRemainingArguments = $true)]
