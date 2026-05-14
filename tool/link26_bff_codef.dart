@@ -1,11 +1,14 @@
-// link26_bff CODEF 연동 — `dart run tool/link26_bff.dart` 에서 import.
+// link26_bff 지원 모듈 — `dart run tool/link26_bff.dart` 에서 import.
 //
-// CODEF 요청 형식은 codef-io/codef-node 샘플과 동일:
+// 포함: `.env` 병합, e약은요 serviceKey, **틸코 NHIS 응답 → 약 행** 매핑(`bffMapCodefRootToMedicationItems`) 등.
+//
+// 아래 CODEF HTTP 클라이언트(oauth·상품 POST·헬스 프로브·`fetchMedicationsFromCodef`)는
+// 레포에 **소스로 남아 있으나** `link26_bff.dart` 라우터에서는 더 이상 호출하지 않습니다.
+// (복약 실데이터는 틸코 `POST …/tilko-hira-medications` 만 사용.)
+//
+// CODEF 요청 형식은 codef-io/codef-node 샘플과 동일했던 시절의 기록:
 // - OAuth: https://oauth.codef.io/oauth/token
 // - 상품: POST baseUrl + path, Body = Uri.encodeComponent(jsonEncode(map))
-// - 응답: URL 디코딩 후 JSON
-//
-// 상품 URL·파라미터는 https://developer.codef.io 에서 확인 (건강·복약 상품별 상이).
 
 import 'dart:convert';
 import 'dart:io';

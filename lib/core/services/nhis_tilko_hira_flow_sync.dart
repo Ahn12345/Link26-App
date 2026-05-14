@@ -172,6 +172,8 @@ abstract final class NhisTilkoHiraFlowSync {
               '앱 설정($base)의 포트와 같은지 확인하세요.\n'
               '• 앱에 넣은 PC 주소의 IP가 PC에서 `ipconfig`로 본 IPv4와 같은지, '
               '폰과 PC가 같은 Wi-Fi인지 확인하세요.\n'
+              '• PC에 Wi-Fi와 이더넷이 동시에 있으면 IPv4가 여러 개입니다. '
+              '폰이 쓰는 네트워크와 같은 대역의 IP를 넣어야 합니다(이더넷만의 IP로 넣으면 Wi-Fi 폰에서 실패할 수 있음).\n'
               '• Windows 방화벽에서 해당 포트(예: 8787) 인바운드 허용 여부를 확인하세요.\n'
               '• USB만 쓸 때: PC에서 `adb reverse tcp:8787 tcp:8787` 후 앱 주소를 '
               '`http://127.0.0.1:8787`로 맞추는 방법도 있습니다.',
@@ -185,7 +187,7 @@ abstract final class NhisTilkoHiraFlowSync {
     }
   }
 
-  /// 틸코→BFF(NHIS) 플로우 후, 약이 0건이면 `/v1/medications` 로 한 번 더 보완합니다(스텁·레거시 GET).
+  /// 틸코→BFF(NHIS) 플로우만 사용합니다. 예전 CODEF·스텁용 `GET /v1/medications` 보완 호출은 제거했습니다.
   static Future<NhisMedicinesSyncOutcome?> runTilkoThenHiraWithMedicationsFallback({
     required String displayName,
     required String phoneDigits,
@@ -203,21 +205,6 @@ abstract final class NhisTilkoHiraFlowSync {
     if (first == null) return null;
     if (NhisRuntimeConfig.useMock) return first;
     if (!Link26BffIntegrationsClient.canCall) return first;
-
-    final tilkoOnly = first.metaSource == 'tilko_only';
-    final emptyOk = first.result == NhisMedicinesSyncResult.success &&
-        first.remoteItemCount == 0 &&
-        !first.isStubDemo;
-
-    if (!tilkoOnly && !emptyOk) return first;
-
-    final second = await NhisMedicinesSync.syncNow(phoneDigits: phoneDigits);
-    if (second.remoteItemCount > first.remoteItemCount) {
-      return second;
-    }
-    if (second.metaSource == 'codef' && first.metaSource != 'codef') {
-      return second;
-    }
     return first;
   }
 

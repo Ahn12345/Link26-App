@@ -131,9 +131,9 @@ abstract final class Link26BffIntegrationsClient {
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
-  /// 틸코 간편인증 후 심평원 **내가 먹는 약**(hiraa050300000100) — BFF `POST /v1/flow/tilko-hira-medications`.
+  /// 틸코 간편인증 후 NHIS 진료·투약 정보 — BFF `POST /v1/flow/tilko-hira-medications`.
   ///
-  /// [flowExtras] 는 BFF로 함께 보내는 부가 필드(예: 레거시 `connectedId`)입니다.
+  /// [flowExtras] 는 BFF로 함께 보내는 부가 필드(레거시 호환)입니다.
   static Future<Map<String, dynamic>?> flowTilkoHiraMedications({
     required Map<String, dynamic> tilko,
     Map<String, dynamic>? flowExtras,
@@ -147,8 +147,6 @@ abstract final class Link26BffIntegrationsClient {
       body: jsonEncode({
         'tilko': tilko,
         'flow_extras': extras,
-        // 구 BFF·문서 호환: 동일 맵을 codef_payload 키로도 전달
-        'codef_payload': extras,
       }),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {

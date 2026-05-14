@@ -1,7 +1,7 @@
 // Link26 최소 BFF — Node 없이 `dart run tool/link26_bff.dart` 로 실행.
 //
-// 제품 흐름(의도): 로그인/가입 후 틸코 **국민건강보험공단 간편인증** → NHIS **진료 및 투약 정보** → 본인 복약.
-// 이 Dart BFF는 틸코·심평원(HIRA) 프록시·공공 e약은요·(선택) 레거시 CODEF GET(/v1/medications)을 한 PC에서 돕습니다.
+// 제품 흐름(의도): 로그인/가입 후 틸코 국민건강보험공단 간편인증 → NHIS 진료 및 투약 정보 → 본인 복약.
+// 이 Dart BFF는 틸코·공공 e약은요 등을 한 PC에서 돕습니다. 복약 실데이터는 틸코 NHIS 간편인증 플로우만 사용합니다.
 // 앱은 NHIS_BASE_URL 로만 이 BFF에 붙고, 공단/틸코 비밀키는 루트 `.env` 에 둡니다.
 //
 // 포트: 환경변수 PORT 가 있으면 그 포트만 사용 (이미 다른 터미널에서 쓰 중이면 errno 10048).
@@ -31,12 +31,13 @@ Future<void> main() async {
   stdout.writeln('    http://127.0.0.1:$port/health');
   // ignore: avoid_print
   stdout.writeln('    에뮬용 .env: NHIS_BASE_URL=http://10.0.2.2:$port');
+  await _printLanBffHints(port);
   // ignore: avoid_print
   stdout.writeln('');
   // ignore: avoid_print
   stdout.writeln(
-    '  POST /v1/signup  POST /v1/login  GET /v1/medications  GET /health\n'
-    '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-hira-medications (구: tilko-codef-treatment)',
+    '  POST /v1/signup  POST /v1/login  GET /v1/medications(스텁)  GET /health\n'
+    '  GET /v1/public/easy-drug  POST /v1/tilko/hira-simple-auth  POST /v1/flow/tilko-hira-medications',
   );
   final bootEnv = loadBffDotEnv();
   final pSu = (bootEnv['NHIS_PROXY_SIGNUP_URL'] ?? '').trim();
@@ -107,13 +108,64 @@ Future<HttpServer> _bindServer() async {
   return HttpServer.bind(InternetAddress.anyIPv4, 0);
 }
 
+/// 폰과 같은 Wi-Fi·LAN에 쓰기 적절한 사설 IPv4만(VPN 등 공인·비사설 잡 주소 제외).
+bool _isPrivateLanIpv4(InternetAddress a) {
+  if (a.type != InternetAddressType.IPv4 || a.isLoopback) return false;
+  final parts = a.address.split('.');
+  if (parts.length != 4) return false;
+  final o1 = int.tryParse(parts[0]);
+  final o2 = int.tryParse(parts[1]);
+  if (o1 == null || o2 == null) return false;
+  if (o1 == 10) return true;
+  if (o1 == 172 && o2 >= 16 && o2 <= 31) return true;
+  if (o1 == 192 && o2 == 168) return true;
+  return false;
+}
+
+/// 폰과 같은 Wi-Fi·LAN 대역의 IPv4만 안내(이더넷 vs Wi-Fi 혼동 방지).
+Future<void> _printLanBffHints(int port) async {
+  if (port <= 0 || port > 65535) return;
+  try {
+    final ifs = await NetworkInterface.list(
+      includeLinkLocal: false,
+      type: InternetAddressType.IPv4,
+    );
+    final urls = <String>{};
+    for (final ni in ifs) {
+      for (final a in ni.addresses) {
+        if (!_isPrivateLanIpv4(a)) continue;
+        urls.add('http://${a.address}:$port');
+      }
+    }
+    if (urls.isEmpty) return;
+    final list = urls.toList()..sort();
+    // ignore: avoid_print
+    stdout.writeln('');
+    // ignore: avoid_print
+    stdout.writeln(
+      '    실제 안드로이드 폰: 아래 중 폰과 같은 대역(같은 공유기·LAN) 하나를 '
+      'assets/env/dotenv 의 NHIS_BASE_URL 로 넣고 앱을 다시 빌드하세요.',
+    );
+    for (final u in list) {
+      // ignore: avoid_print
+      stdout.writeln('      NHIS_BASE_URL=$u');
+    }
+    // ignore: avoid_print
+    stdout.writeln(
+      '    (Wi-Fi와 이더넷 IP가 다르면, 폰이 Wi-Fi만 쓸 때는 Wi-Fi 쪽 주소를 써야 합니다.)',
+    );
+  } catch (_) {
+    // ignore: avoid_print
+    stdout.writeln(
+      '    (LAN IPv4 자동 나열 실패 — PC에서 ipconfig 로 IPv4 확인 후 '
+      'NHIS_BASE_URL=http://<IPv4>:$port)',
+    );
+  }
+}
+
 void _printEnvReadinessSummary(Map<String, String> env) {
   final pub = bffPublicDataConfigured(env);
   final tilko = (env['TILKO_API_KEY'] ?? '').trim().isNotEmpty;
-  final codefOAuth =
-      (env['CODEF_CLIENT_ID'] ?? '').trim().isNotEmpty &&
-          (env['CODEF_CLIENT_SECRET'] ?? '').trim().isNotEmpty;
-  final codefMeds = bffMedicationsCodefConfigured(env);
   // ignore: avoid_print
   stdout.writeln('');
   // ignore: avoid_print
@@ -128,8 +180,7 @@ void _printEnvReadinessSummary(Map<String, String> env) {
   stdout.writeln('    틸코 TILKO_API_KEY: $tilko');
   // ignore: avoid_print
   stdout.writeln(
-    '    CODEF OAuth(클라이언트): $codefOAuth  |  복약상품 경로까지: $codefMeds  '
-    '(BFF_USE_CODEF_FOR_MEDICATIONS + CODEF_MEDICATION_PATH 또는 CODEF_NHIS_TREATMENT_PATH)',
+    '    복약 실데이터: CODEF 미사용 — POST /v1/flow/tilko-hira-medications (틸코 NHIS)',
   );
   // ignore: avoid_print
   stdout.writeln('');
@@ -155,15 +206,9 @@ Future<void> _handle(HttpRequest request) async {
 
     if (method == 'GET' && path == '/health') {
       final env = loadBffDotEnv();
-      final probe = await codefHealthProbe(env);
-      final codefMedicationsReady = bffMedicationsCodefConfigured(env);
-      final useCodefMeds = bffEnvTruthy(env['BFF_USE_CODEF_FOR_MEDICATIONS']);
-      final resolvedMedPath = bffResolvedMedicationProductPath(env);
-      final medPathOk = resolvedMedPath.trim().isNotEmpty;
       await _json(request, 200, {
         'ok': true,
         'service': 'link26-bff-dart',
-        'codef': probe,
         'tilko': {
           'configured': (env['TILKO_API_KEY'] ?? '').trim().isNotEmpty,
         },
@@ -171,13 +216,10 @@ Future<void> _handle(HttpRequest request) async {
           'configured': bffPublicDataConfigured(env),
           'serviceKeyFrom': _publicDataKeySourceForHealth(env) ?? 'none',
         },
-        'medicationsSource':
-            codefMedicationsReady ? 'codef' : 'stub',
-        'medicationsConfig': {
-          'bffUseCodefForMedications': useCodefMeds,
-          'resolvedProductPath': resolvedMedPath,
-          'productPathConfigured': medPathOk,
-        },
+        'medicationsSource': 'tilko_nhis_flow',
+        'medicationsNote':
+            '실복약 데이터는 POST /v1/flow/tilko-hira-medications 입니다. '
+            'GET /v1/medications 는 데모 스텁만 반환합니다.',
         'authProxy': {
           'signup':
               (env['NHIS_PROXY_SIGNUP_URL'] ?? '').trim().isNotEmpty,
@@ -228,7 +270,7 @@ Future<void> _handle(HttpRequest request) async {
       try {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
-        // 요청 본문의 flow_extras·codef_payload 는 향후 BFF 확장용(현재 HIRA 분기에서는 미사용).
+        // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
         final tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
           tilkoMap,
@@ -357,36 +399,6 @@ Future<void> _handle(HttpRequest request) async {
     if (method == 'GET' && path == '/v1/medications') {
       final q = request.uri.queryParameters;
       final phone = q['phone'] ?? '';
-      final env = loadBffDotEnv();
-      final codefOn = bffMedicationsCodefConfigured(env);
-      final cid = bffResolvedConnectedId(q, env);
-      if (codefOn &&
-          cid.isEmpty &&
-          !bffAllowCodefWithoutConnectedId(env)) {
-        await _json(request, 200, {
-          'items': <Map<String, dynamic>>[],
-          'meta': {
-            'source': 'codef_missing_connected_id',
-            'phone': phone,
-            'note':
-                'CODEF 상품(건강·공단)은 기관 연동 후 발급되는 connectedId가 필요합니다. '
-                '앱 설정에서 저장했는지, 또는 BFF .env 의 CODEF_CONNECTED_ID 를 확인하세요. '
-                '(테스트용으로만 BFF_ALLOW_CODEF_WITHOUT_CONNECTED_ID=true 가능)',
-          },
-        });
-        return;
-      }
-      final codefRes = await fetchMedicationsFromCodef(
-        env: env,
-        phoneDigits: phone,
-        connectedIdOverride: cid.isNotEmpty ? cid : null,
-        displayName: q['displayName'] ?? '',
-        gender: q['gender'] ?? '',
-      );
-      if (codefRes != null) {
-        await _json(request, 200, codefRes);
-        return;
-      }
       await _json(request, 200, {
         'items': [
           {
@@ -406,9 +418,9 @@ Future<void> _handle(HttpRequest request) async {
           'phone': phone,
           'source': 'link26-bff-dart-stub',
           'note':
-              '데모 JSON입니다. 본인 처방·투약은 BFF에서 틸코 공단 간편인증 후 '
-              '`POST /v1/flow/tilko-hira-medications`(NHIS 진료·투약 정보) 실연동이 필요합니다. '
-              '(구 경로 `tilko-codef-treatment` 도 동일 처리됩니다.)',
+              '데모 JSON입니다. 본인 처방·투약은 POST /v1/flow/tilko-hira-medications '
+              '(틸코 NHIS 간편인증)으로만 조회합니다. '
+              '이전 CODEF 건보 GET 연동은 BFF에서 제거되었습니다.',
         },
       });
       return;

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-/// CODEF 건보·건강iN류 JSON에서 약 목록 행을 최대한 뽑아냅니다.
+/// 공공·기관 API가 돌려주는 중첩 JSON에서 약 목록 행을 최대한 뽑아냅니다.
+/// (파일명·함수명은 예전 CODEF 연동 시절 그대로이며, 틸코 NHIS 응답에도 동일하게 사용합니다.)
 /// `data`가 문자열(JSON)·중첩 Map·다양한 키명을 쓰는 경우를 흡수합니다.
 List<Map<String, dynamic>> codefRootToMedicationItems(Map<String, dynamic> root) {
   var rows = _extractDataRows(root['data']);
