@@ -6,7 +6,22 @@ import 'dart:convert';
 List<Map<String, dynamic>> codefRootToMedicationItems(Map<String, dynamic> root) {
   var rows = _extractDataRows(root['data']);
   if (rows.isEmpty) {
+    rows = _extractDataRows(root['Data']);
+  }
+  if (rows.isEmpty) {
     rows = _extractDataRows(root['result']);
+  }
+  if (rows.isEmpty) {
+    rows = _extractDataRows(root['Result']);
+  }
+  if (rows.isEmpty) {
+    for (final k in _tilkoNhisWrapperKeys) {
+      final w = root[k];
+      if (w is Map) {
+        rows = _extractDataRows(w);
+        if (rows.isNotEmpty) break;
+      }
+    }
   }
   if (rows.isEmpty) {
     rows = _extractDataRows(root);
@@ -16,6 +31,20 @@ List<Map<String, dynamic>> codefRootToMedicationItems(Map<String, dynamic> root)
   }
   return _rowsToMedicationItems(rows);
 }
+
+/// 틸코·기관 JSON에서 실 배열이 한 겹 더 감싸진 경우.
+const _tilkoNhisWrapperKeys = [
+  'Body',
+  'body',
+  'ResultData',
+  'resultData',
+  'Response',
+  'response',
+  'Output',
+  'output',
+  'OutData',
+  'outData',
+];
 
 const _listContainerKeys = [
   'list',
@@ -176,7 +205,19 @@ List<Map<String, dynamic>> _extractDataRows(dynamic data) {
             .toList();
       }
     }
-    for (final key in ['res', 'output', 'outData', 'body', 'content', 'detail']) {
+    for (final key in [
+      'res',
+      'output',
+      'outData',
+      'body',
+      'content',
+      'detail',
+      'Body',
+      'ResultData',
+      'ResData',
+      'Response',
+      'resultData',
+    ]) {
       final v = m[key];
       if (v != null) {
         final inner = _extractDataRows(v);

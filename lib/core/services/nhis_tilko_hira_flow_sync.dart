@@ -166,6 +166,8 @@ abstract final class NhisTilkoHiraFlowSync {
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail:
+              '즉시: PC에서 `dart run tool/link26_bff.dart`를 실행했는지 확인하세요. '
+              '콘솔의 `실제 포트`가 앱 NHIS_BASE_URL의 포트와 같아야 합니다.\n\n'
               '진료·복약 데이터는 PC에서 돌아가는 BFF를 거칩니다. 지금은 그 BFF에 '
               '연결되지 않았습니다.\n\n'
               '• PC에서 `dart run tool/link26_bff.dart` 실행 후, 콘솔에 나온 포트가 '

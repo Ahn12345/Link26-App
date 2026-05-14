@@ -69,6 +69,19 @@ void main() {
     expect(items.first['frequency'], '1일 3회');
   });
 
+  test('Tilko NHIS rows under Body wrapper', () {
+    final root = {
+      'Body': {
+        'RetrieveTreatmentInjectionInformationPersonDetailList': [
+          {'ChoBangYakPumMyung': '바이타민C', 'TuyakIlSoo': '1일 1회'},
+        ],
+      },
+    };
+    final items = codefRootToMedicationItems(root);
+    expect(items.length, 1);
+    expect(items.first['name'], '바이타민C');
+  });
+
   test('dedupes identical rows', () {
     final root = {
       'data': {
