@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
@@ -17,10 +16,6 @@ abstract final class NhisSignupSync {
     required String gender,
     required String residentRegistrationHash,
   }) async {
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
-
     if (NhisRuntimeConfig.useMock) {
       if (kDebugMode) {
         debugPrint('NHIS signup: 목(mock) 성공 — 네트워크 미사용');

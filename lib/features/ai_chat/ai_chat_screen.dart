@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
@@ -17,6 +16,7 @@ import 'package:link26_app/core/services/ai_chat_session_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/decoded_asset_image.dart';
+import 'package:link26_app/core/widgets/link26_vector_icons.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
@@ -678,7 +678,10 @@ class _AiChatBodyState extends State<_AiChatBody> {
                   child: IconButton(
                     style: IconButton.styleFrom(
                         foregroundColor: Link26Surface.textPrimary),
-                    icon: Icon(CupertinoIcons.back, size: 20),
+                    icon: Link26VectorIcons.chevronBack(
+                      Link26Surface.textPrimary,
+                      size: 20,
+                    ),
                     onPressed: () => Navigator.maybePop(context),
                   ),
                 ),
@@ -889,7 +892,7 @@ class _GeminiSetupBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(CupertinoIcons.lock_fill, color: Colors.amber.shade900, size: 22),
+          Link26VectorIcons.lock(Colors.amber.shade900, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -935,9 +938,8 @@ class _DisclaimerBanner extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              CupertinoIcons.info,
-              color: Link26Surface.accent,
+            Link26VectorIcons.info(
+              Link26Surface.accent,
               size: iconPx,
             ),
             SizedBox(width: Link26ResponsiveUi.gapSm(w)),
@@ -1012,10 +1014,9 @@ class _PendingAttachmentChip extends StatelessWidget {
               ),
               SizedBox(width: compact ? 8 : 10),
             ] else ...[
-              Icon(
-                CupertinoIcons.paperclip,
+              Link26VectorIcons.paperclip(
+                Link26Surface.accent,
                 size: compact ? 18 : 20,
-                color: Link26Surface.accent,
               ),
               SizedBox(width: compact ? 6 : 8),
             ],
@@ -1033,10 +1034,9 @@ class _PendingAttachmentChip extends StatelessWidget {
               IconButton(
                 onPressed: onRemove,
                 tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                icon: Icon(
-                  CupertinoIcons.xmark,
+                icon: Link26VectorIcons.xMark(
+                  Link26Surface.textSecondary,
                   size: 20,
-                  color: Link26Surface.textSecondary,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -1103,10 +1103,9 @@ class _InputBar extends StatelessWidget {
               minimumSize: Size(attachTap, attachTap),
               padding: EdgeInsets.zero,
             ),
-            icon: Icon(
-              CupertinoIcons.paperclip,
+            icon: Link26VectorIcons.paperclip(
+              Link26Surface.textSecondary,
               size: iconPx,
-              semanticLabel: attachTooltip,
             ),
           ),
           SizedBox(width: gapAttach),
@@ -1176,10 +1175,9 @@ class _InputBar extends StatelessWidget {
                         ),
                       )
                     : Center(
-                        child: Icon(
-                          CupertinoIcons.paperplane_fill,
-                          color: Colors.white,
-                          size: sendIconPx,
+                        child: Link26VectorIcons.send(
+                          Colors.white,
+                          size: sendIconPx * 1.35,
                         ),
                       ),
               ),
@@ -1321,9 +1319,8 @@ class _ChatBubble extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      CupertinoIcons.capsule,
-                      color: Link26Surface.accent,
+                    Link26VectorIcons.capsule(
+                      Link26Surface.accent,
                       size: (bodyPx * 1.2).clamp(20.0, 26.0),
                     ),
                     SizedBox(width: Link26ResponsiveUi.gapSm(w)),

@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
@@ -193,10 +191,6 @@ abstract final class NhisMedicinesSync {
   static Future<NhisMedicinesSyncOutcome> syncNow({
     required String phoneDigits,
   }) async {
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
-
     if (NhisRuntimeConfig.useMock) {
       if (kDebugMode) {
         debugPrint('NHIS medications: 목(mock) 병합 — 네트워크 미사용');

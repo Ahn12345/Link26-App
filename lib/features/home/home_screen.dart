@@ -1,10 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'package:link26_app/core/database/home_notification_repository.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/ai_chat_home_alert_notifier.dart';
@@ -24,6 +21,7 @@ import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart'
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
+import 'package:link26_app/core/widgets/link26_vector_icons.dart';
 import 'package:link26_app/features/alarms/all_alarms_screen.dart';
 import 'package:link26_app/features/home/my_medicines_period_screen.dart';
 import 'package:link26_app/features/search/pill_search_screen.dart';
@@ -208,10 +206,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       previewParts.add(bffAdvice);
     }
 
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
-
     final shouldSync =
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
     if (!shouldSync) {
@@ -281,9 +275,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   }
 
   Future<void> _refreshMedicinesFromServer() async {
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
     final shouldSync =
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
     if (shouldSync) {
@@ -307,9 +298,6 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
 
   /// 홈에서 심평원(BFF 틸코 플로우) 복약을 바로 반영합니다.
   Future<void> _importHiraMedicationsFromHome() async {
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     if (!await AuthSession.isSignedIn()) {
@@ -433,9 +421,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                           children: [
                             IconButton(
                               onPressed: _openNotificationCenter,
-                              icon: Icon(
-                                CupertinoIcons.bell,
-                                color: Link26Surface.textSecondary,
+                              icon: Link26VectorIcons.bell(
+                                Link26Surface.textSecondary,
+                                size: 22,
                               ),
                             ),
                             if (_bellBadgeCount > 0)
@@ -648,9 +636,9 @@ class _AiChatImageReplyHomeBanner extends StatelessWidget {
               CircleAvatar(
                 radius: Link26ResponsiveUi.alarmAvatarRadius(w),
                 backgroundColor: const Color(0xFFE8F5E9),
-                child: const Icon(
-                  CupertinoIcons.chat_bubble_2,
-                  color: Color(0xFF2E7D32),
+                child: Link26VectorIcons.chat(
+                  const Color(0xFF2E7D32),
+                  size: 22,
                 ),
               ),
               SizedBox(width: Link26ResponsiveUi.alarmRowGap(w)),
@@ -707,9 +695,8 @@ class _AiChatImageReplyHomeBanner extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onDismiss,
-                icon: Icon(
-                  CupertinoIcons.xmark_circle_fill,
-                  color: Link26Surface.textMuted,
+                icon: Link26VectorIcons.xMark(
+                  Link26Surface.textMuted,
                   size: 22,
                 ),
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
@@ -762,9 +749,8 @@ class _SearchPill extends StatelessWidget {
                 ),
               ),
               SizedBox(width: Link26ResponsiveUi.gapSm(w)),
-              Icon(
-                CupertinoIcons.search,
-                color: Link26Surface.textMuted,
+              Link26VectorIcons.search(
+                Link26Surface.textMuted,
                 size: Link26ResponsiveUi.searchIconSize(w),
               ),
               SizedBox(width: pad),
@@ -828,9 +814,9 @@ class _AlarmPreviewCard extends StatelessWidget {
           CircleAvatar(
             radius: avR,
             backgroundColor: const Color(0xFFEAF3FF),
-            child: Icon(
-              CupertinoIcons.bell,
-              color: Link26Surface.accent,
+            child: Link26VectorIcons.bell(
+              Link26Surface.accent,
+              size: avR * 1.15,
             ),
           ),
           SizedBox(width: Link26ResponsiveUi.alarmRowGap(w)),
@@ -914,12 +900,15 @@ class _CompletedTile extends StatelessWidget {
             CircleAvatar(
               radius: Link26ResponsiveUi.completedAvatarRadius(w),
               backgroundColor: const Color(0xFFEAF3FF),
-              child: Icon(
-                item.type == AlarmType.call
-                    ? CupertinoIcons.phone
-                    : CupertinoIcons.bell,
-                color: Link26Surface.accent,
-              ),
+              child: item.type == AlarmType.call
+                  ? Link26VectorIcons.phone(
+                      Link26Surface.accent,
+                      size: Link26ResponsiveUi.completedAvatarRadius(w) * 1.9,
+                    )
+                  : Link26VectorIcons.bell(
+                      Link26Surface.accent,
+                      size: Link26ResponsiveUi.completedAvatarRadius(w) * 1.9,
+                    ),
             ),
             SizedBox(width: Link26ResponsiveUi.gapMd(w)),
             Expanded(
@@ -945,9 +934,8 @@ class _CompletedTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              CupertinoIcons.check_mark_circled_solid,
-              color: Link26Surface.accent,
+            Link26VectorIcons.check(
+              Link26Surface.accent,
               size: Link26ResponsiveUi.searchIconSize(w) + Link26ResponsiveUi.gapXs(w),
             ),
           ],
@@ -978,9 +966,9 @@ class _MedicineTile extends StatelessWidget {
             CircleAvatar(
               radius: Link26ResponsiveUi.medicineAvatarRadius(w),
               backgroundColor: const Color(0xFFEAF3FF),
-              child: Icon(
-                CupertinoIcons.capsule,
-                color: Link26Surface.accent,
+              child: Link26VectorIcons.capsule(
+                Link26Surface.accent,
+                size: Link26ResponsiveUi.medicineAvatarRadius(w) * 1.9,
               ),
             ),
             SizedBox(width: Link26ResponsiveUi.gapMd(w)),
@@ -1010,7 +998,10 @@ class _MedicineTile extends StatelessWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: Icon(CupertinoIcons.pencil, color: Link26Surface.accent),
+              icon: Link26VectorIcons.pencil(
+                Link26Surface.accent,
+                size: 22,
+              ),
             ),
           ],
         ),

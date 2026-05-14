@@ -1,11 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:link26_app/core/services/main_shell_tab_bus.dart';
+import 'package:link26_app/core/services/monthly_hira_auth_gate.dart';
+import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
+import 'package:link26_app/core/widgets/link26_vector_icons.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
-import '../../core/services/main_shell_tab_bus.dart';
-import '../../core/services/monthly_hira_auth_gate.dart';
-import '../../core/theme/link26_surface_style.dart';
-import '../../core/theme/link26_unified_page.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../home/home_screen.dart';
 import '../more/more_screen.dart';
@@ -116,30 +116,35 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               },
               destinations: [
                 NavigationDestination(
-                  icon: Icon(CupertinoIcons.house, color: scheme.onSurfaceVariant),
-                  selectedIcon:
-                      Icon(CupertinoIcons.house_fill, color: scheme.primary),
+                  icon: Link26VectorIcons.home(
+                    scheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                  selectedIcon: Link26VectorIcons.home(
+                    scheme.primary,
+                    size: 24,
+                  ),
                   label: l10n.homeTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(
-                    CupertinoIcons.chat_bubble_2,
-                    color: scheme.onSurfaceVariant,
+                  icon: Link26VectorIcons.chat(
+                    scheme.onSurfaceVariant,
+                    size: 24,
                   ),
-                  selectedIcon: Icon(
-                    CupertinoIcons.chat_bubble_2_fill,
-                    color: scheme.primary,
+                  selectedIcon: Link26VectorIcons.chat(
+                    scheme.primary,
+                    size: 24,
                   ),
                   label: l10n.aiChatTitle,
                 ),
                 NavigationDestination(
-                  icon: Icon(
-                    CupertinoIcons.ellipsis_circle,
-                    color: scheme.onSurfaceVariant,
+                  icon: Link26VectorIcons.more(
+                    scheme.onSurfaceVariant,
+                    size: 24,
                   ),
-                  selectedIcon: Icon(
-                    CupertinoIcons.ellipsis_circle_fill,
-                    color: scheme.primary,
+                  selectedIcon: Link26VectorIcons.more(
+                    scheme.primary,
+                    size: 24,
                   ),
                   label: l10n.moreTitle,
                 ),

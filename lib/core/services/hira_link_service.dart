@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
@@ -53,11 +52,6 @@ abstract final class HiraLinkService {
     required LocalUserRecord user,
   }) async {
     if (!context.mounted) return;
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
-
-    if (!context.mounted) return;
 
     if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
       if (kDebugMode) {
@@ -100,11 +94,6 @@ abstract final class HiraLinkService {
     required LocalUserRecord user,
     bool announceSuccess = false,
   }) async {
-    if (!context.mounted) return null;
-    try {
-      await dotenv.load(fileName: 'assets/env/dotenv');
-    } catch (_) {}
-
     if (!context.mounted) return null;
 
     if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
