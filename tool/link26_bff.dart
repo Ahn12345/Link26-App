@@ -374,13 +374,13 @@ Future<void> _handle(HttpRequest request) async {
                 );
           final passChannel =
               tilkoPrivateAuthTypeName(patForFlow) == 'PASS';
-          // PASS: 한 번만 요청 — 주민 13자리 있으면 예전 2차와 동일(코드 5 + IdentityNumber).
-          // 없으면 4필드만(PASS).
+          // PASS: 한 번만 요청 — 주민 13자리 있으면 IdentityNumber 포함.
+          // (예전 2차는 wire=5 였으나, 일부 NHIS 응답은 문자열 PASS + 주민 조합을 기대할 수 있음.)
           final kakaoAttempts = passChannel
               ? <({String channel, String pat, bool identity})>[
                   (
                     channel: 'NHIS',
-                    pat: id13.length == 13 ? '5' : 'PASS',
+                    pat: 'PASS',
                     identity: id13.length == 13,
                   ),
                 ]
