@@ -71,12 +71,34 @@ bool tilkoNhisLoginCheckSucceeded(Map<String, dynamic> root) {
   return false;
 }
 
-/// NHIS `simpleauthrequest` 비즈니스 오류(ErrorCode≠0) 여부.
+/// NHIS `simpleauthrequest` 비즈니스 오류(ErrorCode≠0 또는 Message/Status 실패) 여부.
 bool tilkoNhisSimpleAuthIndicatesError(Map<String, dynamic> root) {
   final code = (tilkoFindPlainString(root, 'ErrorCode') ?? '').trim();
-  if (code.isEmpty) return false;
-  return code != '0';
+  if (code.isNotEmpty && code != '0') return true;
+
+  final status = (tilkoFindPlainString(root, 'Status') ?? '').trim().toUpperCase();
+  if (status.isNotEmpty &&
+      status != 'OK' &&
+      status != 'SUCCESS' &&
+      status != 'Y') {
+    return true;
+  }
+
+  final msg = (tilkoFindPlainString(root, 'Message') ?? '').trim();
+  if (msg.isEmpty) return false;
+  if (msg.contains('찾을 수 없') ||
+      msg.contains('실패') ||
+      msg.contains('오류') ||
+      msg.contains('유효하지')) {
+    return true;
+  }
+
+  return !tilkoNhisAuthTokensComplete(tilkoNhisLiftNestedSession(root));
 }
+
+/// NHIS 간편인증 API — 휴대폰은 숫자만(하이픈 없음).
+String tilkoNhisCellphoneDigits(String phone) =>
+    phone.replaceAll(RegExp(r'\D'), '');
 
 /// logincheck·simpleauth 응답에 토큰 4종이 채워졌는지(값은 출력하지 않음).
 String tilkoNhisTokenPresenceSummary(Map<String, dynamic> root) {
@@ -288,12 +310,15 @@ class TilkoHiraSimpleAuthClient {
 
   /// 공단(NHIS) 간편인증 요청 — `POST …/nhissimpleauth/simpleauthrequest`
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
+  ///
+  /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber 만 전송합니다.
+  /// (IdentityNumber 는 심평원 hirasimpleauth 등 다른 API용 — NHIS 요청에 넣으면 틸코가 거절할 수 있음)
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
     required String birthDate,
     required String userCellphoneNumber,
-    required String identityNumber,
+    String? identityNumber,
   }) async {
     if (apiKey.isEmpty) {
       throw StateError('TILKO_API_KEY 가 비어 있습니다.');
@@ -306,12 +331,13 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
+    final pat = privateAuthType.trim().toUpperCase();
+    final cell = tilkoNhisCellphoneDigits(userCellphoneNumber);
     final body = <String, dynamic>{
-      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, privateAuthType),
-      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
-      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate),
-      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneNumber),
-      'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, identityNumber),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName.trim()),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate.trim()),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
     };
 
     final uri = Uri.parse('$_root/api/v1.0/nhissimpleauth/simpleauthrequest');
@@ -359,8 +385,8 @@ class TilkoHiraSimpleAuthClient {
 
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
-    final cell = pickReq('UserCellphoneNumber');
-    final pat = pickReq('PrivateAuthType');
+    final cell = tilkoNhisCellphoneDigits(pickReq('UserCellphoneNumber'));
+    final pat = pickReq('PrivateAuthType').toUpperCase();
     if ([userName, birth, cell, pat].any((e) => e.isEmpty)) {
       throw StateError(
         'NHIS logincheck: 요청맵에 이름·생년월일·휴대폰·인증채널이 필요합니다.',

@@ -24,12 +24,37 @@ void main() {
 
   test('tilkoNhisSimpleAuthIndicatesError when ErrorCode not zero', () {
     expect(
-      tilkoNhisSimpleAuthIndicatesError({'ErrorCode': 0}),
+      tilkoNhisSimpleAuthIndicatesError({
+        'ErrorCode': 0,
+        'ResultData': {
+          'Token': 't1',
+          'CxId': 'c1',
+          'TxId': 'x1',
+          'ReqTxId': 'r1',
+        },
+      }),
       isFalse,
     );
     expect(
       tilkoNhisSimpleAuthIndicatesError({'ErrorCode': 12001}),
       isTrue,
+    );
+  });
+
+  test('tilkoNhisSimpleAuthIndicatesError when Message says value not found', () {
+    expect(
+      tilkoNhisSimpleAuthIndicatesError({
+        'ErrorCode': 0,
+        'Message': "요청한 값 'abc=='을(를) 찾을 수 없습니다.",
+      }),
+      isTrue,
+    );
+  });
+
+  test('tilkoNhisCellphoneDigits strips hyphens', () {
+    expect(
+      tilkoNhisCellphoneDigits('010-1234-5678'),
+      '01012345678',
     );
   });
 }

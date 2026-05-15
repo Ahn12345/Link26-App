@@ -481,166 +481,160 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                 constraints: BoxConstraints(
                                   maxWidth: Link26Layout.innerWidth(w),
                                 ),
-                                child: ValueListenableBuilder<int>(
-                                  valueListenable:
-                                      AiChatConversationCache.revision,
-                                  builder: (context, rev, _) {
-                                    assert(rev >= 0);
-                                    final gap =
-                                        Link26ResponsiveUi.gapMd(w);
-                                    final msgs =
-                                        AiChatConversationCache.messages;
-                                    return SingleChildScrollView(
-                                      padding: EdgeInsets.only(
-                                        bottom: Link26ResponsiveUi.gapSm(w),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          _AiWelcomeBubble(
-                                            timeLabel:
-                                                _welcomeAccessLabel ?? '…',
-                                            maxBubbleWidth: bubbleMax,
-                                            layoutWidth: w,
-                                          ),
-                                          for (final m in msgs)
-                                            Padding(
-                                              padding: EdgeInsets.only(top: gap),
-                                              child: _ChatBubble(
-                                                message: m,
-                                                maxBubbleWidth: bubbleMax,
-                                                layoutWidth: w,
-                                              ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: ValueListenableBuilder<int>(
+                                        valueListenable: AiChatConversationCache
+                                            .revision,
+                                        builder: (context, rev, _) {
+                                          assert(rev >= 0);
+                                          final gap =
+                                              Link26ResponsiveUi.gapMd(w);
+                                          final msgs = AiChatConversationCache
+                                              .messages;
+                                          return SingleChildScrollView(
+                                            padding: EdgeInsets.only(
+                                              bottom:
+                                                  Link26ResponsiveUi.gapSm(w),
                                             ),
-                                        ],
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                _AiWelcomeBubble(
+                                                  timeLabel:
+                                                      _welcomeAccessLabel ??
+                                                          '…',
+                                                  maxBubbleWidth: bubbleMax,
+                                                  layoutWidth: w,
+                                                ),
+                                                for (final m in msgs)
+                                                  Padding(
+                                                    padding: EdgeInsets.only(
+                                                      top: gap,
+                                                    ),
+                                                    child: _ChatBubble(
+                                                      message: m,
+                                                      maxBubbleWidth:
+                                                          bubbleMax,
+                                                      layoutWidth: w,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
+                                    ),
+                                    _DisclaimerBanner(
+                                      text: l10n.aiChatDisclaimerShort,
+                                      layoutWidth: w,
+                                    ),
+                                    if (kDebugMode) ...[
+                                      SizedBox(
+                                        height: Link26ResponsiveUi.gapXs(w),
+                                      ),
+                                      Text(
+                                        '빌드 $kAppBuildNumber · $kAppBuildTag',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Link26Surface.textSecondary,
+                                          height: 1.2,
+                                        ),
+                                      ),
+                                    ],
+                                    SizedBox(
+                                      height: Link26ResponsiveUi.gapSm(w),
+                                    ),
+                                    Transform.translate(
+                                      offset: Offset(
+                                        0,
+                                        keyboardLift > 0
+                                            ? 0.0
+                                            : (embedded ? -10.0 : -6.0),
+                                      ),
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            Link26UnifiedPage.frameRadius,
+                                          ),
+                                          border: Border.all(
+                                            color: Link26Surface.outline,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Link26Surface.cardShadow,
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(
+                                            Link26ResponsiveUi.gapSm(w)
+                                                .clamp(8.0, 14.0),
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              if (AiChatPendingAttachmentStore
+                                                  .instance.hasPending)
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: Link26ResponsiveUi
+                                                        .gapSm(w),
+                                                  ),
+                                                  child: _PendingAttachmentChip(
+                                                    label: l10n
+                                                        .aiChatImagePendingHint,
+                                                    compact: keyboardLift > 0,
+                                                    previewBytes:
+                                                        AiChatPendingAttachmentStore
+                                                            .instance.bytes,
+                                                    onRemove: AiChatOutgoingBusy
+                                                            .instance.value
+                                                        ? null
+                                                        : () =>
+                                                            AiChatPendingAttachmentStore
+                                                                .instance
+                                                                .clear(),
+                                                  ),
+                                                ),
+                                              _InputBar(
+                                                controller: controller,
+                                                layoutWidth: w,
+                                                attachTooltip: l10n
+                                                    .aiChatAttachGalleryTooltip,
+                                                enabled: inputEnabled,
+                                                sending: AiChatOutgoingBusy
+                                                    .instance.value,
+                                                hintText: l10n
+                                                    .aiChatInputPlaceholder,
+                                                onSend: () =>
+                                                    unawaited(sendMessage()),
+                                                onAttachImage: () => unawaited(
+                                                  openMedicineImagePicker(),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        Flexible(
-                          fit: FlexFit.loose,
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: SingleChildScrollView(
-                              clipBehavior: Clip.none,
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.manual,
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: Link26Layout.innerWidth(w),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                _DisclaimerBanner(
-                                  text: l10n.aiChatDisclaimerShort,
-                                  layoutWidth: w,
-                                ),
-                                if (kDebugMode) ...[
-                                  SizedBox(height: Link26ResponsiveUi.gapXs(w)),
-                                  Text(
-                                    '빌드 $kAppBuildNumber · $kAppBuildTag',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Link26Surface.textSecondary,
-                                      height: 1.2,
-                                    ),
-                                  ),
-                                ],
-                                SizedBox(height: Link26ResponsiveUi.gapSm(w)),
-                                Transform.translate(
-                                  offset: Offset(
-                                    0,
-                                    keyboardLift > 0
-                                        ? 0.0
-                                        : (embedded ? -10.0 : -6.0),
-                                  ),
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(
-                                        Link26UnifiedPage.frameRadius,
-                                      ),
-                                      border: Border.all(
-                                        color: Link26Surface.outline,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Link26Surface.cardShadow,
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(
-                                        Link26ResponsiveUi.gapSm(w)
-                                            .clamp(8.0, 14.0),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          if (AiChatPendingAttachmentStore
-                                              .instance.hasPending)
-                                            Padding(
-                                              padding: EdgeInsets.only(
-                                                bottom:
-                                                    Link26ResponsiveUi.gapSm(w),
-                                              ),
-                                              child: _PendingAttachmentChip(
-                                                label: l10n
-                                                    .aiChatImagePendingHint,
-                                                compact: keyboardLift > 0,
-                                                previewBytes:
-                                                    AiChatPendingAttachmentStore
-                                                        .instance.bytes,
-                                                onRemove: AiChatOutgoingBusy
-                                                        .instance.value
-                                                    ? null
-                                                    : () =>
-                                                        AiChatPendingAttachmentStore
-                                                            .instance.clear(),
-                                              ),
-                                            ),
-                                          _InputBar(
-                                            controller: controller,
-                                            layoutWidth: w,
-                                            attachTooltip: l10n
-                                                .aiChatAttachGalleryTooltip,
-                                            enabled: inputEnabled,
-                                            sending: AiChatOutgoingBusy
-                                                .instance.value,
-                                            hintText:
-                                                l10n.aiChatInputPlaceholder,
-                                            onSend: () =>
-                                                unawaited(sendMessage()),
-                                            onAttachImage: () => unawaited(
-                                                openMedicineImagePicker()),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                       ],
                     ),
                   ),
