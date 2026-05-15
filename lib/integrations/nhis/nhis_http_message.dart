@@ -16,10 +16,8 @@ String nhisHttpUserMessage(AppFailure failure) {
         return '연결 시간 초과 — 서버가 응답하는지, Wi‑Fi/데이터를 확인하세요.';
       case DioExceptionType.connectionError:
         return '서버에 연결할 수 없습니다. '
-            '실제 폰: NHIS_BASE_URL을 PC Wi‑Fi IP로(예: http://192.168.x.x:8787). '
-            '10.0.2.2·127.0.0.1은 폰에서 PC BFF로 붙지 않습니다. '
-            '에뮬레이터만 http://10.0.2.2:포트. '
-            'PC에서 BFF 실행·같은 Wi‑Fi·Windows 방화벽·http는 디버그 빌드 확인.';
+            'Wi‑Fi·데이터를 확인하고, 디버그에서는 PC BFF 주소(NHIS_BASE_URL)와 '
+            '같은 네트워크인지 확인하세요.';
       case DioExceptionType.badCertificate:
         return 'SSL 인증서 오류 — https 주소·기업용 인증서를 확인하세요.';
       case DioExceptionType.badResponse:

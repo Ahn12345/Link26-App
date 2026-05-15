@@ -158,26 +158,26 @@ abstract final class NhisTilkoHiraFlowSync {
       if (link26ErrorLooksLikeUnreachableHost(e)) {
         if (kDebugMode) {
           debugPrint('Tilko→HIRA: BFF 연결 불가 — $e');
+          final base = NhisRuntimeConfig.baseUrlCandidates.join(', ');
+          debugPrint(
+            'Link26 BFF 연결 점검(상세):\n'
+            '• PC: `dart run tool/link26_bff.dart` 실행, 콘솔 포트 = 앱 NHIS_BASE_URL 포트\n'
+            '• 앱 후보 주소: $base\n'
+            '• PC `ipconfig` IPv4 = NHIS_BASE_URL IP, 폰·PC 동일 Wi‑Fi\n'
+            '• 여러 IP면 dotenv NHIS_BASE_URL에 쉼표로 나열\n'
+            '• Windows 방화벽 인바운드(예: 8787)\n'
+            '• USB만: `adb reverse tcp:8787 tcp:8787` 후 http://127.0.0.1:8787',
+          );
         }
-        final base = NhisRuntimeConfig.baseUrlCandidates.join(', ');
+        final short = kReleaseMode
+            ? '건강·복약 서버(BFF)에 연결하지 못했습니다. '
+                '인터넷과 운영 주소(NHIS_PRODUCTION_BASE_URL·원격 설정)를 확인해 주세요.'
+            : 'PC BFF에 연결하지 못했습니다. '
+                'BFF 실행·Wi‑Fi·포트·방화벽을 확인해 주세요. '
+                '(자세한 점검 항목은 디버그 콘솔 로그를 참고하세요.)';
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
-          detail:
-              '즉시: PC에서 `dart run tool/link26_bff.dart`를 실행했는지 확인하세요. '
-              '콘솔의 `실제 포트`가 앱 NHIS_BASE_URL의 포트와 같아야 합니다.\n\n'
-              '진료·복약 데이터는 PC에서 돌아가는 BFF를 거칩니다. 지금은 그 BFF에 '
-              '연결되지 않았습니다.\n\n'
-              '• PC에서 `dart run tool/link26_bff.dart` 실행 후, 콘솔에 나온 포트가 '
-              '앱 설정($base)의 포트와 같은지 확인하세요.\n'
-              '• 앱에 넣은 PC 주소의 IP가 PC에서 `ipconfig`로 본 IPv4와 같은지, '
-              '폰과 PC가 같은 Wi-Fi인지 확인하세요.\n'
-              '• PC에 Wi-Fi와 이더넷이 동시에 있으면 IPv4가 여러 개입니다. '
-              '`assets/env/dotenv`의 NHIS_BASE_URL에 쉼표로 여러 주소를 나열하면 '
-              '(예: Wi-Fi IP, 이더넷 IP) 연결 실패 시 앱이 자동으로 다음 주소를 시도합니다. '
-              '폰은 그중 폰과 같은 대역 주소로만 BFF에 닿을 수 있습니다.\n'
-              '• Windows 방화벽에서 해당 포트(예: 8787) 인바운드 허용 여부를 확인하세요.\n'
-              '• USB만 쓸 때: PC에서 `adb reverse tcp:8787 tcp:8787` 후 앱 주소를 '
-              '`http://127.0.0.1:8787`로 맞추는 방법도 있습니다.',
+          detail: short,
         );
       }
       debugPrint('Tilko→HIRA: $e\n$st');
