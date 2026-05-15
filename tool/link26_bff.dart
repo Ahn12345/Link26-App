@@ -307,12 +307,11 @@ Future<void> _handle(HttpRequest request) async {
           authChannel = 'HIRA';
           tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
           tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-          final liftedHira = tilkoResLifted!;
           if (tilkoRes['http_status'] == null &&
-              !tilkoNhisSimpleAuthIndicatesError(liftedHira)) {
+              !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
             break;
           }
-          final hiraMsg = tilkoFindPlainString(liftedHira, 'Message');
+          final hiraMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
           // ignore: avoid_print
           print(
             'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) 실패 → NHIS 재시도 '
@@ -322,12 +321,11 @@ Future<void> _handle(HttpRequest request) async {
           authChannel = 'NHIS';
           tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(reqMap);
           tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-          final liftedNhis = tilkoResLifted!;
           if (tilkoRes['http_status'] == null &&
-              !tilkoNhisSimpleAuthIndicatesError(liftedNhis)) {
+              !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
             break;
           }
-          final nhisMsg = tilkoFindPlainString(liftedNhis, 'Message');
+          final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
           if (!tilkoSimpleAuthMessageRetryable(nhisMsg) &&
               !tilkoSimpleAuthMessageRetryable(hiraMsg)) {
             break;
