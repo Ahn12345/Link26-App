@@ -16,6 +16,7 @@ import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/features/auth/services/nhis_signup_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
+import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/features/more/privacy_consent_pdf_screen.dart';
 import 'package:link26_app/features/shell/main_shell.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
@@ -330,7 +331,9 @@ class _SignupPageState extends State<SignupPage> {
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            l10n.kakaoCertSignupNote,
+                            TilkoEnv.isPassAuth
+                                ? l10n.passCertSignupNote
+                                : l10n.kakaoCertSignupNote,
                             style: TextStyle(
                               fontSize: Link26ResponsiveUi.bodySmall(w),
                               color: Link26Surface.textSecondary,
@@ -447,7 +450,9 @@ class _SignupPageState extends State<SignupPage> {
                           contentPadding: EdgeInsets.zero,
                           controlAffinity: ListTileControlAffinity.leading,
                           title: Text(
-                            l10n.kakaoCertSignupAcknowledge,
+                            TilkoEnv.isPassAuth
+                                ? l10n.passCertAcknowledge
+                                : l10n.kakaoCertSignupAcknowledge,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: Link26ResponsiveUi.bodySmall(w),

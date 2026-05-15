@@ -584,7 +584,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kakaoCertDialogDbNote =>
-      'Data in the app DB alone is not enough if Kakao cert lacks your birth date.';
+      'If Kakao shows “Register” for birth date, sync will fail. '
+      'Nickname alone is not enough for Tilko.';
+
+  @override
+  String get kakaoCertAccountSteps =>
+      '1) On Account info, tap Register next to Birth date\n'
+      '2) Complete phone identity verification\n'
+      '3) Match the app: birth 2004-05-22, phone 010-9089-1562\n'
+      '4) When birth shows as a date, return to Link26 and sync';
 
   @override
   String get kakaoCertOpenAccount => 'Open Kakao account / verification';
@@ -602,6 +610,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kakaoCertSignupAcknowledge => 'I understand the above.';
+
+  @override
+  String get passCertDialogTitle => 'PASS simple auth check';
+
+  @override
+  String get passCertDialogBody =>
+      'NHIS/HIRA sync uses Tilko with carrier PASS (SMS OTP). '
+      'Your app data must match PASS identity (name, phone, birth date).';
+
+  @override
+  String get passCertDialogDbNote =>
+      'Data in the app DB alone is not enough if PASS identity is missing.';
+
+  @override
+  String get passCertAccountSteps =>
+      '1) Install your carrier PASS app (SKT/KT/LGU)\n'
+      '2) Register identity in PASS\n'
+      '3) Match the app: birth 2004-05-22, phone 010-9089-1562\n'
+      '4) Start sync in Link26 and approve PASS/SMS OTP';
+
+  @override
+  String get passCertOpenInfo => 'Open PASS info';
+
+  @override
+  String get passCertAcknowledge =>
+      'I confirmed PASS has the same name, phone, and birth date below.';
+
+  @override
+  String get passCertSignupNote =>
+      'Signup saves data in the app. Tilko matches PASS identity, not only our DB.';
 
   @override
   String get dialogCancel => 'Cancel';

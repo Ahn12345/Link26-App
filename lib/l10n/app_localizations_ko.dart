@@ -575,7 +575,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get kakaoCertDialogDbNote =>
-      '앱 DB에만 있고 카카오에 생년월일이 없으면 연동되지 않습니다.';
+      '지금 카카오에 생년월일이 「등록하기」면 연동이 안 됩니다. '
+      '닉네임만 맞아도 틸코는 통과하지 않습니다.';
+
+  @override
+  String get kakaoCertAccountSteps =>
+      '① 계정 정보에서 「생년월일」 옆 등록하기 누르기\n'
+      '② 본인인증(휴대폰 인증)으로 생년월일·성별 등록\n'
+      '③ 앱과 같게: 생년월일 2004-05-22, 전화 010-9089-1562\n'
+      '④ 생년월일이 날짜로 보이면 Link26으로 돌아와 연동';
 
   @override
   String get kakaoCertOpenAccount => '카카오 계정·본인인증 열기';
@@ -594,6 +602,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get kakaoCertSignupAcknowledge => '위 내용을 이해했습니다.';
+
+  @override
+  String get passCertDialogTitle => 'PASS 간편인증 확인';
+
+  @override
+  String get passCertDialogBody =>
+      '건강보험·심평원 연동은 틸코를 통해 통신사 PASS(문자 OTP) 간편인증을 씁니다. '
+      '앱에 저장한 정보와 PASS 본인인증(실명·휴대폰·생년월일)이 같아야 '
+      '인증 요청이 진행됩니다.';
+
+  @override
+  String get passCertDialogDbNote =>
+      '앱 DB에만 있고 PASS·통신사 본인인증에 정보가 없으면 연동되지 않습니다.';
+
+  @override
+  String get passCertAccountSteps =>
+      '① 통신사 PASS 앱 설치(SKT·KT·LGU)\n'
+      '② PASS에서 본인인증(실명·휴대폰·생년월일) 등록\n'
+      '③ 앱과 같게: 생년월일 2004-05-22, 전화 010-9089-1562\n'
+      '④ Link26에서 연동 → PASS 앱 또는 문자 OTP 승인';
+
+  @override
+  String get passCertOpenInfo => 'PASS 안내 페이지 열기';
+
+  @override
+  String get passCertAcknowledge =>
+      'PASS(통신사 본인인증)에 아래와 같은 실명·휴대폰·생년월일이 등록되어 있음을 확인했습니다.';
+
+  @override
+  String get passCertSignupNote =>
+      '가입 정보는 앱 DB에 저장됩니다. 틸코는 PASS·통신사 본인인증 등록 정보와 '
+      '맞는지 검사합니다.';
 
   @override
   String get dialogCancel => '취소';

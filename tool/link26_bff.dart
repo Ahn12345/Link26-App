@@ -283,19 +283,18 @@ Future<void> _handle(HttpRequest request) async {
         );
         // ignore: avoid_print
         final envPat =
-            (env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'KAKAO').trim();
+            (env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'PASS').trim();
         final patRaw = envPat.isNotEmpty
             ? envPat
-            : '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? 'KAKAO'}'
+            : '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? 'PASS'}'
                 .trim();
-        final patForFlow = patRaw.isEmpty ? 'KAKAO' : patRaw;
-        final kakaoOnly =
-            tilkoPrivateAuthTypeName(patForFlow) == 'KAKAO';
+        final patForFlow = patRaw.isEmpty ? 'PASS' : patRaw;
+        final singleShotAuth = tilkoIsSingleShotAuthChannel(patForFlow);
         // ignore: avoid_print
         print(
           'BFF flow tilko-hira-medications: 요청 수신 '
           '(UserName=${tilkoMap['UserName']}, '
-          '간편인증=${kakaoOnly ? '카카오' : patForFlow}, '
+          '간편인증=${tilkoSimpleAuthChannelLabelKo(patForFlow)}, '
           'BirthDate=${tilkoMap['BirthDate']}, '
           'rrn13=${tilkoIdentityDigits13('${tilkoMap['IdentityNumber'] ?? ''}').length == 13})',
         );
@@ -336,7 +335,7 @@ Future<void> _handle(HttpRequest request) async {
           );
         }
 
-        if (kakaoOnly) {
+        if (singleShotAuth) {
           final id13 = tilkoIdentityDigits13(
             '${tilkoMap['IdentityNumber'] ?? ''}',
           );
@@ -345,8 +344,8 @@ Future<void> _handle(HttpRequest request) async {
               : tilkoFormatCellphoneHyphen(
                   '${tilkoMap['UserCellphoneNumber'] ?? ''}',
                 );
-          final pNum = patCandidates.isNotEmpty ? patCandidates.first : '1';
-          // 카카오: NHIS 1회(주민번호 있으면 포함). 찾을 수 없음·HIRA 무이력은 재시도 무의미.
+          final pNum = patCandidates.isNotEmpty ? patCandidates.first : '5';
+          // PASS·카카오: NHIS 1회(주민번호 있으면 포함). 본인 불일치 시 재시도 무의미.
           final kakaoAttempts = <({String channel, String pat, bool identity})>[
             (
               channel: 'NHIS',
@@ -463,7 +462,8 @@ Future<void> _handle(HttpRequest request) async {
         if (!broke) {
           // ignore: avoid_print
           print(
-            'BFF ① simpleauth 실패(카카오 ${kakaoOnly ? '순차 시도' : '후보 소진'})',
+            'BFF ① simpleauth 실패(${tilkoSimpleAuthChannelLabelKo(patForFlow)} '
+            '${singleShotAuth ? '1회' : '후보 소진'})',
           );
         }
 
@@ -504,6 +504,7 @@ Future<void> _handle(HttpRequest request) async {
           final hint = tilkoBestSimpleAuthHintKo(
             nhisLifted: lastNhisLifted,
             hiraLifted: lastHiraLifted,
+            privateAuthType: patForFlow,
           );
           final nhisMsg =
               tilkoFindPlainString(tilkoResLifted, 'Message') ?? '';
@@ -513,7 +514,7 @@ Future<void> _handle(HttpRequest request) async {
                 '틸코 simpleauthrequest 오류 ($authChannel, ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode')})',
             'hint_ko': hint,
             'meta': {
-              'kakao_cert_mismatch': nhisMsg.contains('찾을 수 없'),
+              'simple_auth_mismatch': nhisMsg.contains('찾을 수 없'),
               'api_tx_key': tilkoFindPlainString(tilkoResLifted, 'ApiTxKey'),
             },
             'tilko': tilkoRes,
@@ -547,10 +548,11 @@ Future<void> _handle(HttpRequest request) async {
           final pollHint = pollErr is String &&
                   pollErr.contains('simpleauthrequest 응답에 CxId')
               ? '틸코 simpleauthrequest 단계에서 세션 토큰을 받지 못했습니다. '
-                  '카카오 간편인증(`.env` TILKO_PRIVATE_AUTH_TYPE=KAKAO)으로 '
-                  '휴대폰 알림을 완료했는지 확인하세요. '
-                  'TILKO_API_KEY·틸코 상품(NHIS 간편인증) 권한을 확인하세요.'
-              : '휴대폰에서 카카오 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
+                  '통신사 PASS(`.env` TILKO_PRIVATE_AUTH_TYPE=PASS) 간편인증으로 '
+                  'PASS 앱·문자 인증을 완료했는지 확인하세요. '
+                  'TILKO_API_KEY·틸코 상품(NHIS·PASS 간편인증) 권한을 확인하세요.'
+              : '휴대폰에서 PASS 앱 또는 문자 인증번호로 간편인증을 완료한 뒤, '
+                  '다시 「심평원에서 불러오기」를 눌러 주세요. '
                   '서버가 약 1분간 logincheck(Result)로 완료 여부를 확인합니다.$errBit '
                   '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
                   '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.';

@@ -21,7 +21,7 @@ class HealthLinkScreen extends StatefulWidget {
 }
 
 class _HealthLinkScreenState extends State<HealthLinkScreen> {
-  final _privateAuthType = TextEditingController(text: 'KAKAO');
+  final _privateAuthType = TextEditingController(text: 'PASS');
   final _userName = TextEditingController();
   final _birthDate = TextEditingController();
   final _phone = TextEditingController();

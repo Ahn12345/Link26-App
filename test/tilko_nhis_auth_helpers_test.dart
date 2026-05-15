@@ -55,7 +55,7 @@ void main() {
     const raw = "요청한 값 '11G1+Wo3AZ2FvwzmbvrMUw=='을(를) 찾을 수 없습니다.";
     final friendly = tilkoUserFacingMessageKo(raw);
     expect(friendly, isNot(contains('11G1+')));
-    expect(friendly, contains('카카오'));
+    expect(friendly, contains('PASS'));
   });
 
   test('tilkoFriendlyHintFromLifted uses Message when tokens empty', () {

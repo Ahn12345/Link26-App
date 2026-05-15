@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
+import 'package:link26_app/integrations/tilko/tilko_env.dart';
+import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// 틸코 NHIS 간편인증 전 — 카카오 본인인증(실명·휴대폰·생년월일) 일치 확인.
-abstract final class KakaoCertReadiness {
-  static final Uri kakaoAccountUri = Uri.parse(
-    'https://accounts.kakao.com/weblogin/account/info',
+/// 틸코 NHIS/HIRA 간편인증 전 — 채널(PASS 등) 본인정보 일치 확인.
+abstract final class SimpleAuthCertReadiness {
+  static final Uri passInfoUri = Uri.parse(
+    'https://www.sktpass.com',
   );
 
   static String formatBirthYmd(String? ymd) {
@@ -16,11 +18,11 @@ abstract final class KakaoCertReadiness {
     return '${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6)}';
   }
 
-  static Future<void> openKakaoAccountSettings() async {
-    await launchUrl(kakaoAccountUri, mode: LaunchMode.externalApplication);
+  static Future<void> openPassInfo() async {
+    await launchUrl(passInfoUri, mode: LaunchMode.externalApplication);
   }
 
-  /// true = 사용자가 카카오 본인정보 일치를 확인하고 계속함.
+  /// true = 사용자가 간편인증 본인정보 일치를 확인하고 계속함.
   static Future<bool> confirmBeforeTilkoSync({
     required BuildContext context,
     required String displayName,
@@ -28,11 +30,13 @@ abstract final class KakaoCertReadiness {
     String? birthDateYmd,
   }) async {
     final l10n = AppLocalizations.of(context);
+    final channel = tilkoPrivateAuthTypeName(TilkoEnv.privateAuthType);
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _KakaoCertReadinessDialog(
+      builder: (ctx) => _SimpleAuthCertReadinessDialog(
         l10n: l10n,
+        channel: channel,
         displayName: displayName.trim(),
         phoneDisplay: UserLocalRepository.formatPhoneDigitsForDisplay(
           phoneDigits.replaceAll(RegExp(r'\D'), ''),
@@ -44,39 +48,44 @@ abstract final class KakaoCertReadiness {
   }
 }
 
-class _KakaoCertReadinessDialog extends StatefulWidget {
-  const _KakaoCertReadinessDialog({
+class _SimpleAuthCertReadinessDialog extends StatefulWidget {
+  const _SimpleAuthCertReadinessDialog({
     required this.l10n,
+    required this.channel,
     required this.displayName,
     required this.phoneDisplay,
     required this.birthDisplay,
   });
 
   final AppLocalizations l10n;
+  final String channel;
   final String displayName;
   final String phoneDisplay;
   final String birthDisplay;
 
   @override
-  State<_KakaoCertReadinessDialog> createState() =>
-      _KakaoCertReadinessDialogState();
+  State<_SimpleAuthCertReadinessDialog> createState() =>
+      _SimpleAuthCertReadinessDialogState();
 }
 
-class _KakaoCertReadinessDialogState extends State<_KakaoCertReadinessDialog> {
+class _SimpleAuthCertReadinessDialogState
+    extends State<_SimpleAuthCertReadinessDialog> {
   var _ack = false;
+
+  bool get _isPass => widget.channel == 'PASS';
 
   @override
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     return AlertDialog(
-      title: Text(l10n.kakaoCertDialogTitle),
+      title: Text(_isPass ? l10n.passCertDialogTitle : l10n.kakaoCertDialogTitle),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              l10n.kakaoCertDialogBody,
+              _isPass ? l10n.passCertDialogBody : l10n.kakaoCertDialogBody,
               style: TextStyle(
                 color: Link26Surface.textSecondary,
                 height: 1.45,
@@ -88,7 +97,7 @@ class _KakaoCertReadinessDialogState extends State<_KakaoCertReadinessDialog> {
             _row(l10n.signupBirthLabel, widget.birthDisplay),
             const SizedBox(height: 12),
             Text(
-              l10n.kakaoCertDialogDbNote,
+              _isPass ? l10n.passCertDialogDbNote : l10n.kakaoCertDialogDbNote,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -96,23 +105,56 @@ class _KakaoCertReadinessDialogState extends State<_KakaoCertReadinessDialog> {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () => KakaoCertReadiness.openKakaoAccountSettings(),
-              icon: const Icon(Icons.open_in_new, size: 18),
-              label: Text(l10n.kakaoCertOpenAccount),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Link26Surface.accent,
-                side: const BorderSide(color: Link26Surface.accent),
+            const SizedBox(height: 10),
+            Text(
+              _isPass
+                  ? l10n.passCertAccountSteps
+                  : l10n.kakaoCertAccountSteps,
+              style: TextStyle(
+                fontSize: 13,
+                color: Link26Surface.textSecondary,
+                height: 1.5,
               ),
             ),
+            if (_isPass) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => SimpleAuthCertReadiness.openPassInfo(),
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(l10n.passCertOpenInfo),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Link26Surface.accent,
+                  side: const BorderSide(color: Link26Surface.accent),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await launchUrl(
+                    Uri.parse(
+                      'https://accounts.kakao.com/weblogin/account/info',
+                    ),
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(l10n.kakaoCertOpenAccount),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Link26Surface.accent,
+                  side: const BorderSide(color: Link26Surface.accent),
+                ),
+              ),
+            ],
             CheckboxListTile(
               value: _ack,
               onChanged: (v) => setState(() => _ack = v ?? false),
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               title: Text(
-                l10n.kakaoCertAcknowledge,
+                _isPass
+                    ? l10n.passCertAcknowledge
+                    : l10n.kakaoCertAcknowledge,
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,

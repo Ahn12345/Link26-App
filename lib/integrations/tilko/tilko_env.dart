@@ -16,18 +16,18 @@ abstract final class TilkoEnv {
   static String get apiHost =>
       (_resolved['TILKO_API_HOST'] ?? TilkoEnvResolver.demoHost).trim();
 
-  /// 간편인증 채널 — 현재 제품은 카카오만 (`TILKO_PRIVATE_AUTH_TYPE=KAKAO`).
+  /// 간편인증 채널 — `TILKO_PRIVATE_AUTH_TYPE` (예: PASS, KAKAO).
   static String get privateAuthType {
-    final s = (dotenv.env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'KAKAO').trim();
-    return s.isEmpty ? 'KAKAO' : s;
+    final s = (dotenv.env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'PASS').trim();
+    return s.isEmpty ? 'PASS' : s;
   }
 
-  /// BFF·틸코 요청 본문용 채널 이름(항상 `KAKAO`).
+  /// BFF·틸코 요청 본문용 채널 이름.
   static String get privateAuthTypePlain =>
       tilkoPrivateAuthTypePlain(privateAuthType);
 
-  static bool get isKakaoAuthOnly =>
-      tilkoPrivateAuthTypeName(privateAuthType) == 'KAKAO';
+  static bool get isPassAuth =>
+      tilkoPrivateAuthTypeName(privateAuthType) == 'PASS';
 
   static bool get isConfigured => apiKey.isNotEmpty;
 }

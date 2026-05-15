@@ -156,6 +156,27 @@ String tilkoPrivateAuthTypeNumeric(String raw) {
   }
 }
 
+/// NHIS 1회 시도로 충분한 채널(포인트·중복 호출 방지).
+bool tilkoIsSingleShotAuthChannel(String raw) {
+  final n = tilkoPrivateAuthTypeName(raw);
+  return n == 'KAKAO' || n == 'PASS';
+}
+
+String tilkoSimpleAuthChannelLabelKo(String raw) {
+  switch (tilkoPrivateAuthTypeName(raw)) {
+    case 'PASS':
+      return '통신사 PASS';
+    case 'KAKAO':
+      return '카카오';
+    case 'NAVER':
+      return '네이버';
+    case 'TOSS':
+      return '토스';
+    default:
+      return tilkoPrivateAuthTypeName(raw);
+  }
+}
+
 /// BFF simpleauth — 틸코 운영 API는 숫자 코드(1=카카오)를 먼저 시도한 뒤 채널 이름.
 List<String> tilkoPrivateAuthTypeCandidates(String raw) {
   final name = tilkoPrivateAuthTypeName(raw);
@@ -200,32 +221,43 @@ bool tilkoSimpleAuthMessageRetryable(String? message) {
   return false;
 }
 
-/// NHIS·HIRA simpleauth 실패 시 사용자 안내 — NHIS(카카오) 오류를 우선합니다.
+/// NHIS·HIRA simpleauth 실패 시 사용자 안내 — NHIS 오류를 우선합니다.
 String tilkoBestSimpleAuthHintKo({
   Map<String, dynamic>? nhisLifted,
   Map<String, dynamic>? hiraLifted,
+  String privateAuthType = 'PASS',
 }) {
+  final label = tilkoSimpleAuthChannelLabelKo(privateAuthType);
   if (nhisLifted != null) {
     final m = (tilkoFindPlainString(nhisLifted, 'Message') ?? '').trim();
     if (m.contains('찾을 수 없')) {
-      return tilkoFriendlyHintFromLifted(nhisLifted);
+      return tilkoFriendlyHintFromLifted(
+        nhisLifted,
+        privateAuthType: privateAuthType,
+      );
     }
   }
   if (nhisLifted != null && hiraLifted != null) {
     final hiraMsg = (tilkoFindPlainString(hiraLifted, 'Message') ?? '').trim();
     if (hiraMsg.contains('조회된 데이터가 없습니다')) {
-      return '건강보험공단(NHIS) 카카오 간편인증이 되지 않았습니다. '
-          '카카오톡 실명·휴대폰·생년월일과 앱 입력(이름·주민번호)이 같은지 확인하세요. '
+      return '건강보험공단(NHIS) $label 간편인증이 되지 않았습니다. '
+          '$label 실명·휴대폰·생년월일과 앱 입력(이름·주민번호)이 같은지 확인하세요. '
           '심평원(HIRA)에 처방 이력이 없어도 공단 간편인증은 먼저 성공해야 합니다.';
     }
   }
   if (nhisLifted != null) {
-    return tilkoFriendlyHintFromLifted(nhisLifted);
+    return tilkoFriendlyHintFromLifted(
+      nhisLifted,
+      privateAuthType: privateAuthType,
+    );
   }
   if (hiraLifted != null) {
-    return tilkoFriendlyHintFromLifted(hiraLifted);
+    return tilkoFriendlyHintFromLifted(
+      hiraLifted,
+      privateAuthType: privateAuthType,
+    );
   }
-  return _tilkoSimpleAuthDefaultHintKo;
+  return tilkoSimpleAuthDefaultHintKo(privateAuthType);
 }
 
 /// 틸코 NHIS에 넣을 휴대폰 후보 — 하이픈(010-1234-5678) → 숫자만.
@@ -237,32 +269,46 @@ List<String> tilkoCellphoneWireCandidates(String phone) {
   return <String>[hyphen, digits];
 }
 
-const String _tilkoValueNotFoundUserKo =
-    '앱 DB에는 정보가 있으나, 카카오 간편인증에 등록된 본인(실명·휴대폰·생년월일)과 '
-    '틸코가 맞지 않는다고 응답했습니다. '
-    '카카오 계정에서 본인인증 후 생년월일이 보이는지 확인하고, '
-    '아래와 같은지 맞춘 뒤 다시 시도하세요. '
-    '그다음 폰에서 카카오 간편인증 알림을 완료해 주세요.';
+String _tilkoValueNotFoundUserKoFor(String channelRaw) {
+  final label = tilkoSimpleAuthChannelLabelKo(channelRaw);
+  if (tilkoPrivateAuthTypeName(channelRaw) == 'PASS') {
+    return '앱 DB에는 정보가 있으나, $label(통신사 본인인증)에 등록된 '
+        '실명·휴대폰·생년월일과 틸코가 맞지 않는다고 응답했습니다. '
+        'PASS 앱에서 본인인증 정보를 아래와 같게 맞춘 뒤 다시 시도하세요. '
+        '연동 시 PASS 앱 또는 문자 인증번호를 완료해 주세요.';
+  }
+  return '앱 DB에는 정보가 있으나, $label 간편인증에 등록된 본인(실명·휴대폰·생년월일)과 '
+      '틸코가 맞지 않는다고 응답했습니다. '
+      '본인인증 정보를 아래와 같게 맞춘 뒤 다시 시도하세요. '
+      '그다음 폰에서 $label 간편인증을 완료해 주세요.';
+}
 
-const String _tilkoNoHiraDataUserKo =
-    '심평원(HIRA)에 해당 주민·이름·휴대폰 조합으로 조회된 이력이 없습니다. '
-    '입력 정보가 본인·카카오 간편인증 등록 정보와 같은지 확인하세요.';
+String tilkoNoHiraDataUserKo(String privateAuthType) {
+  final label = tilkoSimpleAuthChannelLabelKo(privateAuthType);
+  return '심평원(HIRA)에 해당 주민·이름·휴대폰 조합으로 조회된 이력이 없습니다. '
+      '입력 정보가 본인·$label 간편인증 등록 정보와 같은지 확인하세요.';
+}
 
-const String _tilkoSimpleAuthDefaultHintKo =
-    '이름·생년월일(주민번호)·휴대폰을 카카오·틸코에 등록된 정보와 '
-    '맞춰 주세요. TILKO_API_KEY에 심평원·NHIS 간편인증 상품 권한이 있는지 확인하세요.';
+String tilkoSimpleAuthDefaultHintKo(String privateAuthType) {
+  final label = tilkoSimpleAuthChannelLabelKo(privateAuthType);
+  return '이름·생년월일(주민번호)·휴대폰을 $label·틸코에 등록된 정보와 '
+      '맞춰 주세요. TILKO_API_KEY에 심평원·NHIS 간편인증(PASS 등) 권한이 있는지 확인하세요.';
+}
 
 /// BFF `hint_ko`·앱 스낵바 — 틸코 `Message`/`TargetMessage`의 암호문·원문을 숨깁니다.
-String tilkoUserFacingMessageKo(String raw) {
+String tilkoUserFacingMessageKo(
+  String raw, {
+  String privateAuthType = 'PASS',
+}) {
   final s = raw.trim();
   if (s.isEmpty) return s;
   if (s.contains('찾을 수 없') &&
       (RegExp(r"'[A-Za-z0-9+/=]{4,}'").hasMatch(s) ||
           RegExp(r'[A-Za-z0-9+/=]{12,}={0,2}').hasMatch(s))) {
-    return _tilkoValueNotFoundUserKo;
+    return _tilkoValueNotFoundUserKoFor(privateAuthType);
   }
   if (s.contains('조회된 데이터가 없습니다')) {
-    return _tilkoNoHiraDataUserKo;
+    return tilkoNoHiraDataUserKo(privateAuthType);
   }
   return raw;
 }
@@ -274,19 +320,31 @@ String tilkoHintWithApiTxKey(String base, Map<String, dynamic> lifted) {
 }
 
 /// simpleauthrequest 실패 시 BFF·앱 공통 `hint_ko`.
-String tilkoFriendlyHintFromLifted(Map<String, dynamic> lifted) {
+String tilkoFriendlyHintFromLifted(
+  Map<String, dynamic> lifted, {
+  String privateAuthType = 'PASS',
+}) {
   final target = (tilkoFindPlainString(lifted, 'TargetMessage') ?? '').trim();
   if (target.isNotEmpty && target != '-') {
-    final t = tilkoUserFacingMessageKo(target);
+    final t = tilkoUserFacingMessageKo(
+      target,
+      privateAuthType: privateAuthType,
+    );
     if (t != target || !target.contains('찾을 수 없')) {
       return t;
     }
   }
   final msg = (tilkoFindPlainString(lifted, 'Message') ?? '').trim();
   if (msg.isNotEmpty) {
-    return tilkoHintWithApiTxKey(tilkoUserFacingMessageKo(msg), lifted);
+    return tilkoHintWithApiTxKey(
+      tilkoUserFacingMessageKo(msg, privateAuthType: privateAuthType),
+      lifted,
+    );
   }
-  return tilkoHintWithApiTxKey(_tilkoSimpleAuthDefaultHintKo, lifted);
+  return tilkoHintWithApiTxKey(
+    tilkoSimpleAuthDefaultHintKo(privateAuthType),
+    lifted,
+  );
 }
 
 /// 틸코 간편인증 API — 휴대폰 `010-1234-5678` (apidemo·샘플 코드 형식).
@@ -891,7 +949,7 @@ class TilkoHiraSimpleAuthClient {
     } else {
       out['_link26_poll_error'] =
           'logincheck에서 간편인증 완료(Result=true)를 받지 못했습니다. '
-          '휴대폰에서 카카오 간편인증을 완료한 뒤 다시 시도하세요.';
+          '휴대폰에서 PASS 앱 또는 문자 인증번호로 간편인증을 완료한 뒤 다시 시도하세요.';
     }
     return out;
   }
