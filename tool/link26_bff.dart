@@ -21,6 +21,9 @@ import 'package:link26_app/integrations/tilko/tilko_response_meta.dart';
 import 'link26_bff_codef.dart';
 import 'link26_bff_lan_beacon.dart';
 
+String _bffYmd(DateTime d) =>
+    '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
+
 Future<void> main() async {
   final server = await _bindServer();
   final port = server.port;
@@ -276,6 +279,11 @@ Future<void> _handle(HttpRequest request) async {
       try {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
+        // ignore: avoid_print
+        print(
+          'BFF flow tilko-hira-medications: 요청 수신 '
+          '(UserName=${tilkoMap['UserName'] ?? tilkoMap['userName']})',
+        );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
         final tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
@@ -351,23 +359,56 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
 
-        final items = bffMapCodefRootToMedicationItems(nhisRes);
+        var items = bffMapCodefRootToMedicationItems(nhisRes);
+        var metaSource = 'tilko_nhis_simpleauth_treatment_injection';
+        Map<String, dynamic>? hiraRes;
+        if (items.isEmpty) {
+          final end = DateTime.now();
+          final start = DateTime(end.year - 3, end.month, end.day);
+          try {
+            hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
+              tilkoRequestMap: tilkoMap,
+              tilkoAuthResponse: tilkoAuth,
+              startDateYyyymmdd: _bffYmd(start),
+              endDateYyyymmdd: _bffYmd(end),
+            );
+            if (hiraRes['http_status'] == null &&
+                !tilkoApiIndicatesFailure(hiraRes)) {
+              final hiraItems = bffMapCodefRootToMedicationItems(hiraRes);
+              if (hiraItems.isNotEmpty) {
+                items = hiraItems;
+                metaSource = 'tilko_hira_my_medications';
+                // ignore: avoid_print
+                print(
+                  'BFF flow: NHIS 0건 → HIRA hiraa050300000100 ${items.length}건',
+                );
+              }
+            }
+          } catch (e) {
+            // ignore: avoid_print
+            print('BFF flow HIRA fallback: $e');
+          }
+        }
         final emptyParsed = items.isEmpty;
-        final st = tilkoApiStatusFields(nhisRes);
+        final st = tilkoApiStatusFields(
+          hiraRes is Map<String, dynamic> ? hiraRes : nhisRes,
+        );
+        // ignore: avoid_print
+        print('BFF flow tilko-hira-medications: ok items=${items.length}');
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoAuth,
           'nhis_treatment_injection': nhisRes,
-          'hira_medications': nhisRes,
+          'hira_medications': hiraRes ?? nhisRes,
           'items': items,
           'meta': {
-            'source': 'tilko_nhis_simpleauth_treatment_injection',
+            'source': metaSource,
             'codefResultCode': st['code'],
             'codefResultMessage': st['message'],
             if (emptyParsed)
               'note':
-                  'NHIS 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '
-                  '진료·투약 이력이 없거나 ResultList/RetrieveTreatmentInjectionInformationPersonDetailList 구조가 바뀐 경우일 수 있습니다.',
+                  'NHIS·심평원(HIRA) 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '
+                  '조회 기간 내 처방이 없거나 JSON 필드명이 바뀐 경우일 수 있습니다.',
           },
         });
       } catch (e, st) {

@@ -365,13 +365,23 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       );
       return;
     }
-    await HiraLinkService.promptRrnAndSyncHiraMedications(
+    final out = await HiraLinkService.promptRrnAndSyncHiraMedications(
       context: context,
       user: user,
       announceSuccess: true,
     );
     if (!mounted) return;
     await _reloadMedicinesFromStores();
+    if (!mounted || out == null) return;
+    if (out.remoteItemCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${l10n.homeHiraMedicationsLoadSuccess} (${out.remoteItemCount}건)',
+          ),
+        ),
+      );
+    }
   }
 
   String _shortTime(DateTime? t) {

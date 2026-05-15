@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/database/home_notification_repository.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/services/nhis_tilko_hira_flow_sync.dart';
@@ -97,9 +98,13 @@ abstract final class HiraLinkService {
     if (!context.mounted) return null;
 
     if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
-      if (kDebugMode) {
-        debugPrint(
-          'HIRA: 틸코·심평원 플로우 생략 (mock 또는 NHIS_BASE_URL 없음)',
+      if (context.mounted) {
+        final msg = NhisRuntimeConfig.useMock
+            ? 'NHIS_USE_MOCK=true 입니다. .env에서 false 후 앱을 다시 빌드하세요.'
+            : 'BFF 주소(NHIS_BASE_URL)가 없습니다. '
+                'PC에서 BFF 실행·USB면 adb reverse tcp:8787 후 앱 재빌드하세요.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 8)),
         );
       }
       return null;
@@ -123,6 +128,18 @@ abstract final class HiraLinkService {
         SnackBar(content: Text(l10n.tilkoNhisLinkRrnInvalid)),
       );
       return null;
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '틸코·건강보험 연동 중입니다. 휴대폰에서 PASS·카카오 인증을 완료한 뒤 '
+            '최대 약 2분 기다려 주세요.',
+          ),
+          duration: Duration(seconds: 6),
+        ),
+      );
     }
 
     final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
@@ -149,6 +166,10 @@ abstract final class HiraLinkService {
             content: Text(msg),
             duration: const Duration(seconds: 8),
           ),
+        );
+        await HomeNotificationRepository.insertSystemSyncNotice(
+          title: l10n.homeNotificationSystemSyncTitle,
+          preview: msg,
         );
       }
     }

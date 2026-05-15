@@ -34,6 +34,17 @@ Map<String, String?> tilkoApiStatusFields(Map<String, dynamic> root) {
 bool tilkoApiIndicatesFailure(Map<String, dynamic> root) {
   final code = (tilkoApiStatusFields(root)['code'] ?? '').toUpperCase();
   if (code.isEmpty) return false;
-  const ok = {'OK', 'SUCCESS', 'Y', 'TRUE', '0', '0000', 'CF-00000'};
-  return !ok.contains(code);
+  const ok = {
+    'OK',
+    'SUCCESS',
+    'Y',
+    'TRUE',
+    '0',
+    '0000',
+    'CF-00000',
+    '200',
+  };
+  if (ok.contains(code)) return false;
+  if (RegExp(r'^2\d{2}$').hasMatch(code)) return false;
+  return true;
 }
