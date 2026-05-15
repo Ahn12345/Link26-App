@@ -15,4 +15,10 @@ void main() {
     expect(tilkoPrivateAuthTypeName('PASS'), 'PASS');
     expect(tilkoPrivateAuthTypeNumeric('PASS'), '5');
   });
+
+  test('wire plain keeps numeric 1 for Tilko AES', () {
+    expect(tilkoPrivateAuthTypeWirePlain('1'), '1');
+    expect(tilkoPrivateAuthTypeWirePlain('KAKAO'), 'KAKAO');
+    expect(tilkoPrivateAuthTypeWirePlain('KAKAO'), isNot('1'));
+  });
 }

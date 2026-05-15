@@ -166,6 +166,30 @@ List<String> tilkoPrivateAuthTypeCandidates(String raw) {
 /// 단일 호출 경로 기본값(이름).
 String tilkoPrivateAuthTypePlain(String raw) => tilkoPrivateAuthTypeName(raw);
 
+/// 틸코 API AES 필드용 — 숫자 코드(`1`=카카오)는 그대로, 그 외는 채널 이름.
+String tilkoPrivateAuthTypeWirePlain(String raw) {
+  final t = raw.trim();
+  if (RegExp(r'^\d{1,2}$').hasMatch(t)) return t;
+  return tilkoPrivateAuthTypeName(raw);
+}
+
+/// BFF 로그용(마스킹) — simpleauthrequest 직전 필드 요약.
+String tilkoSimpleAuthRequestLogLine(Map<String, dynamic> m) {
+  final birth = '${m['BirthDate'] ?? m['birthDate'] ?? ''}'.trim();
+  final phoneRaw =
+      '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}'.trim();
+  final phone = tilkoFormatCellphoneHyphen(phoneRaw);
+  final maskedPhone = phone.length >= 4
+      ? '***${phone.substring(phone.length - 4)}'
+      : '***';
+  final pat = tilkoPrivateAuthTypeWirePlain(
+    '${m['PrivateAuthType'] ?? m['privateAuthType'] ?? 'KAKAO'}',
+  );
+  final name = '${m['UserName'] ?? m['userName'] ?? ''}'.trim();
+  return 'UserName=$name BirthDate=$birth phone=$maskedPhone '
+      'PrivateAuthType(wire)=$pat';
+}
+
 bool tilkoSimpleAuthMessageRetryable(String? message) {
   final m = (message ?? '').trim();
   if (m.isEmpty) return false;
@@ -173,7 +197,7 @@ bool tilkoSimpleAuthMessageRetryable(String? message) {
 }
 
 const String _tilkoValueNotFoundUserKo =
-    '틸코가 이름·생년월일·휴대폰(010-1234-5678)·카카오 간편인증 정보 중 '
+    '틸코가 이름·생년월일·휴대폰·카카오 간편인증 정보 중 '
     '일치하지 않는 값을 받았습니다. '
     '카카오톡에 등록된 실명·휴대폰·생년월일과 앱·주민번호 입력이 같은지 확인한 뒤, '
     '폰에서 카카오 간편인증 알림을 완료해 주세요. '
@@ -184,7 +208,7 @@ const String _tilkoNoHiraDataUserKo =
     '입력 정보가 본인·카카오 간편인증 등록 정보와 같은지 확인하세요.';
 
 const String _tilkoSimpleAuthDefaultHintKo =
-    '이름·생년월일(주민번호)·휴대폰(010-1234-5678)을 카카오·틸코에 등록된 정보와 '
+    '이름·생년월일(주민번호)·휴대폰을 카카오·틸코에 등록된 정보와 '
     '맞춰 주세요. TILKO_API_KEY에 심평원·NHIS 간편인증 상품 권한이 있는지 확인하세요.';
 
 /// BFF `hint_ko`·앱 스낵바 — 틸코 `Message`/`TargetMessage`의 암호문·원문을 숨깁니다.
@@ -406,7 +430,7 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
-    final pat = tilkoPrivateAuthTypePlain(privateAuthType);
+    final pat = tilkoPrivateAuthTypeWirePlain(privateAuthType);
     final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
     final id = tilkoIdentityDigits13(identityNumber);
     final body = <String, dynamic>{
@@ -467,7 +491,7 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
-    final pat = tilkoPrivateAuthTypePlain(privateAuthType);
+    final pat = tilkoPrivateAuthTypeWirePlain(privateAuthType);
     final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
     final body = <String, dynamic>{
       'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
@@ -523,7 +547,7 @@ class TilkoHiraSimpleAuthClient {
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
     final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
-    final pat = tilkoPrivateAuthTypePlain(pickReq('PrivateAuthType'));
+    final pat = tilkoPrivateAuthTypeWirePlain(pickReq('PrivateAuthType'));
     if ([userName, birth, cell, pat].any((e) => e.isEmpty)) {
       throw StateError(
         'Tilko logincheck: 요청맵에 이름·생년월일·휴대폰·인증채널이 필요합니다.',
@@ -806,7 +830,7 @@ class TilkoHiraSimpleAuthClient {
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
     final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
-    final pat = tilkoPrivateAuthTypePlain(pickReq('PrivateAuthType'));
+    final pat = tilkoPrivateAuthTypeWirePlain(pickReq('PrivateAuthType'));
 
     String pickAuth(String k) =>
         (tilkoFindPlainString(tilkoAuthResponse, k) ?? '').trim();
@@ -898,7 +922,7 @@ class TilkoHiraSimpleAuthClient {
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
     final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
-    final pat = tilkoPrivateAuthTypePlain(pickReq('PrivateAuthType'));
+    final pat = tilkoPrivateAuthTypeWirePlain(pickReq('PrivateAuthType'));
 
     String pickAuth(String k) =>
         (tilkoFindPlainString(liftedAuth, k) ?? '').trim();

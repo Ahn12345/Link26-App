@@ -306,19 +306,10 @@ Future<void> _handle(HttpRequest request) async {
           usedPat = patTry;
           final reqMap = Map<String, dynamic>.from(tilkoMap)
             ..['PrivateAuthType'] = patTry;
-
-          authChannel = 'HIRA';
-          tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
-          tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-          if (tilkoRes['http_status'] == null &&
-              !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
-            break;
-          }
-          final hiraMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
           // ignore: avoid_print
           print(
-            'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) 실패 → NHIS 재시도 '
-            'Message=${hiraMsg ?? '-'}',
+            'BFF ① simpleauthrequest 요청 필드 — '
+            '${tilkoSimpleAuthRequestLogLine(reqMap)}',
           );
 
           authChannel = 'NHIS';
@@ -329,13 +320,28 @@ Future<void> _handle(HttpRequest request) async {
             break;
           }
           final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
+          // ignore: avoid_print
+          print(
+            'BFF ① NHIS simpleauth(PrivateAuthType=$patTry, '
+            'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}) 실패 '
+            'Message=${nhisMsg ?? '-'}',
+          );
+
+          authChannel = 'HIRA';
+          tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
+          tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+          if (tilkoRes['http_status'] == null &&
+              !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+            break;
+          }
+          final hiraMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
           if (!tilkoSimpleAuthMessageRetryable(nhisMsg) &&
               !tilkoSimpleAuthMessageRetryable(hiraMsg)) {
             break;
           }
           // ignore: avoid_print
           print(
-            'BFF ① NHIS simpleauth(PrivateAuthType=$patTry) 재시도 가능 오류 — '
+            'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) 재시도 가능 오류 — '
             '다음 PrivateAuthType 후보 시도',
           );
         }
