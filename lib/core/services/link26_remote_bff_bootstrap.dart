@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -97,7 +98,11 @@ abstract final class Link26RemoteBffBootstrap {
   /// [body] 는 JSON 객체 문자열입니다.
   static List<String> parseManifestBody(String body) {
     try {
-      final decoded = jsonDecode(body);
+      var t = body.trim();
+      if (t.isNotEmpty && t.codeUnitAt(0) == 0xFEFF) {
+        t = t.substring(1).trim();
+      }
+      final decoded = jsonDecode(t);
       if (decoded is Map) {
         final map = Map<String, dynamic>.from(decoded);
         return _parseManifestObject(map);
@@ -145,11 +150,26 @@ abstract final class Link26RemoteBffBootstrap {
       return;
     }
     try {
-      final res = await http.get(Uri.parse(url)).timeout(timeout);
+      final uri = Uri.parse(url);
+      final res = await http
+          .get(
+            uri,
+            headers: const {
+              'User-Agent': 'Link26App/1.0 (Flutter; NHIS remote manifest)',
+              'Accept': 'application/json,*/*;q=0.8',
+            },
+          )
+          .timeout(timeout);
       if (res.statusCode < 200 || res.statusCode >= 300) {
         if (kDebugMode) {
           debugPrint(
             'Link26RemoteBffBootstrap: HTTP ${res.statusCode} for $url',
+          );
+        }
+        if (kReleaseMode) {
+          developer.log(
+            '매니페스트 HTTP ${res.statusCode} (LINK26_REMOTE_CONFIG_URL)',
+            name: 'link26.nhis',
           );
         }
         return;
@@ -161,6 +181,12 @@ abstract final class Link26RemoteBffBootstrap {
             'Link26RemoteBffBootstrap: JSON에 nhisBffBases 등 유효 필드 없음',
           );
         }
+        if (kReleaseMode) {
+          developer.log(
+            '매니페스트 JSON에 nhisBffBases 등 HTTPS BFF 주소가 없음(또는 릴리스에서 http:// 제외)',
+            name: 'link26.nhis',
+          );
+        }
         return;
       }
       final prefs = await SharedPreferences.getInstance();
@@ -169,6 +195,12 @@ abstract final class Link26RemoteBffBootstrap {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Link26RemoteBffBootstrap.refreshFromNetwork: $e');
+      }
+      if (kReleaseMode) {
+        developer.log(
+          'LINK26_REMOTE_CONFIG_URL 요청 실패: $e',
+          name: 'link26.nhis',
+        );
       }
     }
   }

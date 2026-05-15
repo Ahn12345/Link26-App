@@ -1,8 +1,11 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'package:link26_app/core/constants/api_keys.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/design/link26_design_catalog.dart';
 import 'package:link26_app/core/services/dose_reminder_notifications.dart';
@@ -62,6 +65,22 @@ Future<void> main() async {
   await _loadDotenvFromAssets();
   await Link26RemoteBffBootstrap.init();
   Link26RemoteBffBootstrap.scheduleBackgroundRefresh();
+  // 실제 기기 릴리스: 캐시 없이 LINK26 만 쓰는 경우 첫 프레임 전에 주소를 채우기 위해
+  // 한 번 동기로 받습니다(최대 ~10s). NHIS_PRODUCTION_BASE_URL 이 이미 있으면 생략.
+  if (kReleaseMode &&
+      ApiConfig.nhisProductionBaseUrl.trim().isEmpty &&
+      Link26RemoteBffBootstrap.manifestUrl.trim().isNotEmpty &&
+      NhisRuntimeConfig.baseUrl.isEmpty) {
+    await Link26RemoteBffBootstrap.refreshFromNetwork(
+      timeout: const Duration(seconds: 10),
+    );
+    if (NhisRuntimeConfig.baseUrl.isEmpty) {
+      developer.log(
+        '릴리스: 원격 매니페스트 후에도 BFF base 비움 — JSON·네트워크·HTTPS(nhisBffBases) 확인',
+        name: 'link26.nhis',
+      );
+    }
+  }
   await Link26BffAdvice.evaluateAfterDotenv();
   if (kDebugMode) {
     final m = Link26RemoteBffBootstrap.manifestUrl.trim();
