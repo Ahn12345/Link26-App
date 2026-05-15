@@ -97,6 +97,37 @@ bool tilkoNhisSimpleAuthIndicatesError(Map<String, dynamic> root) {
   return !tilkoNhisAuthTokensComplete(tilkoNhisLiftNestedSession(root));
 }
 
+/// 틸코 `PrivateAuthType` 평문 — 간편인증 채널 번호(틸코·CODEF 샘플: 1=카카오, 5=PASS …).
+String tilkoPrivateAuthTypePlain(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return '1';
+  if (RegExp(r'^\d{1,2}$').hasMatch(t)) return t;
+  switch (t.toUpperCase()) {
+    case 'KAKAO':
+      return '1';
+    case 'PAYCO':
+      return '2';
+    case 'SAMSUNG':
+    case 'SAMSUNGPASS':
+      return '3';
+    case 'KB':
+    case 'KBMOBILE':
+      return '4';
+    case 'PASS':
+    case 'TELCO':
+    case 'PHONE':
+      return '5';
+    case 'NAVER':
+      return '6';
+    case 'SHINHAN':
+      return '7';
+    case 'TOSS':
+      return '8';
+    default:
+      return '1';
+  }
+}
+
 /// 틸코 간편인증 API — 휴대폰 `010-1234-5678` (apidemo·샘플 코드 형식).
 String tilkoFormatCellphoneHyphen(String phone) {
   final d = phone.replaceAll(RegExp(r'\D'), '');
@@ -285,7 +316,7 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
-    final pat = privateAuthType.trim().toUpperCase();
+    final pat = tilkoPrivateAuthTypePlain(privateAuthType);
     final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
     final id = tilkoIdentityDigits13(identityNumber);
     final body = <String, dynamic>{
@@ -346,7 +377,7 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
-    final pat = privateAuthType.trim().toUpperCase();
+    final pat = tilkoPrivateAuthTypePlain(privateAuthType);
     final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
     final body = <String, dynamic>{
       'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
@@ -402,7 +433,7 @@ class TilkoHiraSimpleAuthClient {
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
     final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
-    final pat = pickReq('PrivateAuthType').toUpperCase();
+    final pat = tilkoPrivateAuthTypePlain(pickReq('PrivateAuthType'));
     if ([userName, birth, cell, pat].any((e) => e.isEmpty)) {
       throw StateError(
         'Tilko logincheck: 요청맵에 이름·생년월일·휴대폰·인증채널이 필요합니다.',
@@ -685,7 +716,7 @@ class TilkoHiraSimpleAuthClient {
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
     final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
-    final pat = pickReq('PrivateAuthType').toUpperCase();
+    final pat = tilkoPrivateAuthTypePlain(pickReq('PrivateAuthType'));
 
     String pickAuth(String k) =>
         (tilkoFindPlainString(tilkoAuthResponse, k) ?? '').trim();
@@ -777,7 +808,7 @@ class TilkoHiraSimpleAuthClient {
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
     final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
-    final pat = pickReq('PrivateAuthType').toUpperCase();
+    final pat = tilkoPrivateAuthTypePlain(pickReq('PrivateAuthType'));
 
     String pickAuth(String k) =>
         (tilkoFindPlainString(liftedAuth, k) ?? '').trim();

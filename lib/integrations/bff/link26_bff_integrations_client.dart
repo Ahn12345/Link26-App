@@ -31,11 +31,11 @@ String _tilkoKeyMissingHintKo() =>
 String _rewriteTilkoEnvHint(String msg) {
   final s = msg.trim();
   if (s.contains('찾을 수 없습니다') && RegExp(r"'[A-Za-z0-9+/=]{8,}'").hasMatch(s)) {
-    return '틸코가 이름·생년월일·휴대폰(010-1234-5678)·간편인증 채널(KAKAO/PASS) 중 '
+    return '틸코가 이름·생년월일·휴대폰(010-1234-5678)·간편인증 채널 중 '
         '일치하지 않는 값을 받았습니다. '
-        'PC `.env`의 TILKO_PRIVATE_AUTH_TYPE과 폰에서 누른 인증 앱이 같아야 하고, '
-        'TILKO_API_HOST는 키 종류와 맞아야 합니다(데모 키→https://dev.tilko.net, '
-        '운영 키→https://api.tilko.net).';
+        'PC `.env`의 TILKO_PRIVATE_AUTH_TYPE(카카오=KAKAO, 통신사 PASS=PASS)이 '
+        '폰에서 누른 인증과 같아야 합니다. '
+        '틸코 내정보에서 간편인증 3종 API 사용·포인트도 확인하세요.';
   }
   if (s.contains('조회된 데이터가 없습니다')) {
     return '심평원(HIRA)에 해당 주민·이름·휴대폰 조합으로 조회된 이력이 없습니다. '

@@ -280,9 +280,14 @@ Future<void> _handle(HttpRequest request) async {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
         // ignore: avoid_print
+        final patRaw =
+            '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? ''}'
+                .trim();
+        // ignore: avoid_print
         print(
           'BFF flow tilko-hira-medications: 요청 수신 '
-          '(UserName=${tilkoMap['UserName'] ?? tilkoMap['userName']})',
+          '(UserName=${tilkoMap['UserName'] ?? tilkoMap['userName']}, '
+          'PrivateAuthType=${tilkoPrivateAuthTypePlain(patRaw.isEmpty ? 'KAKAO' : patRaw)})',
         );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
