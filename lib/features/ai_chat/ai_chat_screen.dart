@@ -474,14 +474,13 @@ class _AiChatBodyState extends State<_AiChatBody> {
                             ),
                           ),
                         Expanded(
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: Link26Layout.innerWidth(w),
-                              ),
-                              child: ColoredBox(
-                                color: Link26UnifiedPage.background,
+                          child: ColoredBox(
+                            color: Link26UnifiedPage.background,
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: Link26Layout.innerWidth(w),
+                                ),
                                 child: ValueListenableBuilder<int>(
                                   valueListenable:
                                       AiChatConversationCache.revision,
@@ -491,35 +490,31 @@ class _AiChatBodyState extends State<_AiChatBody> {
                                         Link26ResponsiveUi.gapMd(w);
                                     final msgs =
                                         AiChatConversationCache.messages;
-                                    return ListView(
-                                      reverse: true,
+                                    return SingleChildScrollView(
                                       padding: EdgeInsets.only(
-                                        top: Link26ResponsiveUi.gapSm(w),
+                                        bottom: Link26ResponsiveUi.gapSm(w),
                                       ),
-                                      children: [
-                                        for (final m in msgs.reversed)
-                                          Padding(
-                                            padding: EdgeInsets.only(
-                                              bottom: gap,
-                                            ),
-                                            child: _ChatBubble(
-                                              message: m,
-                                              maxBubbleWidth: bubbleMax,
-                                              layoutWidth: w,
-                                            ),
-                                          ),
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                            bottom: gap,
-                                          ),
-                                          child: _AiWelcomeBubble(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          _AiWelcomeBubble(
                                             timeLabel:
                                                 _welcomeAccessLabel ?? '…',
                                             maxBubbleWidth: bubbleMax,
                                             layoutWidth: w,
                                           ),
-                                        ),
-                                      ],
+                                          for (final m in msgs)
+                                            Padding(
+                                              padding: EdgeInsets.only(top: gap),
+                                              child: _ChatBubble(
+                                                message: m,
+                                                maxBubbleWidth: bubbleMax,
+                                                layoutWidth: w,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     );
                                   },
                                 ),

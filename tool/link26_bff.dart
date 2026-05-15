@@ -304,11 +304,14 @@ Future<void> _handle(HttpRequest request) async {
         }
 
         final tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+        final rd = tilkoResLifted['ResultData'];
+        final rdKeys = rd is Map ? rd.keys.join(',') : (rd == null ? 'null' : rd.runtimeType.toString());
         // ignore: avoid_print
         print(
           'BFF ① simpleauthrequest — ${tilkoNhisTokenPresenceSummary(tilkoResLifted)} '
           'ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode') ?? '-'} '
-          'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'}',
+          'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'} '
+          'topKeys=${tilkoResLifted.keys.join(',')} ResultData=($rdKeys)',
         );
         if (tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
           await _json(request, 200, {
