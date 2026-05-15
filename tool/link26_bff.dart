@@ -286,49 +286,76 @@ Future<void> _handle(HttpRequest request) async {
         );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
-        final tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
-          tilkoMap,
-        );
+        var authChannel = 'HIRA';
+        var tilkoRes = await tilkoClient.requestFromJsonMap(tilkoMap);
+        var tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+        if (tilkoRes['http_status'] != null ||
+            tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+          // ignore: avoid_print
+          print(
+            'BFF ① HIRA simpleauth 실패 → NHIS 재시도 '
+            'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'}',
+          );
+          authChannel = 'NHIS';
+          tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(tilkoMap);
+          tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+        }
         if (tilkoRes['http_status'] != null) {
           // ignore: avoid_print
           print('BFF ① simpleauthrequest: HTTP ${tilkoRes['http_status']}');
           await _json(request, 200, {
             'ok': false,
-            'detail': '틸코 국민건강보험공단 간편인증(simpleauthrequest)이 HTTP 오류로 끝났습니다.',
+            'detail': '틸코 간편인증(simpleauthrequest) HTTP 오류 ($authChannel)',
             'hint_ko':
-                'TILKO_API_KEY·TILKO_API_HOST(데모: https://dev.tilko.net)와 요청 필드를 확인하세요. '
-                '인증 채널은 공단 간편인증(nhissimpleauth)에 맞는지 확인하세요.',
+                'TILKO_API_KEY·TILKO_API_HOST(데모: https://dev.tilko.net)와 요청 필드를 확인하세요.',
             'tilko': tilkoRes,
           });
           return;
         }
 
-        final tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
         final rd = tilkoResLifted['ResultData'];
-        final rdKeys = rd is Map ? rd.keys.join(',') : (rd == null ? 'null' : rd.runtimeType.toString());
+        final rdKeys = rd is Map
+            ? rd.keys.join(',')
+            : (rd == null ? 'null' : rd.runtimeType.toString());
+        final targetMsg = tilkoFindPlainString(tilkoResLifted, 'TargetMessage');
         // ignore: avoid_print
         print(
-          'BFF ① simpleauthrequest — ${tilkoNhisTokenPresenceSummary(tilkoResLifted)} '
+          'BFF ① $authChannel simpleauthrequest — '
+          '${tilkoNhisTokenPresenceSummary(tilkoResLifted)} '
           'ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode') ?? '-'} '
           'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'} '
+          'TargetMessage=${targetMsg ?? '-'} '
           'topKeys=${tilkoResLifted.keys.join(',')} ResultData=($rdKeys)',
         );
         if (tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+          final hint = (targetMsg?.trim().isNotEmpty == true)
+              ? targetMsg!.trim()
+              : (tilkoFindPlainString(tilkoResLifted, 'Message') ??
+                  '이름·생년월일(주민번호)·휴대폰(010-1234-5678)·간편인증 채널(KAKAO/PASS)을 '
+                  '틸코·본인 정보와 맞춰 주세요. TILKO_API_KEY에 심평원·NHIS 간편인증 상품 권한이 있는지 확인하세요.');
           await _json(request, 200, {
             'ok': false,
             'detail':
-                '틸코 simpleauthrequest 오류 (ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode')})',
-            'hint_ko':
-                tilkoFindPlainString(tilkoResLifted, 'Message') ??
-                'TILKO_API_KEY·상품 권한·요청 필드(이름·생년월일·휴대폰·주민번호)를 확인하세요.',
+                '틸코 simpleauthrequest 오류 ($authChannel, ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode')})',
+            'hint_ko': hint,
             'tilko': tilkoRes,
           });
           return;
         }
+        final loginPaths = authChannel == 'HIRA'
+            ? const [
+                '/api/v1.0/hirasimpleauth/logincheck',
+                '/api/v1.0/nhissimpleauth/logincheck',
+              ]
+            : const [
+                '/api/v1.0/nhissimpleauth/logincheck',
+                '/api/v1.0/hirasimpleauth/logincheck',
+              ];
         final tilkoAuth = await tilkoClient.waitForNhisAuthForTreatmentInjection(
           tilkoRequestMap: tilkoMap,
           initialSimpleAuthResponse: tilkoRes,
           logPollProgress: true,
+          loginCheckPathCandidates: loginPaths,
         );
         if (!tilkoNhisAuthTokensComplete(tilkoAuth)) {
           // ignore: avoid_print
@@ -361,46 +388,71 @@ Future<void> _handle(HttpRequest request) async {
 
         // ignore: avoid_print
         print('BFF ② logincheck OK — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}');
-        final nhisRes =
-            await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
-          tilkoRequestMap: tilkoMap,
-          tilkoAuthResponse: tilkoAuth,
-        );
-        if (nhisRes['http_status'] != null) {
-          final inner = nhisRes['body'];
-          await _json(request, 200, {
-            'ok': false,
-            'detail': '틸코 NHIS 진료·투약 정보(간편인증) HTTP 오류',
-            'hint_ko':
-                '공단 간편인증이 완료된 뒤 호출했는지, '
-                '문서(https://apidemo.tilko.net … NhisSimpleAuth-RetrieveTreatmentInjectionInformationPerson)와 대조하세요.',
-            'tilko': tilkoAuth,
-            'nhis_treatment_injection':
-                inner is Map<String, dynamic> ? inner : nhisRes,
-          });
-          return;
-        }
-
-        if (tilkoApiIndicatesFailure(nhisRes)) {
-          final st = tilkoApiStatusFields(nhisRes);
-          await _json(request, 200, {
-            'ok': false,
-            'detail':
-                'NHIS 진료·투약 조회 실패: ${st['code'] ?? ''} ${st['message'] ?? ''}'.trim(),
-            'hint_ko':
-                '틸코 응답 Status를 확인하세요. 간편인증이 완료되지 않았거나 조회 기간에 이력이 없을 수 있습니다.',
-            'tilko': tilkoAuth,
-            'nhis_treatment_injection': nhisRes,
-          });
-          return;
-        }
-
-        var items = bffMapCodefRootToMedicationItems(nhisRes);
-        var metaSource = 'tilko_nhis_simpleauth_treatment_injection';
+        final end = DateTime.now();
+        final start = DateTime(end.year - 3, end.month, end.day);
         Map<String, dynamic>? hiraRes;
+        Map<String, dynamic>? nhisRes;
+        var items = <Map<String, dynamic>>[];
+        var metaSource = 'tilko_hira_my_medications';
+
+        if (authChannel == 'HIRA') {
+          try {
+            hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
+              tilkoRequestMap: tilkoMap,
+              tilkoAuthResponse: tilkoAuth,
+              startDateYyyymmdd: _bffYmd(start),
+              endDateYyyymmdd: _bffYmd(end),
+            );
+            if (hiraRes['http_status'] == null &&
+                !tilkoApiIndicatesFailure(hiraRes)) {
+              items = bffMapCodefRootToMedicationItems(hiraRes);
+            }
+          } catch (e) {
+            // ignore: avoid_print
+            print('BFF flow HIRA 조회: $e');
+          }
+        }
+
         if (items.isEmpty) {
-          final end = DateTime.now();
-          final start = DateTime(end.year - 3, end.month, end.day);
+          nhisRes =
+              await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
+            tilkoRequestMap: tilkoMap,
+            tilkoAuthResponse: tilkoAuth,
+          );
+          if (nhisRes['http_status'] != null) {
+            final inner = nhisRes['body'];
+            await _json(request, 200, {
+              'ok': false,
+              'detail': '틸코 NHIS 진료·투약 정보(간편인증) HTTP 오류',
+              'hint_ko':
+                  '공단 간편인증이 완료된 뒤 호출했는지, '
+                  '문서(https://apidemo.tilko.net … NhisSimpleAuth-RetrieveTreatmentInjectionInformationPerson)와 대조하세요.',
+              'tilko': tilkoAuth,
+              'nhis_treatment_injection':
+                  inner is Map<String, dynamic> ? inner : nhisRes,
+            });
+            return;
+          }
+
+          if (tilkoApiIndicatesFailure(nhisRes)) {
+            final st = tilkoApiStatusFields(nhisRes);
+            await _json(request, 200, {
+              'ok': false,
+              'detail':
+                  'NHIS 진료·투약 조회 실패: ${st['code'] ?? ''} ${st['message'] ?? ''}'.trim(),
+              'hint_ko':
+                  '틸코 응답 Status를 확인하세요. 간편인증이 완료되지 않았거나 조회 기간에 이력이 없을 수 있습니다.',
+              'tilko': tilkoAuth,
+              'nhis_treatment_injection': nhisRes,
+            });
+            return;
+          }
+
+          items = bffMapCodefRootToMedicationItems(nhisRes);
+          metaSource = 'tilko_nhis_simpleauth_treatment_injection';
+        }
+
+        if (items.isEmpty && hiraRes == null) {
           try {
             hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
               tilkoRequestMap: tilkoMap,
@@ -427,7 +479,7 @@ Future<void> _handle(HttpRequest request) async {
         }
         final emptyParsed = items.isEmpty;
         final st = tilkoApiStatusFields(
-          hiraRes is Map<String, dynamic> ? hiraRes : nhisRes,
+          (hiraRes ?? nhisRes ?? tilkoAuth) as Map<String, dynamic>,
         );
         // ignore: avoid_print
         print('BFF flow tilko-hira-medications: ok items=${items.length}');

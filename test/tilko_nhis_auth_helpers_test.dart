@@ -51,10 +51,10 @@ void main() {
     );
   });
 
-  test('tilkoNhisCellphoneDigits strips hyphens', () {
+  test('tilkoFormatCellphoneHyphen formats mobile', () {
     expect(
-      tilkoNhisCellphoneDigits('010-1234-5678'),
-      '01012345678',
+      tilkoFormatCellphoneHyphen('01012345678'),
+      '010-1234-5678',
     );
   });
 }

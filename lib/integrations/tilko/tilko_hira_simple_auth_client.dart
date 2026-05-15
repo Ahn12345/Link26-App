@@ -96,9 +96,20 @@ bool tilkoNhisSimpleAuthIndicatesError(Map<String, dynamic> root) {
   return !tilkoNhisAuthTokensComplete(tilkoNhisLiftNestedSession(root));
 }
 
-/// NHIS 간편인증 API — 휴대폰은 숫자만(하이픈 없음).
-String tilkoNhisCellphoneDigits(String phone) =>
-    phone.replaceAll(RegExp(r'\D'), '');
+/// 틸코 간편인증 API — 휴대폰 `010-1234-5678` (apidemo·샘플 코드 형식).
+String tilkoFormatCellphoneHyphen(String phone) {
+  final d = phone.replaceAll(RegExp(r'\D'), '');
+  if (d.length == 11 && d.startsWith('010')) {
+    return '${d.substring(0, 3)}-${d.substring(3, 7)}-${d.substring(7)}';
+  }
+  if (d.length == 10 && d.startsWith('02')) {
+    return '${d.substring(0, 2)}-${d.substring(2, 6)}-${d.substring(6)}';
+  }
+  return d;
+}
+
+/// 주민등록번호 13자리(숫자만).
+String tilkoIdentityDigits13(String raw) => raw.replaceAll(RegExp(r'\D'), '');
 
 /// logincheck·simpleauth 응답에 토큰 4종이 채워졌는지(값은 출력하지 않음).
 String tilkoNhisTokenPresenceSummary(Map<String, dynamic> root) {
@@ -273,12 +284,15 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
+    final pat = privateAuthType.trim().toUpperCase();
+    final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
+    final id = tilkoIdentityDigits13(identityNumber);
     final body = <String, dynamic>{
-      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, privateAuthType),
-      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
-      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate),
-      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneNumber),
-      'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, identityNumber),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName.trim()),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate.trim()),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
+      'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, id),
     };
 
     final uri = Uri.parse('$_root/api/v1.0/hirasimpleauth/simpleauthrequest');
@@ -332,7 +346,7 @@ class TilkoHiraSimpleAuthClient {
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
     final pat = privateAuthType.trim().toUpperCase();
-    final cell = tilkoNhisCellphoneDigits(userCellphoneNumber);
+    final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
     final body = <String, dynamic>{
       'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
       'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName.trim()),
@@ -367,13 +381,14 @@ class TilkoHiraSimpleAuthClient {
     return decoded;
   }
 
-  /// NHIS **[간편인증 완료여부 확인]** — `POST …/nhissimpleauth/logincheck`
-  /// (틸코 API 상태: `/api/v1.0/nhissimpleauth/logincheck`).
-  ///
-  /// [sessionTokens]: `simpleauthrequest` 응답(및 이전 logincheck 응답)을 합친 맵. 토큰 필드는 비어 있어도 됨.
-  Future<Map<String, dynamic>> requestNhisLoginCheck({
+  /// 간편인증 **[완료여부 확인]** — HIRA·NHIS `logincheck` (및 v2 LoginCheck 폴백).
+  Future<Map<String, dynamic>> requestTilkoLoginCheck({
     required Map<String, dynamic> tilkoRequestMap,
     required Map<String, dynamic> sessionTokens,
+    List<String> pathCandidates = const [
+      '/api/v1.0/hirasimpleauth/logincheck',
+      '/api/v1.0/nhissimpleauth/logincheck',
+    ],
   }) async {
     if (apiKey.isEmpty) {
       throw StateError('TILKO_API_KEY 가 비어 있습니다.');
@@ -385,11 +400,11 @@ class TilkoHiraSimpleAuthClient {
 
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
-    final cell = tilkoNhisCellphoneDigits(pickReq('UserCellphoneNumber'));
+    final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
     final pat = pickReq('PrivateAuthType').toUpperCase();
     if ([userName, birth, cell, pat].any((e) => e.isEmpty)) {
       throw StateError(
-        'NHIS logincheck: 요청맵에 이름·생년월일·휴대폰·인증채널이 필요합니다.',
+        'Tilko logincheck: 요청맵에 이름·생년월일·휴대폰·인증채널이 필요합니다.',
       );
     }
 
@@ -448,18 +463,18 @@ class TilkoHiraSimpleAuthClient {
       return decoded;
     }
 
-    var out = await postLogin(
-      '/api/v1.0/nhissimpleauth/logincheck',
-      <String, dynamic>{'Auth': flatAuth},
-      encKeyHeader,
-    );
-    if (out['http_status'] == 404) {
+    Map<String, dynamic>? out;
+    for (final path in pathCandidates) {
       out = await postLogin(
-        '/api/v1.0/nhissimpleauth/logincheck',
-        flatAuth,
+        path,
+        <String, dynamic>{'Auth': flatAuth},
         encKeyHeader,
       );
+      if (out['http_status'] != 404) break;
+      out = await postLogin(path, flatAuth, encKeyHeader);
+      if (out['http_status'] != 404) break;
     }
+    out ??= <String, dynamic>{'http_status': 404};
     if (out['http_status'] == 404) {
       final pub2 = await fetchPublicKey();
       final rnd2 = Random.secure();
@@ -487,6 +502,20 @@ class TilkoHiraSimpleAuthClient {
     return out;
   }
 
+  /// NHIS logincheck — [requestTilkoLoginCheck] NHIS 경로 우선.
+  Future<Map<String, dynamic>> requestNhisLoginCheck({
+    required Map<String, dynamic> tilkoRequestMap,
+    required Map<String, dynamic> sessionTokens,
+  }) =>
+      requestTilkoLoginCheck(
+        tilkoRequestMap: tilkoRequestMap,
+        sessionTokens: sessionTokens,
+        pathCandidates: const [
+          '/api/v1.0/nhissimpleauth/logincheck',
+          '/api/v1.0/hirasimpleauth/logincheck',
+        ],
+      );
+
   /// `simpleauthrequest`의 ResultData에서 받은 토큰으로 `logincheck`를 폴링해
   /// 휴대폰 간편인증 완료(`Result`==true)까지 기다립니다.
   ///
@@ -497,6 +526,10 @@ class TilkoHiraSimpleAuthClient {
     int maxAttempts = 36,
     Duration interval = const Duration(seconds: 2),
     bool logPollProgress = false,
+    List<String> loginCheckPathCandidates = const [
+      '/api/v1.0/hirasimpleauth/logincheck',
+      '/api/v1.0/nhissimpleauth/logincheck',
+    ],
   }) async {
     var session = tilkoNhisLiftNestedSession(
       Map<String, dynamic>.from(initialSimpleAuthResponse),
@@ -550,9 +583,10 @@ class TilkoHiraSimpleAuthClient {
     for (var i = 0; i < maxAttempts; i++) {
       Map<String, dynamic> lc;
       try {
-        lc = await requestNhisLoginCheck(
+        lc = await requestTilkoLoginCheck(
           tilkoRequestMap: tilkoRequestMap,
           sessionTokens: session,
+          pathCandidates: loginCheckPathCandidates,
         );
       } catch (e) {
         lastPollError = '$e';
@@ -616,12 +650,16 @@ class TilkoHiraSimpleAuthClient {
 
   Future<Map<String, dynamic>> requestFromJsonMap(Map<String, dynamic> m) {
     return requestSimpleAuth(
-      privateAuthType: '${m['PrivateAuthType'] ?? m['privateAuthType'] ?? ''}',
-      userName: '${m['UserName'] ?? m['userName'] ?? ''}',
-      birthDate: '${m['BirthDate'] ?? m['birthDate'] ?? ''}',
-      userCellphoneNumber:
-          '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}',
-      identityNumber: '${m['IdentityNumber'] ?? m['identityNumber'] ?? ''}',
+      privateAuthType:
+          '${m['PrivateAuthType'] ?? m['privateAuthType'] ?? ''}'.trim(),
+      userName: '${m['UserName'] ?? m['userName'] ?? ''}'.trim(),
+      birthDate: '${m['BirthDate'] ?? m['birthDate'] ?? ''}'.trim(),
+      userCellphoneNumber: tilkoFormatCellphoneHyphen(
+        '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}',
+      ),
+      identityNumber: tilkoIdentityDigits13(
+        '${m['IdentityNumber'] ?? m['identityNumber'] ?? ''}',
+      ),
     );
   }
 
@@ -645,8 +683,8 @@ class TilkoHiraSimpleAuthClient {
     final identity = pickReq('IdentityNumber');
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
-    final cell = pickReq('UserCellphoneNumber');
-    final pat = pickReq('PrivateAuthType');
+    final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
+    final pat = pickReq('PrivateAuthType').toUpperCase();
 
     String pickAuth(String k) =>
         (tilkoFindPlainString(tilkoAuthResponse, k) ?? '').trim();
@@ -737,8 +775,8 @@ class TilkoHiraSimpleAuthClient {
 
     final userName = pickReq('UserName');
     final birth = pickReq('BirthDate');
-    final cell = pickReq('UserCellphoneNumber');
-    final pat = pickReq('PrivateAuthType');
+    final cell = tilkoFormatCellphoneHyphen(pickReq('UserCellphoneNumber'));
+    final pat = pickReq('PrivateAuthType').toUpperCase();
 
     String pickAuth(String k) =>
         (tilkoFindPlainString(liftedAuth, k) ?? '').trim();
