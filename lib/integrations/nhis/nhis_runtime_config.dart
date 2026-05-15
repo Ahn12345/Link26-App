@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../core/constants/api_keys.dart';
+import '../../core/services/link26_remote_bff_bootstrap.dart';
 
 /// `.env` 우선, 없으면 빌드 시 [ApiConfig.nhisBaseUrl] (`--dart-define=NHIS_BASE_URL=...`).
 abstract final class NhisRuntimeConfig {
@@ -31,13 +32,16 @@ abstract final class NhisRuntimeConfig {
   /// [Link26BffIntegrationsClient] 가 연결 실패 시 순서대로 재시도합니다.
   ///
   /// **릴리스(`kReleaseMode`)**: `assets/env/dotenv`의 LAN 주소는 스토어에 실수로
-  /// 포함되기 쉬우므로 무시합니다. 대신 빌드 시
-  /// `--dart-define=NHIS_PRODUCTION_BASE_URL=https://운영-API` 만 사용합니다.
+  /// 포함되기 쉬우므로 무시합니다. 우선순위:
+  /// 1. `--dart-define=NHIS_PRODUCTION_BASE_URL=…`
+  /// 2. [Link26RemoteBffBootstrap] 캐시(원격 JSON + 로컬 저장)
   /// 디버그·프로파일은 기존처럼 dotenv → `NHIS_BASE_URL` dart-define 순입니다.
   static List<String> get baseUrlCandidates {
     if (kReleaseMode) {
       final prod = _splitAndNormalizeBffBases(ApiConfig.nhisProductionBaseUrl.trim());
       if (prod.isNotEmpty) return prod;
+      final remote = Link26RemoteBffBootstrap.cachedReleaseBases;
+      if (remote.isNotEmpty) return List<String>.from(remote);
       return const [];
     }
     final v = _stripQuotes(dotenv.env['NHIS_BASE_URL']);

@@ -5,6 +5,7 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
+import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
@@ -93,9 +94,18 @@ class NhisMedicinesSyncOutcome {
       case NhisMedicinesSyncResult.skipped:
         if (NhisRuntimeConfig.baseUrl.isEmpty) {
           if (kReleaseMode) {
-            return '복약 동기화를 건너뛰었습니다. 스토어/릴리스 빌드에는 '
-                '빌드 시 --dart-define=NHIS_PRODUCTION_BASE_URL=https://운영-BFF-주소 '
-                '를 넣어야 합니다. (.env의 NHIS_BASE_URL은 릴리스에서 사용하지 않습니다.)';
+            final hasManifest =
+                Link26RemoteBffBootstrap.manifestUrl.trim().isNotEmpty;
+            if (hasManifest) {
+              return '복약 동기화를 건너뛰었습니다. LINK26_REMOTE_CONFIG_URL 의 JSON을 '
+                  '아직 받지 못했거나 형식이 맞지 않습니다. 네트워크 후 재시도하거나 '
+                  '--dart-define=NHIS_PRODUCTION_BASE_URL=… 를 사용하세요.';
+            }
+            return '복약 동기화를 건너뛰었습니다. 스토어/릴리스에는 '
+                '(1) dotenv의 LINK26_REMOTE_CONFIG_URL=https://…/manifest.json '
+                '(JSON에 nhisBffBases) 또는 '
+                '(2) --dart-define=NHIS_PRODUCTION_BASE_URL=https://… '
+                '가 필요합니다. (.env의 NHIS_BASE_URL은 릴리스에서 사용하지 않습니다.)';
           }
           return '복약 동기화를 건너뛰었습니다. assets/env/dotenv 의 NHIS_BASE_URL '
               '또는 --dart-define=NHIS_BASE_URL 과 PC BFF 실행을 확인하세요.';

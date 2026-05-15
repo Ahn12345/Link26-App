@@ -7,6 +7,8 @@ import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/design/link26_design_catalog.dart';
 import 'package:link26_app/core/services/dose_reminder_notifications.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
+import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
+import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
 import 'app.dart';
 
@@ -58,7 +60,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _waitForDebugAndroidAssetBundle();
   await _loadDotenvFromAssets();
+  await Link26RemoteBffBootstrap.init();
+  Link26RemoteBffBootstrap.scheduleBackgroundRefresh();
   await Link26BffAdvice.evaluateAfterDotenv();
+  if (kDebugMode) {
+    final m = Link26RemoteBffBootstrap.manifestUrl.trim();
+    debugPrint(
+      'Link26: kReleaseMode=$kReleaseMode NHIS_USE_MOCK=${NhisRuntimeConfig.useMock} '
+      'baseUrl="${NhisRuntimeConfig.baseUrl}" '
+      'remoteManifest=${m.isEmpty ? "(비움)" : m}',
+    );
+  }
   await Link26DesignCatalog.load();
   await DoseReminderNotifications.init();
   await DoseReminderNotifications.rescheduleFromPrefs();

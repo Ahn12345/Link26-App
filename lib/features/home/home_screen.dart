@@ -14,6 +14,7 @@ import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
+import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
@@ -125,6 +126,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     super.initState();
     HomeNotificationRepository.revision.addListener(_onBellDepsChanged);
     AiChatHomeAlertNotifier.instance.addListener(_onBellDepsChanged);
+    Link26RemoteBffBootstrap.revision.addListener(_onRemoteBffRevision);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _bootstrapMedicines();
       if (!mounted) return;
@@ -137,10 +139,16 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     unawaited(_refreshBellBadge());
   }
 
+  void _onRemoteBffRevision() {
+    if (!mounted) return;
+    unawaited(_bootstrapMedicines());
+  }
+
   @override
   void dispose() {
     HomeNotificationRepository.revision.removeListener(_onBellDepsChanged);
     AiChatHomeAlertNotifier.instance.removeListener(_onBellDepsChanged);
+    Link26RemoteBffBootstrap.revision.removeListener(_onRemoteBffRevision);
     super.dispose();
   }
 
@@ -212,15 +220,25 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       if (kDebugMode) {
         debugPrint(
           'NHIS: mock 꺼짐 + BFF 베이스 URL 비어 있음 — 복약 동기화 생략 '
-          '(릴리스는 --dart-define=NHIS_PRODUCTION_BASE_URL=..., 디버그는 .env NHIS_BASE_URL)',
+          '(릴리스: NHIS_PRODUCTION_BASE_URL 또는 LINK26_REMOTE_CONFIG_URL JSON, '
+          '디버그: .env NHIS_BASE_URL)',
         );
       }
       if (kReleaseMode && !NhisRuntimeConfig.useMock) {
+        final hasManifest =
+            Link26RemoteBffBootstrap.manifestUrl.trim().isNotEmpty;
         previewParts.add(
-          '운영 BFF 주소가 빌드에 없어 서버에서 복약 정보를 불러오지 않습니다. '
-          '릴리스 빌드에 다음을 넣으세요: '
-          '--dart-define=NHIS_PRODUCTION_BASE_URL=https://운영-BFF-주소 '
-          '(.env의 NHIS_BASE_URL은 스토어 APK에서 사용하지 않습니다.)',
+          hasManifest
+              ? '운영 BFF 주소를 아직 불러오지 못했습니다. '
+                  'Wi‑Fi·데이터 연결을 확인하거나 잠시 후 당겨서 새로고침해 보세요. '
+                  'LINK26_REMOTE_CONFIG_URL 의 JSON에 '
+                  '`{"nhisBffBases":["https://운영-BFF-주소"]}` 형식이 있는지 확인하세요. '
+                  '또는 빌드에 --dart-define=NHIS_PRODUCTION_BASE_URL=… 를 넣을 수 있습니다.'
+              : '운영 BFF 주소가 없어 서버에서 복약 정보를 불러오지 않습니다. '
+                  '선택 ① dotenv에 LINK26_REMOTE_CONFIG_URL=https://…/link26-bff.json '
+                  '(HTTPS JSON에 nhisBffBases) ② 빌드 시 '
+                  '--dart-define=NHIS_PRODUCTION_BASE_URL=https://… '
+                  '(.env의 NHIS_BASE_URL은 스토어 APK에서 쓰지 않습니다.)',
         );
       }
       if (mounted && previewParts.isNotEmpty) {
