@@ -6,6 +6,7 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/services/nhis_tilko_hira_flow_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
+import 'package:link26_app/features/health/kakao_cert_readiness.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
@@ -23,6 +24,15 @@ abstract final class HiraLinkService {
     required String residentRegistrationDigits13,
     String? codefConnectedId,
   }) async {
+    if (!context.mounted) return;
+    final ready = await KakaoCertReadiness.confirmBeforeTilkoSync(
+      context: context,
+      displayName: displayName,
+      phoneDigits: phoneDigits,
+      birthDateYmd: birthDateYmd,
+    );
+    if (!ready || !context.mounted) return;
+
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -144,18 +154,6 @@ abstract final class HiraLinkService {
       return null;
     }
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '틸코·건강보험 연동 중입니다. 휴대폰에서 카카오 간편인증 알림을 '
-            '완료한 뒤 최대 약 2분 기다려 주세요.',
-          ),
-          duration: Duration(seconds: 6),
-        ),
-      );
-    }
-
     var birthYmd = user.birthDateYmd;
     if (birthYmd == null || birthYmd.length != 8) {
       final fromRrn = TilkoRrnFields.birthYmdFromRrn(rrn);
@@ -166,6 +164,27 @@ abstract final class HiraLinkService {
           birthDateYmd: fromRrn,
         );
       }
+    }
+
+    if (!context.mounted) return null;
+    final ready = await KakaoCertReadiness.confirmBeforeTilkoSync(
+      context: context,
+      displayName: user.displayName,
+      phoneDigits: user.phoneDigits,
+      birthDateYmd: birthYmd,
+    );
+    if (!ready || !context.mounted) return null;
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '틸코·건강보험 연동 중입니다. 휴대폰에서 카카오 간편인증 알림을 '
+            '완료한 뒤 최대 약 2분 기다려 주세요.',
+          ),
+          duration: Duration(seconds: 6),
+        ),
+      );
     }
 
     final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(

@@ -565,6 +565,40 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signupBirthRequired => '생년월일을 입력하세요.';
 
   @override
+  String get kakaoCertDialogTitle => '카카오 간편인증 확인';
+
+  @override
+  String get kakaoCertDialogBody =>
+      '건강보험·심평원 연동은 틸코를 통해 카카오 간편인증을 씁니다. '
+      '앱에 저장한 정보와 카카오 본인인증(실명·휴대폰·생년월일)이 같아야 '
+      '카카오톡 알림이 옵니다.';
+
+  @override
+  String get kakaoCertDialogDbNote =>
+      '앱 DB에만 있고 카카오에 생년월일이 없으면 연동되지 않습니다.';
+
+  @override
+  String get kakaoCertOpenAccount => '카카오 계정·본인인증 열기';
+
+  @override
+  String get kakaoCertAcknowledge =>
+      '카카오에 아래와 같은 실명·휴대폰·생년월일이 등록되어 있음을 확인했습니다.';
+
+  @override
+  String get kakaoCertContinue => '연동 시작';
+
+  @override
+  String get kakaoCertSignupNote =>
+      '가입 정보는 앱 DB에 저장됩니다. 틸코는 카카오 간편인증 등록 정보와 '
+      '맞는지 검사하므로, 카카오 본인인증에 생년월일이 있어야 합니다.';
+
+  @override
+  String get kakaoCertSignupAcknowledge => '위 내용을 이해했습니다.';
+
+  @override
+  String get dialogCancel => '취소';
+
+  @override
   String get signupRrnLabel => '주민등록번호';
 
   @override

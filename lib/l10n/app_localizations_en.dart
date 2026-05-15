@@ -574,6 +574,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupBirthRequired => 'Please enter your date of birth.';
 
   @override
+  String get kakaoCertDialogTitle => 'Kakao simple auth check';
+
+  @override
+  String get kakaoCertDialogBody =>
+      'NHIS/HIRA sync uses Tilko with Kakao simple authentication. '
+      'Your app data must match Kakao cert (legal name, phone, date of birth) '
+      'or you will not receive a Kakao notification.';
+
+  @override
+  String get kakaoCertDialogDbNote =>
+      'Data in the app DB alone is not enough if Kakao cert lacks your birth date.';
+
+  @override
+  String get kakaoCertOpenAccount => 'Open Kakao account / verification';
+
+  @override
+  String get kakaoCertAcknowledge =>
+      'I confirmed Kakao has the same name, phone, and birth date below.';
+
+  @override
+  String get kakaoCertContinue => 'Start sync';
+
+  @override
+  String get kakaoCertSignupNote =>
+      'Signup saves data in the app. Tilko matches Kakao cert, not only our DB.';
+
+  @override
+  String get kakaoCertSignupAcknowledge => 'I understand the above.';
+
+  @override
+  String get dialogCancel => 'Cancel';
+
+  @override
   String get signupRrnLabel => 'Resident ID (KR, 13 digits)';
 
   @override

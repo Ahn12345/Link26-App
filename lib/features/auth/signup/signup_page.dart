@@ -38,6 +38,7 @@ class _SignupPageState extends State<SignupPage> {
   /// `male` | `female`
   String? _gender;
   bool _privacyAgreed = false;
+  bool _kakaoCertUnderstood = false;
   bool _busy = false;
 
   @override
@@ -56,6 +57,7 @@ class _SignupPageState extends State<SignupPage> {
     if (!SignupValidators.isBirthYmd8(_birthCtrl.text)) return false;
     if (!SignupValidators.isRrn13Digits(_rrnCtrl.text)) return false;
     if (!_privacyAgreed) return false;
+    if (!_kakaoCertUnderstood) return false;
     return true;
   }
 
@@ -325,6 +327,17 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            l10n.kakaoCertSignupNote,
+                            style: TextStyle(
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              color: Link26Surface.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
                         SizedBox(height: Link26ResponsiveUi.gapMd(w)),
                         Text(
                           l10n.signupGenderLabel,
@@ -427,6 +440,21 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                        CheckboxListTile(
+                          value: _kakaoCertUnderstood,
+                          onChanged: (v) =>
+                              setState(() => _kakaoCertUnderstood = v ?? false),
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          title: Text(
+                            l10n.kakaoCertSignupAcknowledge,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                              color: Link26Surface.textPrimary,
+                            ),
+                          ),
+                        ),
                         CheckboxListTile(
                           value: _privacyAgreed,
                           onChanged: (v) =>

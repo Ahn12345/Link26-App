@@ -217,6 +217,15 @@ abstract class AppLocalizations {
   String get signupBirthInvalid;
   String get signupBirthRrnMismatch;
   String get signupBirthRequired;
+  String get kakaoCertDialogTitle;
+  String get kakaoCertDialogBody;
+  String get kakaoCertDialogDbNote;
+  String get kakaoCertOpenAccount;
+  String get kakaoCertAcknowledge;
+  String get kakaoCertContinue;
+  String get kakaoCertSignupNote;
+  String get kakaoCertSignupAcknowledge;
+  String get dialogCancel;
   String get signupRrnLabel;
   String get signupRrnHint;
   String get signupRrnInvalid;
