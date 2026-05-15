@@ -296,12 +296,21 @@ Future<void> _handle(HttpRequest request) async {
         );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
-        final patCandidates = tilkoPrivateAuthTypeCandidates(patForFlow);
+        var patCandidates = tilkoPrivateAuthTypeCandidates(patForFlow);
         final kakaoOnly =
             tilkoPrivateAuthTypeName(patForFlow) == 'KAKAO';
-        final phoneCandidates = tilkoCellphoneWireCandidates(
+        var phoneCandidates = tilkoCellphoneWireCandidates(
           '${tilkoMap['UserCellphoneNumber'] ?? tilkoMap['userCellphoneNumber'] ?? ''}',
         );
+        if (kakaoOnly) {
+          // 카카오만: 틸코 샘플 형식(1 + 010-1234-5678) 우선 — 실패 시 KAKAO 1회만 추가.
+          patCandidates = patCandidates.length > 1
+              ? <String>[patCandidates.first, patCandidates.last]
+              : patCandidates;
+          phoneCandidates = phoneCandidates.isNotEmpty
+              ? <String>[phoneCandidates.first]
+              : phoneCandidates;
+        }
         var authChannel = 'NHIS';
         Map<String, dynamic>? tilkoRes;
         Map<String, dynamic>? tilkoResLifted;
@@ -337,11 +346,14 @@ Future<void> _handle(HttpRequest request) async {
             final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
             final nhisTarget =
                 tilkoFindPlainString(tilkoResLifted, 'TargetCode');
+            final apiTxKey =
+                tilkoFindPlainString(tilkoResLifted, 'ApiTxKey');
             // ignore: avoid_print
             print(
               'BFF ① NHIS simpleauth(PrivateAuthType=$patTry, '
               'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}, phone=$cellWire) '
-              '실패 Message=${nhisMsg ?? '-'} TargetCode=${nhisTarget ?? '-'}',
+              '실패 Message=${nhisMsg ?? '-'} TargetCode=${nhisTarget ?? '-'} '
+              'ApiTxKey=${apiTxKey ?? '-'}',
             );
 
             if (!kakaoOnly) {

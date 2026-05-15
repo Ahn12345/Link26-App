@@ -21,6 +21,17 @@ abstract final class HiraLinkService {
     required String residentRegistrationDigits13,
     String? codefConnectedId,
   }) async {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '틸코·건강보험 연동 중입니다. 휴대폰에서 카카오 간편인증 알림을 '
+            '완료한 뒤 최대 약 2분 기다려 주세요.',
+          ),
+          duration: Duration(seconds: 6),
+        ),
+      );
+    }
     final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
       displayName: displayName,
       phoneDigits: phoneDigits,
