@@ -193,7 +193,45 @@ String tilkoSimpleAuthRequestLogLine(Map<String, dynamic> m) {
 bool tilkoSimpleAuthMessageRetryable(String? message) {
   final m = (message ?? '').trim();
   if (m.isEmpty) return false;
-  return m.contains('찾을 수 없') || m.contains('조회된 데이터가 없습니다');
+  if (m.contains('조회된 데이터가 없습니다')) return false;
+  return m.contains('찾을 수 없');
+}
+
+/// NHIS·HIRA simpleauth 실패 시 사용자 안내 — NHIS(카카오) 오류를 우선합니다.
+String tilkoBestSimpleAuthHintKo({
+  Map<String, dynamic>? nhisLifted,
+  Map<String, dynamic>? hiraLifted,
+}) {
+  if (nhisLifted != null) {
+    final m = (tilkoFindPlainString(nhisLifted, 'Message') ?? '').trim();
+    if (m.contains('찾을 수 없')) {
+      return tilkoFriendlyHintFromLifted(nhisLifted);
+    }
+  }
+  if (nhisLifted != null && hiraLifted != null) {
+    final hiraMsg = (tilkoFindPlainString(hiraLifted, 'Message') ?? '').trim();
+    if (hiraMsg.contains('조회된 데이터가 없습니다')) {
+      return '건강보험공단(NHIS) 카카오 간편인증이 되지 않았습니다. '
+          '카카오톡 실명·휴대폰·생년월일과 앱 입력(이름·주민번호)이 같은지 확인하세요. '
+          '심평원(HIRA)에 처방 이력이 없어도 공단 간편인증은 먼저 성공해야 합니다.';
+    }
+  }
+  if (nhisLifted != null) {
+    return tilkoFriendlyHintFromLifted(nhisLifted);
+  }
+  if (hiraLifted != null) {
+    return tilkoFriendlyHintFromLifted(hiraLifted);
+  }
+  return _tilkoSimpleAuthDefaultHintKo;
+}
+
+/// 틸코 NHIS에 넣을 휴대폰 후보 — 하이픈(010-1234-5678) → 숫자만.
+List<String> tilkoCellphoneWireCandidates(String phone) {
+  final digits = phone.replaceAll(RegExp(r'\D'), '');
+  final hyphen = tilkoFormatCellphoneHyphen(phone);
+  if (digits.isEmpty) return <String>[hyphen];
+  if (hyphen == digits) return <String>[digits];
+  return <String>[hyphen, digits];
 }
 
 const String _tilkoValueNotFoundUserKo =
@@ -784,12 +822,13 @@ class TilkoHiraSimpleAuthClient {
   Future<Map<String, dynamic>> requestNhisSimpleAuthFromJsonMap(
     Map<String, dynamic> m,
   ) {
+    final phone =
+        '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}'.trim();
     return requestNhisSimpleAuth(
       privateAuthType: '${m['PrivateAuthType'] ?? m['privateAuthType'] ?? ''}',
       userName: '${m['UserName'] ?? m['userName'] ?? ''}',
       birthDate: '${m['BirthDate'] ?? m['birthDate'] ?? ''}',
-      userCellphoneNumber:
-          '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}',
+      userCellphoneNumber: phone,
       identityNumber: '${m['IdentityNumber'] ?? m['identityNumber'] ?? ''}',
     );
   }

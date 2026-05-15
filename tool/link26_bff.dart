@@ -297,53 +297,83 @@ Future<void> _handle(HttpRequest request) async {
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
         final patCandidates = tilkoPrivateAuthTypeCandidates(patForFlow);
-        var authChannel = 'HIRA';
+        final kakaoOnly =
+            tilkoPrivateAuthTypeName(patForFlow) == 'KAKAO';
+        final phoneCandidates = tilkoCellphoneWireCandidates(
+          '${tilkoMap['UserCellphoneNumber'] ?? tilkoMap['userCellphoneNumber'] ?? ''}',
+        );
+        var authChannel = 'NHIS';
         Map<String, dynamic>? tilkoRes;
         Map<String, dynamic>? tilkoResLifted;
+        Map<String, dynamic>? lastNhisLifted;
+        Map<String, dynamic>? lastHiraLifted;
         var usedPat = patCandidates.first;
+        var broke = false;
 
+        outer:
         for (final patTry in patCandidates) {
-          usedPat = patTry;
-          final reqMap = Map<String, dynamic>.from(tilkoMap)
-            ..['PrivateAuthType'] = patTry;
-          // ignore: avoid_print
-          print(
-            'BFF ① simpleauthrequest 요청 필드 — '
-            '${tilkoSimpleAuthRequestLogLine(reqMap)}',
-          );
+          for (final cellWire in phoneCandidates) {
+            usedPat = patTry;
+            final reqMap = Map<String, dynamic>.from(tilkoMap)
+              ..['PrivateAuthType'] = patTry
+              ..['UserCellphoneNumber'] = cellWire;
+            // ignore: avoid_print
+            print(
+              'BFF ① simpleauthrequest 요청 필드 — '
+              '${tilkoSimpleAuthRequestLogLine(reqMap)}',
+            );
 
-          authChannel = 'NHIS';
-          tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(reqMap);
-          tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-          if (tilkoRes['http_status'] == null &&
-              !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
-            break;
-          }
-          final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
-          // ignore: avoid_print
-          print(
-            'BFF ① NHIS simpleauth(PrivateAuthType=$patTry, '
-            'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}) 실패 '
-            'Message=${nhisMsg ?? '-'}',
-          );
+            authChannel = 'NHIS';
+            tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
+              reqMap,
+            );
+            tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+            lastNhisLifted = tilkoResLifted;
+            if (tilkoRes['http_status'] == null &&
+                !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+              broke = true;
+              break outer;
+            }
+            final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
+            final nhisTarget =
+                tilkoFindPlainString(tilkoResLifted, 'TargetCode');
+            // ignore: avoid_print
+            print(
+              'BFF ① NHIS simpleauth(PrivateAuthType=$patTry, '
+              'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}, phone=$cellWire) '
+              '실패 Message=${nhisMsg ?? '-'} TargetCode=${nhisTarget ?? '-'}',
+            );
 
-          authChannel = 'HIRA';
-          tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
-          tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-          if (tilkoRes['http_status'] == null &&
-              !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
-            break;
+            if (!kakaoOnly) {
+              authChannel = 'HIRA';
+              tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
+              tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+              lastHiraLifted = tilkoResLifted;
+              if (tilkoRes['http_status'] == null &&
+                  !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+                broke = true;
+                break outer;
+              }
+              final hiraMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
+              if (!tilkoSimpleAuthMessageRetryable(nhisMsg) &&
+                  !tilkoSimpleAuthMessageRetryable(hiraMsg)) {
+                broke = true;
+                break outer;
+              }
+              // ignore: avoid_print
+              print(
+                'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) — '
+                '다음 후보 시도',
+              );
+            } else if (!tilkoSimpleAuthMessageRetryable(nhisMsg)) {
+              broke = true;
+              break outer;
+            }
           }
-          final hiraMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
-          if (!tilkoSimpleAuthMessageRetryable(nhisMsg) &&
-              !tilkoSimpleAuthMessageRetryable(hiraMsg)) {
-            break;
-          }
+        }
+        if (!broke) {
           // ignore: avoid_print
-          print(
-            'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) 재시도 가능 오류 — '
-            '다음 PrivateAuthType 후보 시도',
-          );
+          print('BFF ① simpleauth 모든 후보 소진');
         }
 
         tilkoRes ??= <String, dynamic>{};
@@ -380,7 +410,10 @@ Future<void> _handle(HttpRequest request) async {
           'topKeys=${tilkoResLifted.keys.join(',')} ResultData=($rdKeys)',
         );
         if (tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
-          final hint = tilkoFriendlyHintFromLifted(tilkoResLifted);
+          final hint = tilkoBestSimpleAuthHintKo(
+            nhisLifted: lastNhisLifted,
+            hiraLifted: lastHiraLifted,
+          );
           await _json(request, 200, {
             'ok': false,
             'detail':
