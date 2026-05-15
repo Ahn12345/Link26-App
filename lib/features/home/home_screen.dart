@@ -221,7 +221,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         debugPrint(
           'NHIS: mock 꺼짐 + BFF 베이스 URL 비어 있음 — 복약 동기화 생략 '
           '(릴리스: NHIS_PRODUCTION_BASE_URL 또는 LINK26_REMOTE_CONFIG_URL JSON, '
-          '디버그: .env NHIS_BASE_URL)',
+          '디버그·프로파일: NHIS_BASE_URL)',
         );
       }
       if (kReleaseMode && !NhisRuntimeConfig.useMock) {
@@ -235,10 +235,11 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                   '`{"nhisBffBases":["https://운영-BFF-주소"]}` 형식이 있는지 확인하세요. '
                   '또는 빌드에 --dart-define=NHIS_PRODUCTION_BASE_URL=… 를 넣을 수 있습니다.'
               : '운영 BFF 주소가 없어 서버에서 복약 정보를 불러오지 않습니다. '
-                  '선택 ① dotenv에 LINK26_REMOTE_CONFIG_URL=https://…/link26-bff.json '
-                  '(HTTPS JSON에 nhisBffBases) ② 빌드 시 '
+                  '릴리스에는 다음 중 하나가 필요합니다: '
+                  '① dotenv에 LINK26_REMOTE_CONFIG_URL=https://…/manifest.json '
+                  '(JSON에 nhisBffBases) ② 빌드 시 '
                   '--dart-define=NHIS_PRODUCTION_BASE_URL=https://… '
-                  '(.env의 NHIS_BASE_URL은 스토어 APK에서 쓰지 않습니다.)',
+                  '(dotenv의 NHIS_BASE_URL은 릴리스에서 사용하지 않습니다.)',
         );
       }
       if (mounted && previewParts.isNotEmpty) {

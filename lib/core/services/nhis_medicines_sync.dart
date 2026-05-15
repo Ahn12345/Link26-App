@@ -105,7 +105,7 @@ class NhisMedicinesSyncOutcome {
                 '(1) dotenv의 LINK26_REMOTE_CONFIG_URL=https://…/manifest.json '
                 '(JSON에 nhisBffBases) 또는 '
                 '(2) --dart-define=NHIS_PRODUCTION_BASE_URL=https://… '
-                '가 필요합니다. (.env의 NHIS_BASE_URL은 릴리스에서 사용하지 않습니다.)';
+                '가 필요합니다. (dotenv의 NHIS_BASE_URL은 릴리스에서 사용하지 않습니다.)';
           }
           return '복약 동기화를 건너뛰었습니다. assets/env/dotenv 의 NHIS_BASE_URL '
               '또는 --dart-define=NHIS_BASE_URL 과 PC BFF 실행을 확인하세요.';
