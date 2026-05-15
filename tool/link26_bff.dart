@@ -303,9 +303,9 @@ Future<void> _handle(HttpRequest request) async {
           '${tilkoMap['UserCellphoneNumber'] ?? tilkoMap['userCellphoneNumber'] ?? ''}',
         );
         if (kakaoOnly) {
-          // 카카오만: 틸코 샘플 형식(1 + 010-1234-5678) 우선 — 실패 시 KAKAO 1회만 추가.
-          patCandidates = patCandidates.length > 1
-              ? <String>[patCandidates.first, patCandidates.last]
+          // 카카오만: NHIS 1회(1 + 010-1234-5678). 동일 오류 반복 호출은 포인트만 소모.
+          patCandidates = patCandidates.isNotEmpty
+              ? <String>[patCandidates.first]
               : patCandidates;
           phoneCandidates = phoneCandidates.isNotEmpty
               ? <String>[phoneCandidates.first]
@@ -380,49 +380,15 @@ Future<void> _handle(HttpRequest request) async {
                 'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) — '
                 '다음 후보 시도',
               );
-            } else if (!tilkoSimpleAuthMessageRetryable(nhisMsg)) {
+            } else {
               broke = true;
               break outer;
             }
           }
         }
         if (!broke) {
-          final idDigits = tilkoIdentityDigits13(
-            '${tilkoMap['IdentityNumber'] ?? tilkoMap['identityNumber'] ?? ''}',
-          );
-          if (idDigits.length == 13 && kakaoOnly) {
-            final retryMap = Map<String, dynamic>.from(tilkoMap)
-              ..['PrivateAuthType'] = patCandidates.first
-              ..['UserCellphoneNumber'] = phoneCandidates.first;
-            // ignore: avoid_print
-            print(
-              'BFF ① NHIS simpleauth + IdentityNumber(13) 재시도 — '
-              '${tilkoSimpleAuthRequestLogLine(retryMap)} rrn7=${idDigits[6]}',
-            );
-            authChannel = 'NHIS';
-            tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
-              retryMap,
-              includeIdentityNumber: true,
-            );
-            tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-            lastNhisLifted = tilkoResLifted;
-            if (tilkoRes['http_status'] == null &&
-                !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
-              broke = true;
-            } else {
-              final m = tilkoFindPlainString(tilkoResLifted, 'Message');
-              final log = tilkoFindPlainString(tilkoResLifted, 'ErrorLog');
-              // ignore: avoid_print
-              print(
-                'BFF ① NHIS+주민번호 재시도 실패 Message=${m ?? '-'} '
-                'ErrorLog=${log ?? '-'}',
-              );
-            }
-          }
-          if (!broke) {
-            // ignore: avoid_print
-            print('BFF ① simpleauth 모든 후보 소진');
-          }
+          // ignore: avoid_print
+          print('BFF ① simpleauth 실패(카카오 1회 시도)');
         }
 
         tilkoRes ??= <String, dynamic>{};
@@ -463,11 +429,17 @@ Future<void> _handle(HttpRequest request) async {
             nhisLifted: lastNhisLifted,
             hiraLifted: lastHiraLifted,
           );
+          final nhisMsg =
+              tilkoFindPlainString(tilkoResLifted, 'Message') ?? '';
           await _json(request, 200, {
             'ok': false,
             'detail':
                 '틸코 simpleauthrequest 오류 ($authChannel, ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode')})',
             'hint_ko': hint,
+            'meta': {
+              'kakao_cert_mismatch': nhisMsg.contains('찾을 수 없'),
+              'api_tx_key': tilkoFindPlainString(tilkoResLifted, 'ApiTxKey'),
+            },
             'tilko': tilkoRes,
           });
           return;
