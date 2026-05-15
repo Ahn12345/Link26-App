@@ -61,15 +61,10 @@ Future<void> _loadDotenvFromAssets() async {
 }
 
 Future<void> _maybeDiscoverLanBff() async {
-  if (kReleaseMode) {
-    final v = (dotenv.env['NHIS_LAN_AUTO_DISCOVER'] ?? '').trim().toLowerCase();
-    if (v != 'true' && v != '1' && v != 'yes') return;
-  } else {
-    final v = (dotenv.env['NHIS_LAN_AUTO_DISCOVER'] ?? '').trim().toLowerCase();
-    if (v == 'false' || v == '0' || v == 'no') return;
-  }
+  if (!NhisRuntimeConfig.lanAutoDiscoverEnabled) return;
   final found = await Link26LanBffDiscovery.discoverOnce();
   NhisRuntimeConfig.setLanDiscoveredBases(found);
+  await NhisRuntimeConfig.reorderLanDiscoveredForCurrentDevice();
 }
 
 Future<void> main() async {

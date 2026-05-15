@@ -40,10 +40,28 @@ InternetAddress? _broadcastFor(InternetAddress a) {
   return null;
 }
 
+/// Hyper-V·WSL·가상머신 NIC 으로 브로드캐스트하면 폰이 `172.*` 등 **잘못된 BFF IP** 를 잡는 경우가 많습니다.
+bool _isLikelyVirtualInterface(String name) {
+  final n = name.toLowerCase();
+  return n.contains('vethernet') ||
+      n.contains('hyper-v') ||
+      n.contains('virtualbox') ||
+      n.contains('vmware') ||
+      n.contains('wsl') ||
+      n.contains('virtual ') ||
+      n.contains('vpn') ||
+      n.contains('tap-windows') ||
+      n.contains('zerotier') ||
+      n.contains('tailscale') ||
+      n.contains('nordlynx') ||
+      n.contains('wireguard');
+}
+
 Future<Set<InternetAddress>> _broadcastTargets() async {
   final out = <InternetAddress>{};
   try {
     for (final ni in await NetworkInterface.list(includeLoopback: false)) {
+      if (_isLikelyVirtualInterface(ni.name)) continue;
       for (final addr in ni.addresses) {
         if (!_isPrivateLanIpv4(addr)) continue;
         final b = _broadcastFor(addr);

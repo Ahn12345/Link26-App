@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../core/constants/api_keys.dart';
+import '../../core/services/link26_lan_bff_discovery.dart';
 import '../../core/services/link26_remote_bff_bootstrap.dart';
 
 /// `.env` 우선, 없으면 빌드 시 [ApiConfig.nhisBaseUrl] (`--dart-define=NHIS_BASE_URL=...`).
@@ -38,6 +39,45 @@ abstract final class NhisRuntimeConfig {
       out.addAll(_splitAndNormalizeBffBases(b.trim()));
     }
     _lanDiscoveredBases = List<String>.unmodifiable(out);
+  }
+
+  /// [setLanDiscoveredBases] 와 달리, 새로 찾은 주소를 **앞**에 두고 기존 LAN 후보와 합칩니다(중복 제거).
+  static void mergeLanDiscoveredBases(List<String> newlyFound) {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final b in newlyFound) {
+      for (final n in _splitAndNormalizeBffBases(b.trim())) {
+        if (n.isEmpty || seen.contains(n)) continue;
+        seen.add(n);
+        out.add(n);
+      }
+    }
+    for (final b in _lanDiscoveredBases) {
+      if (b.isEmpty || seen.contains(b)) continue;
+      seen.add(b);
+      out.add(b);
+    }
+    _lanDiscoveredBases = List<String>.unmodifiable(out);
+  }
+
+  /// Wi‑Fi와 같은 대역의 BFF 주소가 먼저 오도록 LAN 후보만 다시 정렬합니다.
+  static Future<void> reorderLanDiscoveredForCurrentDevice() async {
+    if (kReleaseMode || _lanDiscoveredBases.isEmpty) return;
+    final sorted = await Link26LanBffDiscovery.prioritizeForDeviceLan(
+      List<String>.from(_lanDiscoveredBases),
+    );
+    _lanDiscoveredBases = List<String>.unmodifiable(sorted);
+  }
+
+  /// [main] 의 `_maybeDiscoverLanBff` 와 동일한 on/off 규칙.
+  static bool get lanAutoDiscoverEnabled {
+    if (kReleaseMode) {
+      final v = (dotenv.env['NHIS_LAN_AUTO_DISCOVER'] ?? '').trim().toLowerCase();
+      return v == 'true' || v == '1' || v == 'yes';
+    }
+    final v = (dotenv.env['NHIS_LAN_AUTO_DISCOVER'] ?? '').trim().toLowerCase();
+    if (v == 'false' || v == '0' || v == 'no') return false;
+    return true;
   }
 
   /// BFF 베이스 URL 목록. `NHIS_BASE_URL`에 쉼표·세미콜론·공백으로 여러 개를 두면

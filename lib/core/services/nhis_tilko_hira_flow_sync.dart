@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
+import 'package:link26_app/core/services/link26_lan_bff_discovery.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
@@ -37,6 +38,14 @@ abstract final class NhisTilkoHiraFlowSync {
         debugPrint('Tilko→HIRA: NHIS_USE_MOCK — 플로우 생략');
       }
       return null;
+    }
+
+    if (!kIsWeb && NhisRuntimeConfig.lanAutoDiscoverEnabled) {
+      final more = await Link26LanBffDiscovery.discoverOnce(
+        listenFor: const Duration(milliseconds: 6500),
+      );
+      NhisRuntimeConfig.mergeLanDiscoveredBases(more);
+      await NhisRuntimeConfig.reorderLanDiscoveredForCurrentDevice();
     }
 
     if (!Link26BffIntegrationsClient.canCall) {
