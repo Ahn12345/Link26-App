@@ -164,12 +164,16 @@ class _AlarmTile extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        item.time,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: Link26Surface.textPrimary,
+                      Flexible(
+                        child: Text(
+                          item.time,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: Link26Surface.textPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -192,7 +196,9 @@ class _AlarmTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${item.medicineName} ${item.dose}',
+                    '${item.medicineName} ${item.dose}'.trim(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Link26Surface.textSecondary,
                       fontSize: 15,
@@ -202,6 +208,7 @@ class _AlarmTile extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             if (item.completed)
               const Text(
                 '✓ 완료',
@@ -213,8 +220,17 @@ class _AlarmTile extends StatelessWidget {
             else
               FilledButton(
                 onPressed: onDone,
-                style: Link26Surface.filledAccentButton(),
-                child: const Text('복용 완료', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                style: Link26Surface.filledAccentButton().copyWith(
+                  minimumSize: const WidgetStatePropertyAll(Size(0, 40)),
+                  padding: const WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  '복용 완료',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                ),
               ),
           ],
         ),

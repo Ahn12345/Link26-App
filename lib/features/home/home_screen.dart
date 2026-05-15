@@ -875,12 +875,16 @@ class _AlarmPreviewCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      item.time,
-                      style: TextStyle(
-                        fontSize: Link26ResponsiveUi.alarmTime(w),
-                        fontWeight: FontWeight.w800,
-                        color: Link26Surface.textPrimary,
+                    Flexible(
+                      child: Text(
+                        item.time,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: Link26ResponsiveUi.alarmTime(w),
+                          fontWeight: FontWeight.w800,
+                          color: Link26Surface.textPrimary,
+                        ),
                       ),
                     ),
                     SizedBox(width: Link26ResponsiveUi.gapSm(w)),
@@ -903,7 +907,9 @@ class _AlarmPreviewCard extends StatelessWidget {
                 ),
                 SizedBox(height: Link26ResponsiveUi.alarmMetaGap(w)),
                 Text(
-                  '${item.medicineName} ${item.dose}',
+                  '${item.medicineName} ${item.dose}'.trim(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Link26Surface.textSecondary,
                     fontSize: Link26ResponsiveUi.body(w),
@@ -913,15 +919,24 @@ class _AlarmPreviewCard extends StatelessWidget {
               ],
             ),
           ),
+          SizedBox(width: Link26ResponsiveUi.gapSm(w).clamp(6.0, 10.0)),
           FilledButton(
             onPressed: onDone,
             style: FilledButton.styleFrom(
               backgroundColor: Link26Surface.accent,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('복용 완료', style: TextStyle(fontWeight: FontWeight.w800)),
+            child: Text(
+              '복용 완료',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: Link26ResponsiveUi.caption(w).clamp(11.0, 13.0),
+              ),
+            ),
           ),
         ],
       ),
