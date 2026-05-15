@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
+import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 
 final _codfRedirectRe = RegExp(r'CODEF HTTP (301|302|303|307|308)');
 
@@ -30,17 +31,8 @@ String _tilkoKeyMissingHintKo() =>
 
 String _rewriteTilkoEnvHint(String msg) {
   final s = msg.trim();
-  if (s.contains('찾을 수 없습니다') && RegExp(r"'[A-Za-z0-9+/=]{8,}'").hasMatch(s)) {
-    return '틸코가 이름·생년월일·휴대폰(010-1234-5678)·간편인증 채널 중 '
-        '일치하지 않는 값을 받았습니다. '
-        'PC `.env`의 TILKO_PRIVATE_AUTH_TYPE(카카오=KAKAO, 통신사 PASS=PASS)이 '
-        '폰에서 누른 인증과 같아야 합니다. '
-        '틸코 내정보에서 간편인증 3종 API 사용·포인트도 확인하세요.';
-  }
-  if (s.contains('조회된 데이터가 없습니다')) {
-    return '심평원(HIRA)에 해당 주민·이름·휴대폰 조합으로 조회된 이력이 없습니다. '
-        '입력 정보가 본인·간편인증 등록 정보와 같은지 확인하세요.';
-  }
+  final tilko = tilkoUserFacingMessageKo(s);
+  if (tilko != s) return tilko;
   if (s.contains('TILKO_API_KEY') &&
       (s.contains('비어') || s.toLowerCase().contains('empty'))) {
     if (kDebugMode) {
@@ -65,7 +57,7 @@ String _flowHttpErrorDetail(int statusCode, String body) {
     if (decoded is Map) {
       final hint = decoded['hint_ko'];
       if (hint is String && hint.trim().isNotEmpty) {
-        return hint.trim();
+        return _rewriteTilkoEnvHint(hint.trim());
       }
       final detail = decoded['detail'];
       if (detail is String && detail.trim().isNotEmpty) {
@@ -77,7 +69,7 @@ String _flowHttpErrorDetail(int statusCode, String body) {
           return 'CODEF 연동 오류입니다. BFF .env의 CODEF 클라이언트·호스트·상품 경로를 '
               '확인하거나 PC에서 BFF 로그를 확인하세요.\n($d)';
         }
-        return d;
+        return _rewriteTilkoEnvHint(d);
       }
     }
   } catch (_) {}

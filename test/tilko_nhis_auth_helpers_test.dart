@@ -51,6 +51,21 @@ void main() {
     );
   });
 
+  test('tilkoUserFacingMessageKo hides encrypted value-not-found', () {
+    const raw = "요청한 값 '11G1+Wo3AZ2FvwzmbvrMUw=='을(를) 찾을 수 없습니다.";
+    final friendly = tilkoUserFacingMessageKo(raw);
+    expect(friendly, isNot(contains('11G1+')));
+    expect(friendly, contains('카카오'));
+  });
+
+  test('tilkoFriendlyHintFromLifted uses Message when tokens empty', () {
+    final hint = tilkoFriendlyHintFromLifted({
+      'ErrorCode': 0,
+      'Message': "요청한 값 'abc=='을(를) 찾을 수 없습니다.",
+    });
+    expect(hint, isNot(contains('abc==')));
+  });
+
   test('tilkoFormatCellphoneHyphen formats mobile', () {
     expect(
       tilkoFormatCellphoneHyphen('01012345678'),

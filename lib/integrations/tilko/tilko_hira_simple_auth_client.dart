@@ -155,11 +155,12 @@ String tilkoPrivateAuthTypeNumeric(String raw) {
   }
 }
 
-/// BFF·로그용 — 이름(KAKAO) → 숫자(1) 순으로 중복 없이.
+/// BFF simpleauth — 틸코 운영 API는 숫자 코드(1=카카오)를 먼저 시도한 뒤 채널 이름.
 List<String> tilkoPrivateAuthTypeCandidates(String raw) {
   final name = tilkoPrivateAuthTypeName(raw);
   final num = tilkoPrivateAuthTypeNumeric(raw);
-  return <String>[name, num];
+  if (num == name) return <String>[name];
+  return <String>[num, name];
 }
 
 /// 단일 호출 경로 기본값(이름).
@@ -169,6 +170,52 @@ bool tilkoSimpleAuthMessageRetryable(String? message) {
   final m = (message ?? '').trim();
   if (m.isEmpty) return false;
   return m.contains('찾을 수 없') || m.contains('조회된 데이터가 없습니다');
+}
+
+const String _tilkoValueNotFoundUserKo =
+    '틸코가 이름·생년월일·휴대폰(010-1234-5678)·카카오 간편인증 정보 중 '
+    '일치하지 않는 값을 받았습니다. '
+    '카카오톡에 등록된 실명·휴대폰·생년월일과 앱·주민번호 입력이 같은지 확인한 뒤, '
+    '폰에서 카카오 간편인증 알림을 완료해 주세요. '
+    '틸코 내정보에서 간편인증 3종 API 사용·포인트도 확인하세요.';
+
+const String _tilkoNoHiraDataUserKo =
+    '심평원(HIRA)에 해당 주민·이름·휴대폰 조합으로 조회된 이력이 없습니다. '
+    '입력 정보가 본인·카카오 간편인증 등록 정보와 같은지 확인하세요.';
+
+const String _tilkoSimpleAuthDefaultHintKo =
+    '이름·생년월일(주민번호)·휴대폰(010-1234-5678)을 카카오·틸코에 등록된 정보와 '
+    '맞춰 주세요. TILKO_API_KEY에 심평원·NHIS 간편인증 상품 권한이 있는지 확인하세요.';
+
+/// BFF `hint_ko`·앱 스낵바 — 틸코 `Message`/`TargetMessage`의 암호문·원문을 숨깁니다.
+String tilkoUserFacingMessageKo(String raw) {
+  final s = raw.trim();
+  if (s.isEmpty) return s;
+  if (s.contains('찾을 수 없') &&
+      (RegExp(r"'[A-Za-z0-9+/=]{4,}'").hasMatch(s) ||
+          RegExp(r'[A-Za-z0-9+/=]{12,}={0,2}').hasMatch(s))) {
+    return _tilkoValueNotFoundUserKo;
+  }
+  if (s.contains('조회된 데이터가 없습니다')) {
+    return _tilkoNoHiraDataUserKo;
+  }
+  return raw;
+}
+
+/// simpleauthrequest 실패 시 BFF·앱 공통 `hint_ko`.
+String tilkoFriendlyHintFromLifted(Map<String, dynamic> lifted) {
+  final target = (tilkoFindPlainString(lifted, 'TargetMessage') ?? '').trim();
+  if (target.isNotEmpty && target != '-') {
+    final t = tilkoUserFacingMessageKo(target);
+    if (t != target || !target.contains('찾을 수 없')) {
+      return t;
+    }
+  }
+  final msg = (tilkoFindPlainString(lifted, 'Message') ?? '').trim();
+  if (msg.isNotEmpty) {
+    return tilkoUserFacingMessageKo(msg);
+  }
+  return _tilkoSimpleAuthDefaultHintKo;
 }
 
 /// 틸코 간편인증 API — 휴대폰 `010-1234-5678` (apidemo·샘플 코드 형식).
@@ -705,7 +752,7 @@ class TilkoHiraSimpleAuthClient {
     } else {
       out['_link26_poll_error'] =
           'logincheck에서 간편인증 완료(Result=true)를 받지 못했습니다. '
-          '휴대폰에서 PASS·카카오 등 인증을 완료한 뒤 다시 시도하세요.';
+          '휴대폰에서 카카오 간편인증을 완료한 뒤 다시 시도하세요.';
     }
     return out;
   }

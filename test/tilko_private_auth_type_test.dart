@@ -7,7 +7,7 @@ void main() {
     expect(tilkoPrivateAuthTypeNumeric('KAKAO'), '1');
     expect(
       tilkoPrivateAuthTypeCandidates('KAKAO'),
-      ['KAKAO', '1'],
+      ['1', 'KAKAO'],
     );
   });
 

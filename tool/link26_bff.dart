@@ -280,20 +280,23 @@ Future<void> _handle(HttpRequest request) async {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
         final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
         // ignore: avoid_print
-        final patRaw =
-            '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? ''}'
+        final envPat =
+            (env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'KAKAO').trim();
+        final patRaw = envPat.isNotEmpty
+            ? envPat
+            : '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? 'KAKAO'}'
                 .trim();
+        final patForFlow = patRaw.isEmpty ? 'KAKAO' : patRaw;
         // ignore: avoid_print
         print(
           'BFF flow tilko-hira-medications: 요청 수신 '
           '(UserName=${tilkoMap['UserName'] ?? tilkoMap['userName']}, '
-          'PrivateAuthType 후보=${tilkoPrivateAuthTypeCandidates(patRaw.isEmpty ? 'KAKAO' : patRaw).join('→')})',
+          '간편인증=카카오만, PrivateAuthType 후보='
+          '${tilkoPrivateAuthTypeCandidates(patForFlow).join('→')})',
         );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
-        final patCandidates = tilkoPrivateAuthTypeCandidates(
-          patRaw.isEmpty ? 'KAKAO' : patRaw,
-        );
+        final patCandidates = tilkoPrivateAuthTypeCandidates(patForFlow);
         var authChannel = 'HIRA';
         Map<String, dynamic>? tilkoRes;
         Map<String, dynamic>? tilkoResLifted;
@@ -371,11 +374,7 @@ Future<void> _handle(HttpRequest request) async {
           'topKeys=${tilkoResLifted.keys.join(',')} ResultData=($rdKeys)',
         );
         if (tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
-          final hint = (targetMsg?.trim().isNotEmpty == true)
-              ? targetMsg!.trim()
-              : (tilkoFindPlainString(tilkoResLifted, 'Message') ??
-                  '이름·생년월일(주민번호)·휴대폰(010-1234-5678)·간편인증 채널(KAKAO/PASS)을 '
-                  '틸코·본인 정보와 맞춰 주세요. TILKO_API_KEY에 심평원·NHIS 간편인증 상품 권한이 있는지 확인하세요.');
+          final hint = tilkoFriendlyHintFromLifted(tilkoResLifted);
           await _json(request, 200, {
             'ok': false,
             'detail':
@@ -412,9 +411,10 @@ Future<void> _handle(HttpRequest request) async {
           final pollHint = pollErr is String &&
                   pollErr.contains('simpleauthrequest 응답에 CxId')
               ? '틸코 simpleauthrequest 단계에서 세션 토큰을 받지 못했습니다. '
-                  '`.env`의 TILKO_PRIVATE_AUTH_TYPE(예: KAKAO)이 휴대폰에서 누른 간편인증과 같아야 합니다. '
+                  '카카오 간편인증(`.env` TILKO_PRIVATE_AUTH_TYPE=KAKAO)으로 '
+                  '휴대폰 알림을 완료했는지 확인하세요. '
                   'TILKO_API_KEY·틸코 상품(NHIS 간편인증) 권한을 확인하세요.'
-              : '휴대폰에서 PASS·카카오 등 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
+              : '휴대폰에서 카카오 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
                   '서버가 약 1분간 logincheck(Result)로 완료 여부를 확인합니다.$errBit '
                   '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
                   '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.';

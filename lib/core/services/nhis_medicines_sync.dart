@@ -8,6 +8,7 @@ import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_parser.dart';
@@ -112,8 +113,10 @@ class NhisMedicinesSyncOutcome {
         }
         return '복약 동기화를 건너뛰었습니다. 로그인 계정의 전화번호(숫자 10자리 이상)를 '
             '프로필에 맞춰 주세요.';
-      case NhisMedicinesSyncResult.failed:
-        return detail ?? '복약 목록을 가져오지 못했습니다.';
+      case NhisMedicinesSyncResult.failed: {
+        final raw = detail ?? '복약 목록을 가져오지 못했습니다.';
+        return Link26BffIntegrationsClient.polishFlowUserMessage(raw);
+      }
       case NhisMedicinesSyncResult.success:
         if (isCodefError) {
           final n = (metaNote ?? '').trim();

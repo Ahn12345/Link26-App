@@ -18,6 +18,7 @@ TILKO_API_HOST=https://api.tilko.net
 TILKO_API_KEY_DEMO=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_KEY_PROD=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_KEY=
+# 간편인증: 카카오만 (PASS 등 다른 채널은 사용하지 않음)
 TILKO_PRIVATE_AUTH_TYPE=KAKAO
 
 # --- CODEF (비활성) ---

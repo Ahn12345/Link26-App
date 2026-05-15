@@ -64,7 +64,6 @@ abstract final class NhisTilkoHiraFlowSync {
       );
     }
 
-    final privateAuthType = TilkoEnv.privateAuthType;
     final flowExtras = <String, dynamic>{};
     final cid = codefConnectedId?.trim();
     if (cid != null && cid.isNotEmpty) {
@@ -77,8 +76,7 @@ abstract final class NhisTilkoHiraFlowSync {
     try {
       final res = await Link26BffIntegrationsClient.flowTilkoHiraMedications(
         tilko: {
-          'PrivateAuthType':
-              privateAuthType.isEmpty ? 'KAKAO' : privateAuthType,
+          'PrivateAuthType': TilkoEnv.privateAuthTypePlain,
           'UserName': displayName.trim(),
           'BirthDate': birth,
           'UserCellphoneNumber': _tilkoCellphone(phoneDigits),

@@ -134,8 +134,8 @@ abstract final class HiraLinkService {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            '틸코·건강보험 연동 중입니다. 휴대폰에서 PASS·카카오 인증을 완료한 뒤 '
-            '최대 약 2분 기다려 주세요.',
+            '틸코·건강보험 연동 중입니다. 휴대폰에서 카카오 간편인증 알림을 '
+            '완료한 뒤 최대 약 2분 기다려 주세요.',
           ),
           duration: Duration(seconds: 6),
         ),
