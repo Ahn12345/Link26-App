@@ -232,6 +232,7 @@ abstract class AppLocalizations {
   String get passCertAccountSteps;
   String get passCertOpenInfo;
   String get passCertAcknowledge;
+  String get passCertContinue;
   String get passCertSignupNote;
   String get dialogCancel;
   String get signupRrnLabel;

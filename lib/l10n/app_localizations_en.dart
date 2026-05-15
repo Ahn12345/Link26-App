@@ -638,6 +638,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'I confirmed PASS has the same name, phone, and birth date below.';
 
   @override
+  String get passCertContinue => 'Request PASS auth';
+
+  @override
   String get passCertSignupNote =>
       'Signup saves data in the app. Tilko matches PASS identity, not only our DB.';
 

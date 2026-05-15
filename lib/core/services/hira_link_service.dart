@@ -6,8 +6,10 @@ import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/services/nhis_tilko_hira_flow_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
+import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/features/health/simple_auth_cert_readiness.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
+import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
@@ -34,18 +36,8 @@ abstract final class HiraLinkService {
     );
     if (!ready || !context.mounted) return;
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '틸코·건강보험 연동 중입니다. PASS 앱 또는 문자 인증번호로 '
-            '간편인증을 완료한 뒤 최대 약 2분 기다려 주세요.',
-          ),
-          duration: Duration(seconds: 6),
-        ),
-      );
-    }
-    final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
+    final out = await _runTilkoWithProgress(
+      context: context,
       displayName: displayName,
       phoneDigits: phoneDigits,
       gender: gender,
@@ -202,19 +194,8 @@ abstract final class HiraLinkService {
     );
     if (!ready || !context.mounted) return null;
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '틸코·건강보험 연동 중입니다. PASS 앱 또는 문자 인증번호로 '
-            '간편인증을 완료한 뒤 최대 약 2분 기다려 주세요.',
-          ),
-          duration: Duration(seconds: 6),
-        ),
-      );
-    }
-
-    final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
+    final out = await _runTilkoWithProgress(
+      context: context,
       displayName: user.displayName,
       phoneDigits: user.phoneDigits,
       gender: user.gender,
@@ -251,6 +232,68 @@ abstract final class HiraLinkService {
 
   static Future<void> afterMonthlyEasyAuth() async {
     debugPrint('HIRA: monthly easy-auth token refresh (stub)');
+  }
+
+  static Future<NhisMedicinesSyncOutcome?> _runTilkoWithProgress({
+    required BuildContext context,
+    required String displayName,
+    required String phoneDigits,
+    required String gender,
+    required String birthDateYmd,
+    required String residentRegistrationDigits13,
+    String? codefConnectedId,
+  }) async {
+    if (!context.mounted) return null;
+
+    final pass = TilkoEnv.isPassAuth;
+    final message = pass
+        ? '틸코에 PASS 간편인증을 요청했습니다.\n'
+            'PASS 앱·문자 OTP를 확인해 주세요.\n'
+            '(최대 약 2분)'
+        : '틸코·건강보험 연동 중입니다.\n'
+            '(최대 약 2분)';
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      routeSettings: const RouteSettings(name: 'tilko_auth_progress'),
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                color: Link26Surface.accent,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(height: 1.45),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      return await NhisTilkoHiraFlowSync
+          .runTilkoThenHiraWithMedicationsFallback(
+        displayName: displayName,
+        phoneDigits: phoneDigits,
+        gender: gender,
+        birthDateYmd: birthDateYmd,
+        residentRegistrationDigits13: residentRegistrationDigits13,
+        codefConnectedId: codefConnectedId,
+      );
+    } finally {
+      if (navigator.mounted) {
+        navigator.pop();
+      }
+    }
   }
 }
 

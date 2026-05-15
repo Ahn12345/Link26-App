@@ -608,9 +608,8 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get passCertDialogBody =>
-      '건강보험·심평원 연동은 틸코를 통해 통신사 PASS(문자 OTP) 간편인증을 씁니다. '
-      '앱에 저장한 정보와 PASS 본인인증(실명·휴대폰·생년월일)이 같아야 '
-      '인증 요청이 진행됩니다.';
+      '「PASS 인증 요청」을 누르면 PASS 앱을 연 뒤 틸코로 건강보험 간편인증을 '
+      '요청합니다. 본인정보가 PASS와 같으면 문자 OTP 또는 PASS 앱 승인 화면이 옵니다.';
 
   @override
   String get passCertDialogDbNote =>
@@ -629,6 +628,9 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get passCertAcknowledge =>
       'PASS(통신사 본인인증)에 아래와 같은 실명·휴대폰·생년월일이 등록되어 있음을 확인했습니다.';
+
+  @override
+  String get passCertContinue => 'PASS 인증 요청';
 
   @override
   String get passCertSignupNote =>

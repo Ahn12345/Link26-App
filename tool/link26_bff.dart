@@ -344,15 +344,24 @@ Future<void> _handle(HttpRequest request) async {
               : tilkoFormatCellphoneHyphen(
                   '${tilkoMap['UserCellphoneNumber'] ?? ''}',
                 );
-          final pNum = patCandidates.isNotEmpty ? patCandidates.first : '5';
-          // PASS·카카오: NHIS 1회(주민번호 있으면 포함). 본인 불일치 시 재시도 무의미.
-          final kakaoAttempts = <({String channel, String pat, bool identity})>[
-            (
-              channel: 'NHIS',
-              pat: pNum,
-              identity: id13.length == 13,
-            ),
-          ];
+          final passChannel =
+              tilkoPrivateAuthTypeName(patForFlow) == 'PASS';
+          // PASS: 4필드(PASS 문자열) → 실패 시 주민 포함·코드 5. 카카오: 1회.
+          final kakaoAttempts = passChannel
+              ? <({String channel, String pat, bool identity})>[
+                  (channel: 'NHIS', pat: 'PASS', identity: false),
+                  if (id13.length == 13)
+                    (channel: 'NHIS', pat: '5', identity: true),
+                ]
+              : <({String channel, String pat, bool identity})>[
+                  (
+                    channel: 'NHIS',
+                    pat: patCandidates.isNotEmpty
+                        ? patCandidates.first
+                        : '1',
+                    identity: id13.length == 13,
+                  ),
+                ];
           for (final att in kakaoAttempts) {
             usedPat = att.pat;
             authChannel = att.channel;

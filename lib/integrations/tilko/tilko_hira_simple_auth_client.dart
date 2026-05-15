@@ -272,10 +272,9 @@ List<String> tilkoCellphoneWireCandidates(String phone) {
 String _tilkoValueNotFoundUserKoFor(String channelRaw) {
   final label = tilkoSimpleAuthChannelLabelKo(channelRaw);
   if (tilkoPrivateAuthTypeName(channelRaw) == 'PASS') {
-    return '앱 DB에는 정보가 있으나, $label(통신사 본인인증)에 등록된 '
-        '실명·휴대폰·생년월일과 틸코가 맞지 않는다고 응답했습니다. '
-        'PASS 앱에서 본인인증 정보를 아래와 같게 맞춘 뒤 다시 시도하세요. '
-        '연동 시 PASS 앱 또는 문자 인증번호를 완료해 주세요.';
+    return '틸코에 PASS 인증을 요청했으나, 통신사 본인정보(실명·휴대폰·생년월일)가 '
+        '맞지 않아 문자·PASS 앱 인증창이 열리지 않았습니다. '
+        'PASS 앱에서 본인인증을 맞춘 뒤 다시 「연동 시작」을 눌러 주세요.';
   }
   return '앱 DB에는 정보가 있으나, $label 간편인증에 등록된 본인(실명·휴대폰·생년월일)과 '
       '틸코가 맞지 않는다고 응답했습니다. '

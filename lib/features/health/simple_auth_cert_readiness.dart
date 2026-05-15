@@ -22,6 +22,24 @@ abstract final class SimpleAuthCertReadiness {
     await launchUrl(passInfoUri, mode: LaunchMode.externalApplication);
   }
 
+  /// 통신사 PASS 앱(또는 스토어) 실행 — 연동 직전에 호출.
+  static Future<void> openPassApp() async {
+    final candidates = <Uri>[
+      Uri.parse('sktpass://'),
+      Uri.parse('pass://'),
+      Uri.parse(
+        'https://play.google.com/store/apps/details?id=com.sktelecom.pass',
+      ),
+      passInfoUri,
+    ];
+    for (final uri in candidates) {
+      try {
+        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (ok) return;
+      } catch (_) {}
+    }
+  }
+
   /// true = 사용자가 간편인증 본인정보 일치를 확인하고 계속함.
   static Future<bool> confirmBeforeTilkoSync({
     required BuildContext context,
@@ -170,11 +188,22 @@ class _SimpleAuthCertReadinessDialogState
           child: Text(l10n.dialogCancel),
         ),
         FilledButton(
-          onPressed: _ack ? () => Navigator.of(context).pop(true) : null,
+          onPressed: _ack
+              ? () async {
+                  if (_isPass) {
+                    await SimpleAuthCertReadiness.openPassApp();
+                  }
+                  if (context.mounted) {
+                    Navigator.of(context).pop(true);
+                  }
+                }
+              : null,
           style: FilledButton.styleFrom(
             backgroundColor: Link26Surface.accent,
           ),
-          child: Text(l10n.kakaoCertContinue),
+          child: Text(
+            _isPass ? l10n.passCertContinue : l10n.kakaoCertContinue,
+          ),
         ),
       ],
     );
