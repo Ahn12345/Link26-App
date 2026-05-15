@@ -14,8 +14,14 @@ $dest = Join-Path $dir "dotenv"
 $src = Join-Path $ProjectRoot ".env"
 
 if (Test-Path -LiteralPath $src) {
-  $text = [System.IO.File]::ReadAllText($src)
-  [System.IO.File]::WriteAllText($dest, $text, [System.Text.UTF8Encoding]::new($false))
+  $bytes = [System.IO.File]::ReadAllBytes($src)
+  $utf8 = [System.Text.UTF8Encoding]::new($false)
+  try {
+    $text = $utf8.GetString($bytes)
+  } catch {
+    $text = [System.Text.Encoding]::GetEncoding(949).GetString($bytes)
+  }
+  [System.IO.File]::WriteAllText($dest, $text, $utf8)
 } else {
   if (-not (Test-Path -LiteralPath $dest)) {
     [System.IO.File]::WriteAllText(

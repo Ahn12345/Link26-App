@@ -28,13 +28,37 @@ import 'package:path/path.dart' as p;
 /// 예전에는 BFF가 `.env` 만 봐서, 키를 `dotenv` 쪽에만 맞춰 둔 경우(또는 동기화만 한 경우)
 /// e약은요·틸코 키가 "비어 있다"고 나왔습니다. 두 파일을 병합합니다.
 /// `BFF_*` / `CODEF_*` / `NHIS_*` … 는 비어 있지 않은 [Platform.environment] 값이 마지막에 덮어씁니다.
+String _readDotEnvFileText(File f) {
+  final bytes = f.readAsBytesSync();
+  if (bytes.length >= 3 &&
+      bytes[0] == 0xEF &&
+      bytes[1] == 0xBB &&
+      bytes[2] == 0xBF) {
+    return utf8.decode(bytes.sublist(3));
+  }
+  if (bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE) {
+    final units = <int>[];
+    for (var i = 2; i + 1 < bytes.length; i += 2) {
+      units.add(bytes[i] | (bytes[i + 1] << 8));
+    }
+    return String.fromCharCodes(units);
+  }
+  try {
+    return utf8.decode(bytes);
+  } on FormatException {
+    return utf8.decode(bytes, allowMalformed: true);
+  }
+}
+
 Map<String, String> loadBffDotEnv() {
   final merged = <String, String>{};
   final root = _link26ProjectRoot();
   void mergeFile(String relativePath) {
     final f = File(p.join(root, relativePath));
     if (f.existsSync()) {
-      merged.addAll(_parseDotEnv(BffDotenvLineScan.stripUtf8Bom(f.readAsStringSync())));
+      merged.addAll(
+        _parseDotEnv(BffDotenvLineScan.stripUtf8Bom(_readDotEnvFileText(f))),
+      );
     }
   }
 
@@ -42,7 +66,9 @@ Map<String, String> loadBffDotEnv() {
   void mergeEnvFileNoEmptyWipe(String relativePath) {
     final f = File(p.join(root, relativePath));
     if (!f.existsSync()) return;
-    final parsed = _parseDotEnv(BffDotenvLineScan.stripUtf8Bom(f.readAsStringSync()));
+    final parsed = _parseDotEnv(
+      BffDotenvLineScan.stripUtf8Bom(_readDotEnvFileText(f)),
+    );
     for (final e in parsed.entries) {
       final incoming = e.value.trim();
       final existing = (merged[e.key] ?? '').trim();
@@ -74,7 +100,9 @@ Map<String, String> loadBffDotEnv() {
     for (final rel in <String>['.env', p.join('assets', 'env', 'dotenv')]) {
       final f = File(p.join(root, rel));
       if (!f.existsSync()) continue;
-      final hit = BffDotenvLineScan.scanTilkoApiKeyLineByLine(f.readAsStringSync());
+      final hit = BffDotenvLineScan.scanTilkoApiKeyLineByLine(
+        _readDotEnvFileText(f),
+      );
       if (hit != null && hit.trim().isNotEmpty) {
         merged['TILKO_API_KEY'] = hit.trim();
         // ignore: avoid_print

@@ -1,5 +1,5 @@
 # =============================================================================
-# ��Ʈ .env ? BFF(dart run tool/link26_bff.dart)�� ����. ���� assets/env/dotenv �� �Բ� ��.
+# ?? .env ? BFF(dart run tool/link26_bff.dart)? ??. ?? assets/env/dotenv ? ?? ?.
 # =============================================================================
 
 NHIS_USE_MOCK=false
@@ -11,16 +11,16 @@ GEMINI_MODEL_ID=gemini-2.5-flash
 
 PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6a501623c
 
-# ƿ�� 3 API(�������NHIS �������� + ���� ��ȸ) ? ���� Ű��ȣ��Ʈ. � ��ȯ: TILKO_USE_PRODUCTION=true
+# ?? 3 API(???�NHIS ???? + ?? ??) ? ?? ?�???. ?? ??: TILKO_USE_PRODUCTION=true
 TILKO_USE_PRODUCTION=true
 TILKO_API_HOST=https://api.tilko.net
-# ƿ�� Credential ���Ϲݿ�� Ű 1�� ? ȣ��Ʈ�� ����/� ����(dev.tilko.net vs api.tilko.net)
+# ?? Credential �???� ? 1? ? ???? ??/?? ??(dev.tilko.net vs api.tilko.net)
 TILKO_API_KEY_DEMO=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_KEY_PROD=6dcba5c46c804056b262a0dbf62da8b7
 TILKO_API_KEY=
-# ��������: PASS(��Ż� �� �ٸ� ä���� ������� ����)
+# ????: PASS(???�?? OTP)
 TILKO_PRIVATE_AUTH_TYPE=PASS
 
-# --- CODEF (��Ȱ��) ---
+# --- CODEF (???) ---
 # CODEF_CLIENT_ID=
 # CODEF_CLIENT_SECRET=
