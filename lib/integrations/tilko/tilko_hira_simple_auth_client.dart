@@ -97,12 +97,39 @@ bool tilkoNhisSimpleAuthIndicatesError(Map<String, dynamic> root) {
   return !tilkoNhisAuthTokensComplete(tilkoNhisLiftNestedSession(root));
 }
 
-/// 틸코 `PrivateAuthType` 평문 — 간편인증 채널 번호(틸코·CODEF 샘플: 1=카카오, 5=PASS …).
-String tilkoPrivateAuthTypePlain(String raw) {
+/// 틸코 `PrivateAuthType` — 문서·샘플 기본은 채널 이름(예: KAKAO, PASS).
+String tilkoPrivateAuthTypeName(String raw) {
   final t = raw.trim();
-  if (t.isEmpty) return '1';
-  if (RegExp(r'^\d{1,2}$').hasMatch(t)) return t;
-  switch (t.toUpperCase()) {
+  if (t.isEmpty) return 'KAKAO';
+  if (RegExp(r'^\d{1,2}$').hasMatch(t)) {
+    switch (t) {
+      case '1':
+        return 'KAKAO';
+      case '2':
+        return 'PAYCO';
+      case '3':
+        return 'SAMSUNG';
+      case '4':
+        return 'KB';
+      case '5':
+        return 'PASS';
+      case '6':
+        return 'NAVER';
+      case '7':
+        return 'SHINHAN';
+      case '8':
+        return 'TOSS';
+      default:
+        return 'KAKAO';
+    }
+  }
+  return t.toUpperCase();
+}
+
+/// 일부 환경에서 숫자 코드(1=카카오 …)만 받는 경우 — [tilkoPrivateAuthTypeCandidates] 로 순서 시도.
+String tilkoPrivateAuthTypeNumeric(String raw) {
+  final name = tilkoPrivateAuthTypeName(raw);
+  switch (name) {
     case 'KAKAO':
       return '1';
     case 'PAYCO':
@@ -126,6 +153,22 @@ String tilkoPrivateAuthTypePlain(String raw) {
     default:
       return '1';
   }
+}
+
+/// BFF·로그용 — 이름(KAKAO) → 숫자(1) 순으로 중복 없이.
+List<String> tilkoPrivateAuthTypeCandidates(String raw) {
+  final name = tilkoPrivateAuthTypeName(raw);
+  final num = tilkoPrivateAuthTypeNumeric(raw);
+  return <String>[name, num];
+}
+
+/// 단일 호출 경로 기본값(이름).
+String tilkoPrivateAuthTypePlain(String raw) => tilkoPrivateAuthTypeName(raw);
+
+bool tilkoSimpleAuthMessageRetryable(String? message) {
+  final m = (message ?? '').trim();
+  if (m.isEmpty) return false;
+  return m.contains('찾을 수 없') || m.contains('조회된 데이터가 없습니다');
 }
 
 /// 틸코 간편인증 API — 휴대폰 `010-1234-5678` (apidemo·샘플 코드 형식).

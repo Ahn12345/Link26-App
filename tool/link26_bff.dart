@@ -287,24 +287,62 @@ Future<void> _handle(HttpRequest request) async {
         print(
           'BFF flow tilko-hira-medications: 요청 수신 '
           '(UserName=${tilkoMap['UserName'] ?? tilkoMap['userName']}, '
-          'PrivateAuthType=${tilkoPrivateAuthTypePlain(patRaw.isEmpty ? 'KAKAO' : patRaw)})',
+          'PrivateAuthType 후보=${tilkoPrivateAuthTypeCandidates(patRaw.isEmpty ? 'KAKAO' : patRaw).join('→')})',
         );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
+        final patCandidates = tilkoPrivateAuthTypeCandidates(
+          patRaw.isEmpty ? 'KAKAO' : patRaw,
+        );
         var authChannel = 'HIRA';
-        var tilkoRes = await tilkoClient.requestFromJsonMap(tilkoMap);
-        var tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-        if (tilkoRes['http_status'] != null ||
-            tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+        Map<String, dynamic>? tilkoRes;
+        Map<String, dynamic>? tilkoResLifted;
+        var usedPat = patCandidates.first;
+
+        for (final patTry in patCandidates) {
+          usedPat = patTry;
+          final reqMap = Map<String, dynamic>.from(tilkoMap)
+            ..['PrivateAuthType'] = patTry;
+
+          authChannel = 'HIRA';
+          tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
+          tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+          final liftedHira = tilkoResLifted!;
+          if (tilkoRes['http_status'] == null &&
+              !tilkoNhisSimpleAuthIndicatesError(liftedHira)) {
+            break;
+          }
+          final hiraMsg = tilkoFindPlainString(liftedHira, 'Message');
           // ignore: avoid_print
           print(
-            'BFF ① HIRA simpleauth 실패 → NHIS 재시도 '
-            'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'}',
+            'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) 실패 → NHIS 재시도 '
+            'Message=${hiraMsg ?? '-'}',
           );
+
           authChannel = 'NHIS';
-          tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(tilkoMap);
+          tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(reqMap);
           tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+          final liftedNhis = tilkoResLifted!;
+          if (tilkoRes['http_status'] == null &&
+              !tilkoNhisSimpleAuthIndicatesError(liftedNhis)) {
+            break;
+          }
+          final nhisMsg = tilkoFindPlainString(liftedNhis, 'Message');
+          if (!tilkoSimpleAuthMessageRetryable(nhisMsg) &&
+              !tilkoSimpleAuthMessageRetryable(hiraMsg)) {
+            break;
+          }
+          // ignore: avoid_print
+          print(
+            'BFF ① NHIS simpleauth(PrivateAuthType=$patTry) 재시도 가능 오류 — '
+            '다음 PrivateAuthType 후보 시도',
+          );
         }
+
+        tilkoRes ??= <String, dynamic>{};
+        tilkoResLifted ??= <String, dynamic>{};
+        // ignore: avoid_print
+        print('BFF ① simpleauth 최종 PrivateAuthType=$usedPat channel=$authChannel');
         if (tilkoRes['http_status'] != null) {
           // ignore: avoid_print
           print('BFF ① simpleauthrequest: HTTP ${tilkoRes['http_status']}');
@@ -323,6 +361,7 @@ Future<void> _handle(HttpRequest request) async {
             ? rd.keys.join(',')
             : (rd == null ? 'null' : rd.runtimeType.toString());
         final targetMsg = tilkoFindPlainString(tilkoResLifted, 'TargetMessage');
+        final pointBal = tilkoFindPlainString(tilkoResLifted, 'PointBalance');
         // ignore: avoid_print
         print(
           'BFF ① $authChannel simpleauthrequest — '
@@ -330,6 +369,7 @@ Future<void> _handle(HttpRequest request) async {
           'ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode') ?? '-'} '
           'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'} '
           'TargetMessage=${targetMsg ?? '-'} '
+          'PointBalance=${pointBal ?? '-'} '
           'topKeys=${tilkoResLifted.keys.join(',')} ResultData=($rdKeys)',
         );
         if (tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
