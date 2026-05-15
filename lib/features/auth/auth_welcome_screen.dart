@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
-import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -14,7 +14,6 @@ import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/widgets/link26_standard_frame.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
-import 'package:link26_app/features/shell/main_shell.dart';
 
 /// 스플래시 이후 — 브랜드 + 로그인 / 회원가입.
 class AuthWelcomeScreen extends StatefulWidget {
@@ -27,20 +26,6 @@ class AuthWelcomeScreen extends StatefulWidget {
 }
 
 class _AuthWelcomeScreenState extends State<AuthWelcomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _resumeHomeIfSignedIn());
-  }
-
-  Future<void> _resumeHomeIfSignedIn() async {
-    if (!await AuthSession.isSignedIn()) return;
-    if (!mounted) return;
-    await Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const MainShell()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -104,24 +89,26 @@ class _AuthWelcomeScreenState extends State<AuthWelcomeScreen> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                SizedBox(
-                                  height: Link26ResponsiveUi.gapLg(w) +
-                                      Link26ResponsiveUi.gapMd(w) +
-                                      Link26ResponsiveUi.gapMd(w) +
-                                      16,
-                                ),
-                                Text(
-                                  '빌드 $kAppBuildNumber · $kAppBuildTag\n'
-                                  '이 문구가 보이면 이 소스에서 만든 최신 APK입니다.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.35,
-                                    color: Link26Surface.textMuted,
+                                if (kDebugMode) ...[
+                                  SizedBox(
+                                    height: Link26ResponsiveUi.gapLg(w) +
+                                        Link26ResponsiveUi.gapMd(w) +
+                                        Link26ResponsiveUi.gapMd(w) +
+                                        16,
                                   ),
-                                ),
-                                const SizedBox(height: 12),
+                                  Text(
+                                    '빌드 $kAppBuildNumber · $kAppBuildTag\n'
+                                    '이 문구가 보이면 이 소스에서 만든 최신 APK입니다.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.35,
+                                      color: Link26Surface.textMuted,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
                               ],
                             ),
                           ),

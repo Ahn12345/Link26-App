@@ -115,10 +115,10 @@ String tilkoPublicKeyToPem(String tilkoPublicKeyB64) {
   return buf.toString();
 }
 
-String _aesEncryptField(Uint8List aesKey, String plain) {
+/// Tilko AES-CBC 필드 암호화. 빈·공백만 값은 암호화하지 않습니다(logincheck 초반 토큰).
+String tilkoAesEncryptFieldOrEmpty(Uint8List aesKey, String plain) {
   // encrypt 패키지는 빈 문자열 CBC 암호화 시 RangeError(start: -16) 를 냅니다.
-  // logincheck 폴링 초반에는 CxId·Token 등이 비어 있을 수 있어 빈 값은 그대로 둡니다.
-  if (plain.isEmpty) return '';
+  if (plain.trim().isEmpty) return '';
   final key = Key(aesKey);
   final iv = IV.allZerosOfLength(16);
   final enc = Encrypter(AES(key, mode: AESMode.cbc));
@@ -210,11 +210,11 @@ class TilkoHiraSimpleAuthClient {
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
     final body = <String, dynamic>{
-      'PrivateAuthType': _aesEncryptField(aesKey, privateAuthType),
-      'UserName': _aesEncryptField(aesKey, userName),
-      'BirthDate': _aesEncryptField(aesKey, birthDate),
-      'UserCellphoneNumber': _aesEncryptField(aesKey, userCellphoneNumber),
-      'IdentityNumber': _aesEncryptField(aesKey, identityNumber),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, privateAuthType),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneNumber),
+      'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, identityNumber),
     };
 
     final uri = Uri.parse('$_root/api/v1.0/hirasimpleauth/simpleauthrequest');
@@ -265,11 +265,11 @@ class TilkoHiraSimpleAuthClient {
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
     final body = <String, dynamic>{
-      'PrivateAuthType': _aesEncryptField(aesKey, privateAuthType),
-      'UserName': _aesEncryptField(aesKey, userName),
-      'BirthDate': _aesEncryptField(aesKey, birthDate),
-      'UserCellphoneNumber': _aesEncryptField(aesKey, userCellphoneNumber),
-      'IdentityNumber': _aesEncryptField(aesKey, identityNumber),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, privateAuthType),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneNumber),
+      'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, identityNumber),
     };
 
     final uri = Uri.parse('$_root/api/v1.0/nhissimpleauth/simpleauthrequest');
@@ -339,14 +339,14 @@ class TilkoHiraSimpleAuthClient {
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
     final flatAuth = <String, dynamic>{
-      'BirthDate': _aesEncryptField(aesKey, birth),
-      'PrivateAuthType': _aesEncryptField(aesKey, pat),
-      'UserName': _aesEncryptField(aesKey, userName),
-      'UserCellphoneNumber': _aesEncryptField(aesKey, cell),
-      'Token': _aesEncryptField(aesKey, token),
-      'CxId': _aesEncryptField(aesKey, cx),
-      'TxId': _aesEncryptField(aesKey, tx),
-      'ReqTxId': _aesEncryptField(aesKey, reqTx),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birth),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
+      'Token': tilkoAesEncryptFieldOrEmpty(aesKey, token),
+      'CxId': tilkoAesEncryptFieldOrEmpty(aesKey, cx),
+      'TxId': tilkoAesEncryptFieldOrEmpty(aesKey, tx),
+      'ReqTxId': tilkoAesEncryptFieldOrEmpty(aesKey, reqTx),
     };
 
     Future<Map<String, dynamic>> postLogin(
@@ -394,14 +394,14 @@ class TilkoHiraSimpleAuthClient {
       }
       final enc2 = _rsaEncryptAesKeyB64(pub2, aesKey2);
       final flat2 = <String, dynamic>{
-        'BirthDate': _aesEncryptField(aesKey2, birth),
-        'PrivateAuthType': _aesEncryptField(aesKey2, pat),
-        'UserName': _aesEncryptField(aesKey2, userName),
-        'UserCellphoneNumber': _aesEncryptField(aesKey2, cell),
-        'Token': _aesEncryptField(aesKey2, token),
-        'CxId': _aesEncryptField(aesKey2, cx),
-        'TxId': _aesEncryptField(aesKey2, tx),
-        'ReqTxId': _aesEncryptField(aesKey2, reqTx),
+        'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey2, birth),
+        'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey2, pat),
+        'UserName': tilkoAesEncryptFieldOrEmpty(aesKey2, userName),
+        'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey2, cell),
+        'Token': tilkoAesEncryptFieldOrEmpty(aesKey2, token),
+        'CxId': tilkoAesEncryptFieldOrEmpty(aesKey2, cx),
+        'TxId': tilkoAesEncryptFieldOrEmpty(aesKey2, tx),
+        'ReqTxId': tilkoAesEncryptFieldOrEmpty(aesKey2, reqTx),
       };
       out = await postLogin(
         '/api/v2.0/NhisSimpleAuth/LoginCheck',
@@ -426,6 +426,7 @@ class TilkoHiraSimpleAuthClient {
     if (tilkoNhisAuthTokensComplete(session)) {
       return session;
     }
+    String? lastPollError;
     for (var i = 0; i < maxAttempts; i++) {
       Map<String, dynamic> lc;
       try {
@@ -434,10 +435,9 @@ class TilkoHiraSimpleAuthClient {
           sessionTokens: session,
         );
       } catch (e) {
-        return {
-          ...session,
-          '_link26_poll_error': '$e',
-        };
+        lastPollError = '$e';
+        await Future<void>.delayed(interval);
+        continue;
       }
       if (lc['http_status'] != null) {
         final inner = lc['body'];
@@ -452,6 +452,12 @@ class TilkoHiraSimpleAuthClient {
         return session;
       }
       await Future<void>.delayed(interval);
+    }
+    if (lastPollError != null && lastPollError.trim().isNotEmpty) {
+      return {
+        ...session,
+        '_link26_poll_error': lastPollError,
+      };
     }
     return session;
   }
@@ -532,17 +538,17 @@ class TilkoHiraSimpleAuthClient {
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
     final body = <String, dynamic>{
-      'IdentityNumber': _aesEncryptField(aesKey, identity),
-      'StartDate': _aesEncryptField(aesKey, startDateYyyymmdd),
-      'EndDate': _aesEncryptField(aesKey, endDateYyyymmdd),
-      'CxId': _aesEncryptField(aesKey, cx),
-      'PrivateAuthType': _aesEncryptField(aesKey, pat),
-      'ReqTxId': _aesEncryptField(aesKey, reqTx),
-      'Token': _aesEncryptField(aesKey, token),
-      'TxId': _aesEncryptField(aesKey, tx),
-      'UserName': _aesEncryptField(aesKey, userName),
-      'BirthDate': _aesEncryptField(aesKey, birth),
-      'UserCellphoneNumber': _aesEncryptField(aesKey, cell),
+      'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, identity),
+      'StartDate': tilkoAesEncryptFieldOrEmpty(aesKey, startDateYyyymmdd),
+      'EndDate': tilkoAesEncryptFieldOrEmpty(aesKey, endDateYyyymmdd),
+      'CxId': tilkoAesEncryptFieldOrEmpty(aesKey, cx),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
+      'ReqTxId': tilkoAesEncryptFieldOrEmpty(aesKey, reqTx),
+      'Token': tilkoAesEncryptFieldOrEmpty(aesKey, token),
+      'TxId': tilkoAesEncryptFieldOrEmpty(aesKey, tx),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birth),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
     };
 
     final uri = Uri.parse('$_root/api/v1.0/hirasimpleauth/hiraa050300000100');
@@ -620,14 +626,14 @@ class TilkoHiraSimpleAuthClient {
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
     final body = <String, dynamic>{
-      'CxId': _aesEncryptField(aesKey, cx),
-      'PrivateAuthType': _aesEncryptField(aesKey, pat),
-      'ReqTxId': _aesEncryptField(aesKey, reqTx),
-      'Token': _aesEncryptField(aesKey, token),
-      'TxId': _aesEncryptField(aesKey, tx),
-      'UserName': _aesEncryptField(aesKey, userName),
-      'BirthDate': _aesEncryptField(aesKey, birth),
-      'UserCellphoneNumber': _aesEncryptField(aesKey, cell),
+      'CxId': tilkoAesEncryptFieldOrEmpty(aesKey, cx),
+      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
+      'ReqTxId': tilkoAesEncryptFieldOrEmpty(aesKey, reqTx),
+      'Token': tilkoAesEncryptFieldOrEmpty(aesKey, token),
+      'TxId': tilkoAesEncryptFieldOrEmpty(aesKey, tx),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birth),
+      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
     };
 
     final uri = Uri.parse(

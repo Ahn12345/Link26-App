@@ -6,6 +6,7 @@ import 'package:link26_app/core/constants/storage_keys.dart';
 import 'package:link26_app/core/navigation/link26_route_observer.dart';
 import 'package:link26_app/core/theme/app_theme.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_screen.dart';
+import 'package:link26_app/core/widgets/link26_session_gate.dart';
 import 'package:link26_app/features/auth/auth_welcome_screen.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
@@ -110,7 +111,7 @@ class Link26AppState extends State<Link26App> {
           child: child,
         );
       },
-      home: const AuthWelcomeScreen(),
+      home: const Link26SessionGate(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, supported) {
