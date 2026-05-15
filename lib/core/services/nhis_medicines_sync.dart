@@ -91,7 +91,17 @@ class NhisMedicinesSyncOutcome {
   String get userMessageKo {
     switch (result) {
       case NhisMedicinesSyncResult.skipped:
-        return '복약 동기화를 건너뛰었습니다. NHIS_BASE_URL·설정을 확인하세요.';
+        if (NhisRuntimeConfig.baseUrl.isEmpty) {
+          if (kReleaseMode) {
+            return '복약 동기화를 건너뛰었습니다. 스토어/릴리스 빌드에는 '
+                '빌드 시 --dart-define=NHIS_PRODUCTION_BASE_URL=https://운영-BFF-주소 '
+                '를 넣어야 합니다. (.env의 NHIS_BASE_URL은 릴리스에서 사용하지 않습니다.)';
+          }
+          return '복약 동기화를 건너뛰었습니다. assets/env/dotenv 의 NHIS_BASE_URL '
+              '또는 --dart-define=NHIS_BASE_URL 과 PC BFF 실행을 확인하세요.';
+        }
+        return '복약 동기화를 건너뛰었습니다. 로그인 계정의 전화번호(숫자 10자리 이상)를 '
+            '프로필에 맞춰 주세요.';
       case NhisMedicinesSyncResult.failed:
         return detail ?? '복약 목록을 가져오지 못했습니다.';
       case NhisMedicinesSyncResult.success:

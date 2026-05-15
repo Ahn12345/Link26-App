@@ -211,7 +211,16 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     if (!shouldSync) {
       if (kDebugMode) {
         debugPrint(
-          'NHIS: mock 꺼짐 + NHIS_BASE_URL 비어 있음 — 복약 동기화 생략',
+          'NHIS: mock 꺼짐 + BFF 베이스 URL 비어 있음 — 복약 동기화 생략 '
+          '(릴리스는 --dart-define=NHIS_PRODUCTION_BASE_URL=..., 디버그는 .env NHIS_BASE_URL)',
+        );
+      }
+      if (kReleaseMode && !NhisRuntimeConfig.useMock) {
+        previewParts.add(
+          '운영 BFF 주소가 빌드에 없어 서버에서 복약 정보를 불러오지 않습니다. '
+          '릴리스 빌드에 다음을 넣으세요: '
+          '--dart-define=NHIS_PRODUCTION_BASE_URL=https://운영-BFF-주소 '
+          '(.env의 NHIS_BASE_URL은 스토어 APK에서 사용하지 않습니다.)',
         );
       }
       if (mounted && previewParts.isNotEmpty) {
