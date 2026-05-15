@@ -128,9 +128,15 @@ void logBffDotEnvBootstrap(Map<String, String> env) {
     '  [BFF env] .env: ${File(envPath).existsSync() ? "exists" : "MISSING"}',
   );
   final tilkoLen = (env['TILKO_API_KEY'] ?? '').trim().length;
+  final tilkoHost = (env['TILKO_API_HOST'] ?? 'https://dev.tilko.net').trim();
   // ignore: avoid_print
   stdout.writeln(
     '  [BFF env] TILKO_API_KEY loaded length: $tilkoLen (0이면 심평원·틸코 플로우 불가)',
+  );
+  // ignore: avoid_print
+  stdout.writeln(
+    '  [BFF env] TILKO_API_HOST=$tilkoHost '
+    '(데모 키→dev.tilko.net · 운영 키→api.tilko.net, 호스트·키 짝이 맞아야 함)',
   );
   if (tilkoLen == 0) {
     // ignore: avoid_print
