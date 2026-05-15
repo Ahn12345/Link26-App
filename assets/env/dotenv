@@ -11,8 +11,13 @@ GEMINI_MODEL_ID=gemini-2.5-flash
 
 PUBLIC_DATA_SERVICE_KEY=0945229c992b907a3a39bb18a10b8a071a46e223387bedaaab414ab6a501623c
 
-TILKO_API_KEY=6dcba5c46c804056b262a0dbf62da8b7
-TILKO_API_HOST=https://dev.tilko.net
+# 틸코 3 API(심평원·NHIS 간편인증 + 복약 조회) — 동일 키·호스트. 운영 전환: TILKO_USE_PRODUCTION=true
+TILKO_USE_PRODUCTION=true
+TILKO_API_HOST=https://api.tilko.net
+# 틸코 Credential «일반용» 키 1개 — 호스트만 데모/운영 구분(dev.tilko.net vs api.tilko.net)
+TILKO_API_KEY_DEMO=6dcba5c46c804056b262a0dbf62da8b7
+TILKO_API_KEY_PROD=6dcba5c46c804056b262a0dbf62da8b7
+TILKO_API_KEY=
 TILKO_PRIVATE_AUTH_TYPE=KAKAO
 
 # --- CODEF (비활성) ---

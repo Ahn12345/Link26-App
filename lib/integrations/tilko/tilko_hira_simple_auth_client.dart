@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:encrypt/encrypt.dart';
 import 'package:http/http.dart' as http;
+import 'package:link26_app/integrations/tilko/tilko_env_resolver.dart';
 import 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
 
 /// 틸코 **건강보험공단(NHIS) 간편인증** 및 진료·투약 조회.
@@ -228,7 +229,7 @@ class TilkoHiraSimpleAuthClient {
   factory TilkoHiraSimpleAuthClient.fromBffEnv(Map<String, String> env) {
     return TilkoHiraSimpleAuthClient(
       apiKey: (env['TILKO_API_KEY'] ?? '').trim(),
-      apiHost: (env['TILKO_API_HOST'] ?? 'https://dev.tilko.net').trim(),
+      apiHost: (env['TILKO_API_HOST'] ?? TilkoEnvResolver.demoHost).trim(),
     );
   }
 

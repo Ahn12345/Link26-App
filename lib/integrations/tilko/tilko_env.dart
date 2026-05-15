@@ -1,11 +1,19 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// 앱 전용 — `.env`의 틸코 설정 (BFF는 [TilkoHiraSimpleAuthClient.fromBffEnv] 사용).
+import 'package:link26_app/integrations/tilko/tilko_env_resolver.dart';
+
+/// 앱 전용 — `assets/env/dotenv`의 틸코 설정 (BFF는 [loadBffDotEnv] + resolver).
 abstract final class TilkoEnv {
-  static String get apiKey => (dotenv.env['TILKO_API_KEY'] ?? '').trim();
+  static Map<String, String> get _resolved {
+    final m = Map<String, String>.from(dotenv.env);
+    TilkoEnvResolver.applyTo(m);
+    return m;
+  }
+
+  static String get apiKey => (_resolved['TILKO_API_KEY'] ?? '').trim();
 
   static String get apiHost =>
-      (dotenv.env['TILKO_API_HOST'] ?? 'https://dev.tilko.net').trim();
+      (_resolved['TILKO_API_HOST'] ?? TilkoEnvResolver.demoHost).trim();
 
   /// 간편인증 채널 (KAKAO, NAVER, PASS …). `.env` / `assets/env/dotenv` 의 `TILKO_PRIVATE_AUTH_TYPE`.
   static String get privateAuthType {

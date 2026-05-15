@@ -15,6 +15,7 @@ import 'dart:io';
 
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
+import 'package:link26_app/integrations/tilko/tilko_env_resolver.dart';
 import 'package:link26_app/tool_support/bff_dotenv_line_scan.dart';
 import 'package:path/path.dart' as p;
 
@@ -67,7 +68,9 @@ Map<String, String> loadBffDotEnv() {
     if (v.isNotEmpty) merged[k] = v;
   }
 
-  if ((merged['TILKO_API_KEY'] ?? '').trim().isEmpty) {
+  if ((merged['TILKO_API_KEY'] ?? '').trim().isEmpty &&
+      (merged['TILKO_API_KEY_PROD'] ?? '').trim().isEmpty &&
+      (merged['TILKO_API_KEY_DEMO'] ?? '').trim().isEmpty) {
     for (final rel in <String>['.env', p.join('assets', 'env', 'dotenv')]) {
       final f = File(p.join(root, rel));
       if (!f.existsSync()) continue;
@@ -83,6 +86,7 @@ Map<String, String> loadBffDotEnv() {
     }
   }
 
+  TilkoEnvResolver.applyTo(merged);
   return merged;
 }
 
@@ -128,16 +132,20 @@ void logBffDotEnvBootstrap(Map<String, String> env) {
     '  [BFF env] .env: ${File(envPath).existsSync() ? "exists" : "MISSING"}',
   );
   final tilkoLen = (env['TILKO_API_KEY'] ?? '').trim().length;
-  final tilkoHost = (env['TILKO_API_HOST'] ?? 'https://dev.tilko.net').trim();
+  final tilkoHost = (env['TILKO_API_HOST'] ?? TilkoEnvResolver.demoHost).trim();
+  final tilkoMode = TilkoEnvResolver.modeLabelKo(env);
   // ignore: avoid_print
   stdout.writeln(
-    '  [BFF env] TILKO_API_KEY loaded length: $tilkoLen (0이면 심평원·틸코 플로우 불가)',
+    '  [BFF env] 틸코 $tilkoMode — TILKO_API_HOST=$tilkoHost '
+    'TILKO_API_KEY length: $tilkoLen (0이면 심평원·틸코 플로우 불가)',
   );
-  // ignore: avoid_print
-  stdout.writeln(
-    '  [BFF env] TILKO_API_HOST=$tilkoHost '
-    '(데모 키→dev.tilko.net · 운영 키→api.tilko.net, 호스트·키 짝이 맞아야 함)',
-  );
+  if (TilkoEnvResolver.productionKeyMissing(env)) {
+    // ignore: avoid_print
+    stderr.writeln(
+      '  [BFF env] 경고: TILKO_USE_PRODUCTION=true 인데 TILKO_API_KEY_PROD 가 비어 있습니다. '
+      '틸코 콘솔 «운영 API Key»를 .env 의 TILKO_API_KEY_PROD 에 넣으세요.',
+    );
+  }
   if (tilkoLen == 0) {
     // ignore: avoid_print
     stderr.writeln(
