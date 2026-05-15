@@ -608,8 +608,8 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get passCertDialogBody =>
-      '「PASS 인증 요청」을 누르면 PASS 앱을 연 뒤 틸코로 건강보험 간편인증을 '
-      '요청합니다. 본인정보가 PASS와 같으면 문자 OTP 또는 PASS 앱 승인 화면이 옵니다.';
+      '「PASS 인증 요청」은 통신사 PASS 앱만 엽니다. OTP·승인 화면은 '
+      '「심평원에서 불러오기」→ 연동 시작 후 틸코가 요청을 받아들일 때 옵니다.';
 
   @override
   String get passCertDialogDbNote =>

@@ -22,22 +22,50 @@ abstract final class SimpleAuthCertReadiness {
     await launchUrl(passInfoUri, mode: LaunchMode.externalApplication);
   }
 
-  /// 통신사 PASS 앱(또는 스토어) 실행 — 연동 직전에 호출.
+  /// 통신사 PASS 앱 실행. 미설치 시 통신사별 Play 스토어(정식 패키지명)로 안내.
   static Future<void> openPassApp() async {
-    final candidates = <Uri>[
-      Uri.parse('sktpass://'),
-      Uri.parse('pass://'),
-      Uri.parse(
-        'https://play.google.com/store/apps/details?id=com.sktelecom.pass',
-      ),
-      passInfoUri,
+    const storePackages = <String>[
+      'com.sktelecom.tauth', // SKT PASS
+      'com.kt.ktauth', // KT PASS
+      'com.lguplus.smartotp', // LG U+ PASS
     ];
-    for (final uri in candidates) {
-      try {
-        final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    final appSchemes = <Uri>[
+      Uri.parse('sktpass://'),
+      Uri.parse('ktpass://'),
+      Uri.parse('upluspass://'),
+      Uri.parse('pass://'),
+    ];
+
+    for (final uri in appSchemes) {
+      if (await canLaunchUrl(uri)) {
+        final ok = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
         if (ok) return;
-      } catch (_) {}
+      }
     }
+
+    for (final pkg in storePackages) {
+      final market = Uri.parse('market://details?id=$pkg');
+      if (await canLaunchUrl(market)) {
+        final ok = await launchUrl(
+          market,
+          mode: LaunchMode.externalApplication,
+        );
+        if (ok) return;
+      }
+      final web = Uri.parse(
+        'https://play.google.com/store/apps/details?id=$pkg',
+      );
+      if (await canLaunchUrl(web)) {
+        final ok = await launchUrl(web, mode: LaunchMode.externalApplication);
+        if (ok) return;
+      }
+    }
+
+    await openPassInfo();
   }
 
   /// true = 사용자가 간편인증 본인정보 일치를 확인하고 계속함.
