@@ -16,7 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
-import 'package:link26_app/integrations/tilko/tilko_pass_launch.dart';
+import 'package:link26_app/integrations/tilko/tilko_pass_uri_extract.dart';
 import 'package:link26_app/integrations/tilko/tilko_response_meta.dart';
 
 import 'link26_bff_codef.dart';
@@ -560,7 +560,7 @@ Future<void> _handle(HttpRequest request) async {
         }
         if (phase == 'start') {
           final passUris =
-              TilkoPassLaunch.extractLaunchUrisFromTilko(tilkoResLifted);
+              TilkoPassUriExtract.extractLaunchUrisFromTilko(tilkoResLifted);
           // ignore: avoid_print
           print(
             'BFF ① phase=start — PASS 실행 URL ${passUris.length}건, '
