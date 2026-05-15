@@ -194,8 +194,10 @@ String tilkoSimpleAuthRequestLogLine(Map<String, dynamic> m) {
 bool tilkoSimpleAuthMessageRetryable(String? message) {
   final m = (message ?? '').trim();
   if (m.isEmpty) return false;
+  // 본인 불일치·이력 없음 — 같은 입력으로 재호출해도 결과 동일(포인트만 소모).
   if (m.contains('조회된 데이터가 없습니다')) return false;
-  return m.contains('찾을 수 없');
+  if (m.contains('찾을 수 없')) return false;
+  return false;
 }
 
 /// NHIS·HIRA simpleauth 실패 시 사용자 안내 — NHIS(카카오) 오류를 우선합니다.

@@ -317,6 +317,7 @@ Future<void> _handle(HttpRequest request) async {
           String channel,
           String patTry,
           String cellWire,
+          bool withIdentity,
           Map<String, dynamic> lifted,
         ) {
           final nhisMsg = tilkoFindPlainString(lifted, 'Message');
@@ -328,7 +329,7 @@ Future<void> _handle(HttpRequest request) async {
           print(
             'BFF ① $channel simpleauth(PrivateAuthType=$patTry, '
             'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}, phone=$cellWire, '
-            'identity=${tilkoIdentityDigits13('${tilkoMap['IdentityNumber'] ?? ''}').length == 13}) '
+            'identity=$withIdentity) '
             '실패 Status=${status ?? '-'} Message=${nhisMsg ?? '-'} '
             'TargetCode=${nhisTarget ?? '-'} ApiTxKey=${apiTxKey ?? '-'} '
             'ErrorLog=${errLog ?? '-'}',
@@ -345,13 +346,13 @@ Future<void> _handle(HttpRequest request) async {
                   '${tilkoMap['UserCellphoneNumber'] ?? ''}',
                 );
           final pNum = patCandidates.isNotEmpty ? patCandidates.first : '1';
-          final pName = patCandidates.length > 1 ? patCandidates.last : 'KAKAO';
+          // 카카오: NHIS 1회(주민번호 있으면 포함). 찾을 수 없음·HIRA 무이력은 재시도 무의미.
           final kakaoAttempts = <({String channel, String pat, bool identity})>[
-            (channel: 'NHIS', pat: pNum, identity: false),
-            if (id13.length == 13) (channel: 'NHIS', pat: pNum, identity: true),
-            if (id13.length == 13 && pName != pNum)
-              (channel: 'NHIS', pat: pName, identity: true),
-            if (id13.length == 13) (channel: 'HIRA', pat: pNum, identity: true),
+            (
+              channel: 'NHIS',
+              pat: pNum,
+              identity: id13.length == 13,
+            ),
           ];
           for (final att in kakaoAttempts) {
             usedPat = att.pat;
@@ -383,7 +384,13 @@ Future<void> _handle(HttpRequest request) async {
               broke = true;
               break;
             }
-            logSimpleAuthFail(att.channel, att.pat, cellWire, tilkoResLifted);
+            logSimpleAuthFail(
+              att.channel,
+              att.pat,
+              cellWire,
+              att.identity,
+              tilkoResLifted,
+            );
             final msg = tilkoFindPlainString(tilkoResLifted, 'Message') ?? '';
             if (!tilkoSimpleAuthMessageRetryable(msg)) {
               break;
@@ -419,7 +426,16 @@ Future<void> _handle(HttpRequest request) async {
                 break outer;
               }
               final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
-              logSimpleAuthFail('NHIS', patTry, cellWire, tilkoResLifted);
+              logSimpleAuthFail(
+                'NHIS',
+                patTry,
+                cellWire,
+                tilkoIdentityDigits13(
+                      '${tilkoMap['IdentityNumber'] ?? ''}',
+                    ).length ==
+                    13,
+                tilkoResLifted,
+              );
 
               authChannel = 'HIRA';
               tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);

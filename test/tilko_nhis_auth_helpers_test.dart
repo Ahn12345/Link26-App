@@ -89,6 +89,19 @@ void main() {
     expect(m['IdentityNumber'], '0405223123456');
   });
 
+  test('tilkoSimpleAuthMessageRetryable stops on value not found', () {
+    expect(
+      tilkoSimpleAuthMessageRetryable(
+        "요청한 값 'abc=='을(를) 찾을 수 없습니다.",
+      ),
+      isFalse,
+    );
+    expect(
+      tilkoSimpleAuthMessageRetryable('조회된 데이터가 없습니다.'),
+      isFalse,
+    );
+  });
+
   test('tilkoFormatCellphoneHyphen formats mobile', () {
     expect(
       tilkoFormatCellphoneHyphen('01012345678'),
