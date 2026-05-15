@@ -74,6 +74,8 @@
 	<string>전화 복용 안내 문구를 음성으로 입력할 때 사용합니다.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>전화 복용 안내 문구를 음성으로 입력할 때 사용합니다.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>같은 Wi-Fi에 있는 PC BFF를 자동으로 찾기 위해 로컬 네트워크를 사용합니다.</string>
 	<!-- 로컬 BFF(http://127.0.0.1, LAN IP 등) 연결 시 ATS 가 http 를 막지 않도록 -->
 	<key>NSAppTransportSecurity</key>
 	<dict>

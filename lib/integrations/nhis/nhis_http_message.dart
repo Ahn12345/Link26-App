@@ -36,18 +36,23 @@ String nhisHttpUserMessage(AppFailure failure) {
 bool nhisFailureLooksLikeUnreachableHost(AppFailure failure) {
   final c = failure.cause;
   if (c is DioException) {
-    switch (c.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        return true;
-      default:
-        break;
-    }
+    return dioExceptionLooksUnreachable(c);
   }
   if (c is SocketException) return true;
   return false;
+}
+
+/// [DioException] 만으로 연결 계열 실패인지 판별합니다.
+bool dioExceptionLooksUnreachable(DioException e) {
+  switch (e.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+    case DioExceptionType.connectionError:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /// `package:http` BFF 플로우 등 [catch (e)] 에서 동일 판별.

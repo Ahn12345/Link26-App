@@ -28,6 +28,18 @@ abstract final class NhisRuntimeConfig {
     return '';
   }
 
+  /// [main] 에서 LAN UDP 비콘([Link26LanBffDiscovery])으로 찾은 BFF 베이스 URL.
+  static List<String> _lanDiscoveredBases = const [];
+
+  /// LAN 자동 발견 결과를 주입합니다. [discoverOnce] 가 돌기 전에는 비어 있습니다.
+  static void setLanDiscoveredBases(List<String> bases) {
+    final out = <String>[];
+    for (final b in bases) {
+      out.addAll(_splitAndNormalizeBffBases(b.trim()));
+    }
+    _lanDiscoveredBases = List<String>.unmodifiable(out);
+  }
+
   /// BFF 베이스 URL 목록. `NHIS_BASE_URL`에 쉼표·세미콜론·공백으로 여러 개를 두면
   /// [Link26BffIntegrationsClient] 가 연결 실패 시 순서대로 재시도합니다.
   ///
@@ -36,7 +48,8 @@ abstract final class NhisRuntimeConfig {
   /// 1. `--dart-define=NHIS_PRODUCTION_BASE_URL=…`
   /// 2. [Link26RemoteBffBootstrap] 캐시(HTTPS 매니페스트 JSON + 로컬 저장)
   ///
-  /// 디버그·프로파일은 기존처럼 dotenv `NHIS_BASE_URL` → `nhisBaseUrl` dart-define 순입니다.
+  /// **디버그·프로파일**: UDP로 찾은 주소([setLanDiscoveredBases])를 **앞에** 두고,
+  /// 이어서 dotenv `NHIS_BASE_URL` → `nhisBaseUrl` dart-define 순입니다.
   static List<String> get baseUrlCandidates {
     if (kReleaseMode) {
       final prod = _splitAndNormalizeBffBases(ApiConfig.nhisProductionBaseUrl.trim());
@@ -45,9 +58,32 @@ abstract final class NhisRuntimeConfig {
       if (remote.isNotEmpty) return List<String>.from(remote);
       return const [];
     }
-    final v = _stripQuotes(dotenv.env['NHIS_BASE_URL']);
-    if (v.isNotEmpty) return _splitAndNormalizeBffBases(v);
-    return _splitAndNormalizeBffBases(ApiConfig.nhisBaseUrl.trim());
+    final manualFromDotenv = _stripQuotes(dotenv.env['NHIS_BASE_URL']);
+    final manual = manualFromDotenv.isNotEmpty
+        ? _splitAndNormalizeBffBases(manualFromDotenv)
+        : _splitAndNormalizeBffBases(ApiConfig.nhisBaseUrl.trim());
+    return _mergeDiscoveredFirst(_lanDiscoveredBases, manual);
+  }
+
+  static List<String> _mergeDiscoveredFirst(
+    List<String> discovered,
+    List<String> manual,
+  ) {
+    final seen = <String>{};
+    final out = <String>[];
+    for (final b in discovered) {
+      final k = b.trim();
+      if (k.isEmpty || seen.contains(k)) continue;
+      seen.add(k);
+      out.add(k);
+    }
+    for (final b in manual) {
+      final k = b.trim();
+      if (k.isEmpty || seen.contains(k)) continue;
+      seen.add(k);
+      out.add(k);
+    }
+    return out;
   }
 
   static List<String> _splitAndNormalizeBffBases(String raw) {

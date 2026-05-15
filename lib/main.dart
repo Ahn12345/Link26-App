@@ -10,6 +10,7 @@ import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/design/link26_design_catalog.dart';
 import 'package:link26_app/core/services/dose_reminder_notifications.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
+import 'package:link26_app/core/services/link26_lan_bff_discovery.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 
@@ -59,10 +60,23 @@ Future<void> _loadDotenvFromAssets() async {
   }
 }
 
+Future<void> _maybeDiscoverLanBff() async {
+  if (kReleaseMode) {
+    final v = (dotenv.env['NHIS_LAN_AUTO_DISCOVER'] ?? '').trim().toLowerCase();
+    if (v != 'true' && v != '1' && v != 'yes') return;
+  } else {
+    final v = (dotenv.env['NHIS_LAN_AUTO_DISCOVER'] ?? '').trim().toLowerCase();
+    if (v == 'false' || v == '0' || v == 'no') return;
+  }
+  final found = await Link26LanBffDiscovery.discoverOnce();
+  NhisRuntimeConfig.setLanDiscoveredBases(found);
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _waitForDebugAndroidAssetBundle();
   await _loadDotenvFromAssets();
+  await _maybeDiscoverLanBff();
   await Link26RemoteBffBootstrap.init();
   Link26RemoteBffBootstrap.scheduleBackgroundRefresh();
   // 실제 기기 릴리스: 캐시 없이 LINK26 만 쓰는 경우 첫 프레임 전에 주소를 채우기 위해

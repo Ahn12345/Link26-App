@@ -18,10 +18,12 @@ import 'dart:io';
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 
 import 'link26_bff_codef.dart';
+import 'link26_bff_lan_beacon.dart';
 
 Future<void> main() async {
   final server = await _bindServer();
   final port = server.port;
+  startLink26BffLanBeacon(port);
 
   // ignore: avoid_print
   stdout.writeln('');
@@ -31,6 +33,8 @@ Future<void> main() async {
   stdout.writeln('    http://127.0.0.1:$port/health');
   // ignore: avoid_print
   stdout.writeln('    에뮬용 .env: NHIS_BASE_URL=http://10.0.2.2:$port');
+  // ignore: avoid_print
+  stdout.writeln('    LAN 자동발견: UDP $kLink26BffLanUdpPort 포트로 BFF 주소 비콘(3초마다)');
   await _printLanBffHints(port);
   // ignore: avoid_print
   stdout.writeln('');

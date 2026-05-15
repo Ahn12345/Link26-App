@@ -8,6 +8,7 @@ import '../../core/network/api_endpoints.dart';
 import '../../core/network/auth_interceptor.dart';
 import '../../core/network/network_error_mapper.dart';
 import '../../core/network/nhis_token_manager.dart';
+import 'nhis_http_message.dart';
 import 'nhis_runtime_config.dart';
 
 /// NHIS/BFF에서 로그인 사용자 복약 목록을 가져옵니다.
@@ -22,8 +23,8 @@ class NhisMedicationsClient {
 
   static final Dio _dio = Dio(
     BaseOptions(
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 18),
+      connectTimeout: const Duration(seconds: 14),
+      receiveTimeout: const Duration(seconds: 28),
       headers: {'Content-Type': 'application/json'},
     ),
   );
@@ -37,38 +38,72 @@ class NhisMedicationsClient {
     String? gender,
     String? connectedId,
   }) async {
-    final base = NhisRuntimeConfig.baseUrl;
-    if (base.isEmpty) {
+    final bases = NhisRuntimeConfig.baseUrlCandidates;
+    if (bases.isEmpty) {
       return const Failure(_missing);
     }
 
-    var uri = buildUri(NhisRuntimeConfig.medicinesPath, base: base);
-    final q = Map<String, String>.from(uri.queryParameters);
-    q['phone'] = phoneDigits;
-    final dn = displayName?.trim();
-    if (dn != null && dn.isNotEmpty) q['displayName'] = dn;
-    final g = gender?.trim();
-    if (g != null && g.isNotEmpty) q['gender'] = g;
-    final cid = connectedId?.trim();
-    if (cid != null && cid.isNotEmpty) q['connectedId'] = cid;
-    final key = NhisRuntimeConfig.serviceKey;
-    if (key != null) {
-      q['serviceKey'] = key;
-    }
-    uri = uri.replace(queryParameters: q);
+    final headers = await _headers.headers();
+    DioException? lastDio;
+    Object? lastOther;
+    StackTrace? lastSt;
 
-    try {
-      final response = await _dio.getUri<dynamic>(
-        uri,
-        options: Options(headers: await _headers.headers()),
-      );
-      final data = response.data;
-      if (data is String) return Success(data);
-      return Success(jsonEncode(data));
-    } on DioException catch (e) {
-      return Failure(AppFailure('GET 오류: ${e.message}', cause: e));
-    } catch (e, st) {
-      return Failure(mapHttpException(e, st));
+    bool hasAnotherNonEmptyBase(int i) {
+      for (var j = i + 1; j < bases.length; j++) {
+        if (bases[j].trim().isNotEmpty) return true;
+      }
+      return false;
     }
+
+    for (var bi = 0; bi < bases.length; bi++) {
+      final base = bases[bi].trim();
+      if (base.isEmpty) continue;
+
+      var uri = buildUri(NhisRuntimeConfig.medicinesPath, base: base);
+      final q = Map<String, String>.from(uri.queryParameters);
+      q['phone'] = phoneDigits;
+      final dn = displayName?.trim();
+      if (dn != null && dn.isNotEmpty) q['displayName'] = dn;
+      final g = gender?.trim();
+      if (g != null && g.isNotEmpty) q['gender'] = g;
+      final cid = connectedId?.trim();
+      if (cid != null && cid.isNotEmpty) q['connectedId'] = cid;
+      final key = NhisRuntimeConfig.serviceKey;
+      if (key != null) {
+        q['serviceKey'] = key;
+      }
+      uri = uri.replace(queryParameters: q);
+
+      try {
+        final response = await _dio.getUri<dynamic>(
+          uri,
+          options: Options(headers: headers),
+        );
+        final data = response.data;
+        if (data is String) return Success(data);
+        return Success(jsonEncode(data));
+      } on DioException catch (e) {
+        lastDio = e;
+        if (hasAnotherNonEmptyBase(bi) && dioExceptionLooksUnreachable(e)) {
+          continue;
+        }
+        return Failure(AppFailure('GET 오류: ${e.message}', cause: e));
+      } catch (e, st) {
+        lastOther = e;
+        lastSt = st;
+        if (hasAnotherNonEmptyBase(bi) && link26ErrorLooksLikeUnreachableHost(e)) {
+          continue;
+        }
+        return Failure(mapHttpException(e, st));
+      }
+    }
+
+    if (lastDio != null) {
+      return Failure(AppFailure('GET 오류: ${lastDio.message}', cause: lastDio));
+    }
+    if (lastOther != null && lastSt != null) {
+      return Failure(mapHttpException(lastOther, lastSt));
+    }
+    return const Failure(_missing);
   }
 }
