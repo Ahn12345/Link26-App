@@ -69,6 +69,21 @@ void main() {
     expect(items.first['frequency'], '1일 3회');
   });
 
+  test('Tilko NHIS ResultList visit rows with nested detail list', () {
+    final root = {
+      'ResultList': [
+        {
+          'RetrieveTreatmentInjectionInformationPersonDetailList': [
+            {'ChoBangYakPumMyung': '로사르탄', 'TuyakIlSoo': '1일 1회'},
+          ],
+        },
+      ],
+    };
+    final items = codefRootToMedicationItems(root);
+    expect(items.length, 1);
+    expect(items.first['name'], '로사르탄');
+  });
+
   test('Tilko NHIS rows under Body wrapper', () {
     final root = {
       'Body': {

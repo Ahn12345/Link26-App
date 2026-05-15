@@ -4,6 +4,19 @@ import 'dart:convert';
 /// (파일명·함수명은 예전 CODEF 연동 시절 그대로이며, 틸코 NHIS 응답에도 동일하게 사용합니다.)
 /// `data`가 문자열(JSON)·중첩 Map·다양한 키명을 쓰는 경우를 흡수합니다.
 List<Map<String, dynamic>> codefRootToMedicationItems(Map<String, dynamic> root) {
+  for (final k in ['ResultList', 'resultList']) {
+    final v = root[k];
+    if (v is List) {
+      final nested = <Map<String, dynamic>>[];
+      for (final e in v) {
+        nested.addAll(_extractDataRows(e));
+      }
+      if (nested.isNotEmpty) {
+        return _rowsToMedicationItems(nested);
+      }
+    }
+  }
+
   var rows = _extractDataRows(root['data']);
   if (rows.isEmpty) {
     rows = _extractDataRows(root['Data']);
@@ -73,7 +86,15 @@ const _listContainerKeys = [
   'prescriptions',
   // 틸코 NHIS 공동인증 API 응답 필드 (문서 RetrieveTreatmentInjectionInformationPerson)
   'ResultList',
+  'resultList',
   'RetrieveTreatmentInjectionInformationPersonDetailList',
+  'retrieveTreatmentInjectionInformationPersonDetailList',
+  'TreatmentInjectionDetailList',
+  'treatmentInjectionDetailList',
+  'DrugDetailList',
+  'drugDetailList',
+  'YakPumList',
+  'yakPumList',
   // 틸코 간편인증 [내가 먹는 약] HIRAA050300000100 — 처방 행 안의 약 목록
   'DrugList',
 ];
@@ -110,6 +131,11 @@ const _medicineNameKeys = [
   'PrscPrepNm',
   'GenNm',
   'MediNm',
+  'YakPumMyung',
+  'yakPumMyung',
+  'DrugProdNm',
+  'drugProdNm',
+  'ResDrugName',
 ];
 
 const _doseKeys = [

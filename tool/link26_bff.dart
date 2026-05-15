@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
+import 'package:link26_app/integrations/tilko/tilko_response_meta.dart';
 
 import 'link26_bff_codef.dart';
 import 'link26_bff_lan_beacon.dart';
@@ -336,8 +337,23 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
 
+        if (tilkoApiIndicatesFailure(nhisRes)) {
+          final st = tilkoApiStatusFields(nhisRes);
+          await _json(request, 200, {
+            'ok': false,
+            'detail':
+                'NHIS 진료·투약 조회 실패: ${st['code'] ?? ''} ${st['message'] ?? ''}'.trim(),
+            'hint_ko':
+                '틸코 응답 Status를 확인하세요. 간편인증이 완료되지 않았거나 조회 기간에 이력이 없을 수 있습니다.',
+            'tilko': tilkoAuth,
+            'nhis_treatment_injection': nhisRes,
+          });
+          return;
+        }
+
         final items = bffMapCodefRootToMedicationItems(nhisRes);
         final emptyParsed = items.isEmpty;
+        final st = tilkoApiStatusFields(nhisRes);
         await _json(request, 200, {
           'ok': true,
           'tilko': tilkoAuth,
@@ -346,6 +362,8 @@ Future<void> _handle(HttpRequest request) async {
           'items': items,
           'meta': {
             'source': 'tilko_nhis_simpleauth_treatment_injection',
+            'codefResultCode': st['code'],
+            'codefResultMessage': st['message'],
             if (emptyParsed)
               'note':
                   'NHIS 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '

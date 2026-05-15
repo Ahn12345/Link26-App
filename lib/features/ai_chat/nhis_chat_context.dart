@@ -20,28 +20,22 @@ abstract final class NhisChatContext {
         return '${NhisMockPayloads.medicationsJson}\n{"meta":{"source":"nhis_mock"}}';
       }
 
-      if (NhisRuntimeConfig.baseUrl.isEmpty) {
-        final cached = await NhisMedicineCacheStore.loadMedicines();
-        if (cached.isEmpty) {
-          return '(NHIS_BASE_URL 미설정 · 로컬 복약 캐시 없음)';
-        }
+      final cached = await NhisMedicineCacheStore.loadMedicines();
+      if (cached.isNotEmpty) {
         return jsonEncode({
           'items': cached.map((m) => m.toJson()).toList(),
-          'meta': {'source': 'local_cache_only'},
+          'meta': {'source': 'local_cache'},
         });
+      }
+
+      if (NhisRuntimeConfig.baseUrl.isEmpty) {
+        return '(NHIS_BASE_URL 미설정 · 로컬 복약 캐시 없음 — 홈에서 「심평원에서 불러오기」)';
       }
 
       final user = await UserLocalRepository.loadSignedInUserRecord();
       final phone = user?.phoneDigits.replaceAll(RegExp(r'\D'), '') ?? '';
       if (phone.length < 10) {
-        final cached = await NhisMedicineCacheStore.loadMedicines();
-        if (cached.isEmpty) {
-          return '(로그인 전화번호 없음 · 건보 API 호출 생략)';
-        }
-        return jsonEncode({
-          'items': cached.map((m) => m.toJson()).toList(),
-          'meta': {'source': 'local_cache_only_no_phone'},
-        });
+        return '(로그인 전화번호 없음 · 건보 API 호출 생략 — 홈에서 「심평원에서 불러오기」)';
       }
 
       var cid = user?.codefConnectedId?.trim();
@@ -60,7 +54,18 @@ abstract final class NhisChatContext {
       if (result is Failure<String>) {
         return '건강보험 복약 API 오류: ${nhisHttpUserMessage(result.error)}';
       }
-      return (result as Success<String>).data;
+      final raw = (result as Success<String>).data;
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map) {
+          final meta = decoded['meta'];
+          final src = meta is Map ? '${meta['source']}' : '';
+          if (src == 'link26-bff-dart-stub' || src == 'link26-bff-dart') {
+            return '(BFF 데모 스텁 — 실제 복약은 홈 「심평원에서 불러오기」로 연동)';
+          }
+        }
+      } catch (_) {}
+      return raw;
     }
 
     if (timeLimit == null) return run();

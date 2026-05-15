@@ -289,22 +289,14 @@ abstract final class NhisMedicinesSync {
     var fromApi = NhisMedicationsParser.parseResponseBody(body);
     final isBffStubMeta = src == 'link26-bff-dart-stub' || src == 'link26-bff-dart';
     if (isBffStubMeta) {
-      await _purgeLink26BffStubDemosFromCache();
-      fromApi = fromApi
-          .where((m) => !_isLink26BffStubMedicineName(m.name))
-          .toList();
-      if (fromApi.isEmpty) {
-        final stubNote = (meta?['note'] as String?)?.trim();
-        const hint = '실제 복약 목록은 로그인 시 주민번호 입력 후 틸코·심평원 조회를 마치거나, '
-            '설정의 심평원 복약 연동을 사용하세요.';
-        return NhisMedicinesSyncOutcome(
-          result: NhisMedicinesSyncResult.success,
-          remoteItemCount: 0,
-          metaSource: src,
-          metaNote:
-              stubNote != null && stubNote.isNotEmpty ? '$stubNote\n\n$hint' : hint,
-        );
-      }
+      // GET /v1/medications 는 데모 스텁 — 틸코·심평원 연동으로 채운 로컬 캐시를 지우지 않습니다.
+      final cached = await NhisMedicineCacheStore.loadMedicines();
+      return NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.success,
+        remoteItemCount: cached.length,
+        metaSource: 'local_cache_preserved',
+        suppressBootstrapBanner: true,
+      );
     }
     if (isAuthoritativeMedicationsMetaSource(src)) {
       await _replaceLocalWithRemote(fromApi);
@@ -331,10 +323,10 @@ abstract final class NhisMedicinesSync {
     String? codefResultMessage,
     String? metaNote,
   }) async {
-    if (isAuthoritativeMedicationsMetaSource(metaSource)) {
+    if (isAuthoritativeMedicationsMetaSource(metaSource) && medicines.isNotEmpty) {
       await _replaceLocalWithRemote(medicines);
       await DoseReminderCompletionStore.clearAll();
-    } else {
+    } else if (medicines.isNotEmpty) {
       await _mergeIntoLocal(medicines);
     }
     return NhisMedicinesSyncOutcome(

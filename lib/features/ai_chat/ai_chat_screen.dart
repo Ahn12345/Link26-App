@@ -1103,9 +1103,12 @@ class _InputBar extends StatelessWidget {
               minimumSize: Size(attachTap, attachTap),
               padding: EdgeInsets.zero,
             ),
-            icon: Link26VectorIcons.paperclip(
-              Link26Surface.textSecondary,
+            icon: Icon(
+              Icons.attach_file_rounded,
               size: iconPx,
+              color: canAct
+                  ? Link26Surface.textSecondary
+                  : Link26Surface.textSecondary.withValues(alpha: 0.35),
             ),
           ),
           SizedBox(width: gapAttach),
