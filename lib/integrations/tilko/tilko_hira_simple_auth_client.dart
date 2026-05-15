@@ -59,6 +59,25 @@ bool tilkoNhisAuthTokensComplete(dynamic root) {
   return true;
 }
 
+/// NHIS `logincheck` — 휴대폰 간편인증 완료 여부(`Result` boolean). 토큰은 포함하지 않음.
+bool tilkoNhisLoginCheckSucceeded(Map<String, dynamic> root) {
+  final v = root['Result'] ?? root['result'];
+  if (v is bool) return v;
+  if (v is num) return v == 1;
+  if (v is String) {
+    final s = v.trim().toLowerCase();
+    return s == 'true' || s == '1' || s == 'y' || s == 'yes';
+  }
+  return false;
+}
+
+/// NHIS `simpleauthrequest` 비즈니스 오류(ErrorCode≠0) 여부.
+bool tilkoNhisSimpleAuthIndicatesError(Map<String, dynamic> root) {
+  final code = (tilkoFindPlainString(root, 'ErrorCode') ?? '').trim();
+  if (code.isEmpty) return false;
+  return code != '0';
+}
+
 /// logincheck·simpleauth 응답에 토큰 4종이 채워졌는지(값은 출력하지 않음).
 String tilkoNhisTokenPresenceSummary(Map<String, dynamic> root) {
   const keys = ['CxId', 'ReqTxId', 'Token', 'TxId'];
@@ -86,6 +105,18 @@ Map<String, dynamic> tilkoNhisLiftNestedSession(Map<String, dynamic> m) {
       out = tilkoMergeJsonMaps(out, v);
     } else if (v is Map) {
       out = tilkoMergeJsonMaps(out, Map<String, dynamic>.from(v));
+    } else if (v is String) {
+      final t = v.trim();
+      if (t.startsWith('{') && t.endsWith('}')) {
+        try {
+          final parsed = jsonDecode(t);
+          if (parsed is Map<String, dynamic>) {
+            out = tilkoMergeJsonMaps(out, parsed);
+          } else if (parsed is Map) {
+            out = tilkoMergeJsonMaps(out, Map<String, dynamic>.from(parsed));
+          }
+        } catch (_) {}
+      }
     }
   }
   return out;
@@ -393,9 +424,16 @@ class TilkoHiraSimpleAuthClient {
 
     var out = await postLogin(
       '/api/v1.0/nhissimpleauth/logincheck',
-      flatAuth,
+      <String, dynamic>{'Auth': flatAuth},
       encKeyHeader,
     );
+    if (out['http_status'] == 404) {
+      out = await postLogin(
+        '/api/v1.0/nhissimpleauth/logincheck',
+        flatAuth,
+        encKeyHeader,
+      );
+    }
     if (out['http_status'] == 404) {
       final pub2 = await fetchPublicKey();
       final rnd2 = Random.secure();
@@ -423,8 +461,10 @@ class TilkoHiraSimpleAuthClient {
     return out;
   }
 
-  /// `simpleauthrequest` 직후 토큰이 없을 수 있으므로, `logincheck`를 두고 간격을 두며
-  /// 응답을 누적해 [CxId]·[ReqTxId]·[Token]·[TxId]가 생길 때까지 기다립니다.
+  /// `simpleauthrequest`의 ResultData에서 받은 토큰으로 `logincheck`를 폴링해
+  /// 휴대폰 간편인증 완료(`Result`==true)까지 기다립니다.
+  ///
+  /// logincheck 응답에는 토큰이 없습니다(틸코 문서). 토큰이 simpleauth에 없으면 폴링하지 않습니다.
   Future<Map<String, dynamic>> waitForNhisAuthForTreatmentInjection({
     required Map<String, dynamic> tilkoRequestMap,
     required Map<String, dynamic> initialSimpleAuthResponse,
@@ -435,25 +475,52 @@ class TilkoHiraSimpleAuthClient {
     var session = tilkoNhisLiftNestedSession(
       Map<String, dynamic>.from(initialSimpleAuthResponse),
     );
-    if (tilkoNhisAuthTokensComplete(session)) {
+
+    if (tilkoNhisSimpleAuthIndicatesError(session)) {
+      final msg = tilkoFindPlainString(session, 'Message') ?? '';
+      final code = tilkoFindPlainString(session, 'ErrorCode') ?? '';
       if (logPollProgress) {
         // ignore: avoid_print
         print(
-          'Tilko logincheck: 초기 응답에 토큰 완비 — '
+          'Tilko simpleauth: ErrorCode=$code Message=$msg — '
           '${tilkoNhisTokenPresenceSummary(session)}',
         );
       }
-      return session;
+      return {
+        ...session,
+        '_link26_poll_error': 'simpleauth ErrorCode=$code${msg.isEmpty ? '' : ': $msg'}',
+      };
     }
+
+    if (!tilkoNhisAuthTokensComplete(session)) {
+      if (logPollProgress) {
+        // ignore: avoid_print
+        print(
+          'Tilko simpleauth: ResultData에 토큰 없음 — logincheck 생략. '
+          '${tilkoNhisTokenPresenceSummary(session)} '
+          'ErrorCode=${tilkoFindPlainString(session, 'ErrorCode') ?? '-'} '
+          'Message=${tilkoFindPlainString(session, 'Message') ?? '-'}',
+        );
+      }
+      return {
+        ...session,
+        '_link26_poll_error':
+            'simpleauthrequest 응답에 CxId·Token 등이 없습니다. '
+            'TILKO_API_KEY·상품 권한·.env TILKO_PRIVATE_AUTH_TYPE(예: KAKAO)이 '
+            '휴대폰에서 누른 간편인증 앱과 같은지 확인하세요.',
+      };
+    }
+
     if (logPollProgress) {
       // ignore: avoid_print
       print(
         'Tilko logincheck: 폴링 시작 (최대 $maxAttempts회, '
-        '${interval.inSeconds}초 간격) — '
-        '${tilkoNhisTokenPresenceSummary(session)}',
+        '${interval.inSeconds}초 간격) — ${tilkoNhisTokenPresenceSummary(session)}',
       );
     }
+
     String? lastPollError;
+    Map<String, dynamic>? lastLoginCheck;
     for (var i = 0; i < maxAttempts; i++) {
       Map<String, dynamic> lc;
       try {
@@ -470,37 +537,42 @@ class TilkoHiraSimpleAuthClient {
         await Future<void>.delayed(interval);
         continue;
       }
-      if (lc['http_status'] != null) {
-        final inner = lc['body'];
-        if (inner is Map<String, dynamic>) {
-          session = tilkoMergeJsonMaps(session, inner);
-        }
-      } else {
-        session = tilkoMergeJsonMaps(session, lc);
-      }
-      session = tilkoNhisLiftNestedSession(session);
+      lastLoginCheck = lc;
+      final lcBody = lc['http_status'] != null
+          ? (lc['body'] is Map<String, dynamic>
+              ? lc['body'] as Map<String, dynamic>
+              : null)
+          : lc;
+      final loginOk = lcBody != null && tilkoNhisLoginCheckSucceeded(lcBody);
       if (logPollProgress && ((i + 1) % 6 == 0 || i == 0)) {
         // ignore: avoid_print
         print(
-          'Tilko logincheck #${i + 1}: ${tilkoNhisTokenPresenceSummary(session)}',
+          'Tilko logincheck #${i + 1}: Result=${loginOk ? '완료' : '대기'} '
+          '${tilkoNhisTokenPresenceSummary(session)}',
         );
       }
-      if (tilkoNhisAuthTokensComplete(session)) {
+      if (loginOk && tilkoNhisAuthTokensComplete(session)) {
         if (logPollProgress) {
           // ignore: avoid_print
-          print('Tilko logincheck: 토큰 완비 (#${i + 1})');
+          print('Tilko logincheck: 간편인증 완료 (#${i + 1})');
         }
         return session;
       }
       await Future<void>.delayed(interval);
     }
-    if (lastPollError != null && lastPollError.trim().isNotEmpty) {
-      return {
-        ...session,
-        '_link26_poll_error': lastPollError,
-      };
+
+    final out = Map<String, dynamic>.from(session);
+    if (lastLoginCheck != null) {
+      out['_link26_last_logincheck'] = lastLoginCheck;
     }
-    return session;
+    if (lastPollError != null && lastPollError.trim().isNotEmpty) {
+      out['_link26_poll_error'] = lastPollError;
+    } else {
+      out['_link26_poll_error'] =
+          'logincheck에서 간편인증 완료(Result=true)를 받지 못했습니다. '
+          '휴대폰에서 PASS·카카오 등 인증을 완료한 뒤 다시 시도하세요.';
+    }
+    return out;
   }
 
   Future<Map<String, dynamic>> requestNhisSimpleAuthFromJsonMap(

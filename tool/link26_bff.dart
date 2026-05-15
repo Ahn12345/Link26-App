@@ -303,10 +303,25 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
 
+        final tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
         // ignore: avoid_print
         print(
-          'BFF ① simpleauthrequest OK — ${tilkoNhisTokenPresenceSummary(tilkoRes)}',
+          'BFF ① simpleauthrequest — ${tilkoNhisTokenPresenceSummary(tilkoResLifted)} '
+          'ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode') ?? '-'} '
+          'Message=${tilkoFindPlainString(tilkoResLifted, 'Message') ?? '-'}',
         );
+        if (tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+          await _json(request, 200, {
+            'ok': false,
+            'detail':
+                '틸코 simpleauthrequest 오류 (ErrorCode=${tilkoFindPlainString(tilkoResLifted, 'ErrorCode')})',
+            'hint_ko':
+                tilkoFindPlainString(tilkoResLifted, 'Message') ??
+                'TILKO_API_KEY·상품 권한·요청 필드(이름·생년월일·휴대폰·주민번호)를 확인하세요.',
+            'tilko': tilkoRes,
+          });
+          return;
+        }
         final tilkoAuth = await tilkoClient.waitForNhisAuthForTreatmentInjection(
           tilkoRequestMap: tilkoMap,
           initialSimpleAuthResponse: tilkoRes,
@@ -321,14 +336,19 @@ Future<void> _handle(HttpRequest request) async {
           final errBit = pollErr is String && pollErr.trim().isNotEmpty
               ? ' ($pollErr)'
               : '';
+          final pollHint = pollErr is String &&
+                  pollErr.contains('simpleauthrequest 응답에 CxId')
+              ? '틸코 simpleauthrequest 단계에서 세션 토큰을 받지 못했습니다. '
+                  '`.env`의 TILKO_PRIVATE_AUTH_TYPE(예: KAKAO)이 휴대폰에서 누른 간편인증과 같아야 합니다. '
+                  'TILKO_API_KEY·틸코 상품(NHIS 간편인증) 권한을 확인하세요.'
+              : '휴대폰에서 PASS·카카오 등 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
+                  '서버가 약 1분간 logincheck(Result)로 완료 여부를 확인합니다.$errBit '
+                  '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
+                  '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.';
           await _json(request, 200, {
             'ok': false,
-            'detail': 'NHIS 간편인증 토큰(CxId·ReqTxId·Token·TxId)을 받지 못했습니다.',
-            'hint_ko':
-                '휴대폰에서 PASS·카카오 등 간편인증을 완료한 뒤, 다시 「심평원에서 불러오기」를 눌러 주세요. '
-                '서버가 약 1분간 logincheck로 완료 여부를 확인합니다.$errBit '
-                '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
-                '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.',
+            'detail': 'NHIS 간편인증을 마치지 못했습니다.',
+            'hint_ko': pollHint,
             'tilko': tilkoRes,
             'tilko_after_poll': tilkoAuth,
             'meta': {'awaiting_nhis_simple_auth': true},
