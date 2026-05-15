@@ -482,64 +482,44 @@ class _AiChatBodyState extends State<_AiChatBody> {
                               ),
                               child: ColoredBox(
                                 color: Link26UnifiedPage.background,
-                                child: LayoutBuilder(
-                                  builder: (context, vp) {
-                                    final scrollPadBottom =
-                                        Link26ResponsiveUi.gapSm(w);
-                                    final minScrollBody =
-                                        vp.maxHeight - scrollPadBottom;
-                                    return SingleChildScrollView(
-                                      padding: EdgeInsets.fromLTRB(
-                                        0,
-                                        0,
-                                        0,
-                                        scrollPadBottom,
+                                child: ValueListenableBuilder<int>(
+                                  valueListenable:
+                                      AiChatConversationCache.revision,
+                                  builder: (context, rev, _) {
+                                    assert(rev >= 0);
+                                    final gap =
+                                        Link26ResponsiveUi.gapMd(w);
+                                    final msgs =
+                                        AiChatConversationCache.messages;
+                                    return ListView(
+                                      reverse: true,
+                                      padding: EdgeInsets.only(
+                                        top: Link26ResponsiveUi.gapSm(w),
                                       ),
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          minHeight: minScrollBody > 0
-                                              ? minScrollBody
-                                              : vp.maxHeight,
+                                      children: [
+                                        for (final m in msgs.reversed)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: gap,
+                                            ),
+                                            child: _ChatBubble(
+                                              message: m,
+                                              maxBubbleWidth: bubbleMax,
+                                              layoutWidth: w,
+                                            ),
+                                          ),
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: gap,
+                                          ),
+                                          child: _AiWelcomeBubble(
+                                            timeLabel:
+                                                _welcomeAccessLabel ?? '…',
+                                            maxBubbleWidth: bubbleMax,
+                                            layoutWidth: w,
+                                          ),
                                         ),
-                                        child: ValueListenableBuilder<int>(
-                                          valueListenable:
-                                              AiChatConversationCache.revision,
-                                          builder: (context, rev, _) {
-                                            assert(rev >= 0);
-                                            return Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.stretch,
-                                              children: [
-                                                _AiWelcomeBubble(
-                                                  timeLabel:
-                                                      _welcomeAccessLabel ??
-                                                          '…',
-                                                  maxBubbleWidth: bubbleMax,
-                                                  layoutWidth: w,
-                                                ),
-                                                ...AiChatConversationCache
-                                                    .messages
-                                                    .map(
-                                                  (m) => Padding(
-                                                    padding: EdgeInsets.only(
-                                                      top: Link26ResponsiveUi
-                                                          .gapMd(w),
-                                                    ),
-                                                    child: _ChatBubble(
-                                                      message: m,
-                                                      maxBubbleWidth:
-                                                          bubbleMax,
-                                                      layoutWidth: w,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                      ),
+                                      ],
                                     );
                                   },
                                 ),
@@ -1208,26 +1188,38 @@ class _BubbleInlineImage extends StatefulWidget {
 
 class _BubbleInlineImageState extends State<_BubbleInlineImage> {
   Uint8List? _bytes;
+  int? _pixelWidth;
+  int? _pixelHeight;
+
+  void _loadBytes(String base64) {
+    try {
+      final decoded = base64Decode(base64);
+      _bytes = decoded;
+      _pixelWidth = null;
+      _pixelHeight = null;
+      final im = img.decodeImage(decoded);
+      if (im != null) {
+        _pixelWidth = im.width;
+        _pixelHeight = im.height;
+      }
+    } catch (_) {
+      _bytes = null;
+      _pixelWidth = null;
+      _pixelHeight = null;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    try {
-      _bytes = base64Decode(widget.base64);
-    } catch (_) {
-      _bytes = null;
-    }
+    _loadBytes(widget.base64);
   }
 
   @override
   void didUpdateWidget(covariant _BubbleInlineImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.base64 != widget.base64) {
-      try {
-        _bytes = base64Decode(widget.base64);
-      } catch (_) {
-        _bytes = null;
-      }
+      _loadBytes(widget.base64);
       setState(() {});
     }
   }
@@ -1238,17 +1230,33 @@ class _BubbleInlineImageState extends State<_BubbleInlineImage> {
     if (b == null || b.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    const maxH = 220.0;
+    final maxW = widget.maxWidth.clamp(120.0, 900.0);
+    var w = maxW;
+    var h = maxH;
+    final pw = _pixelWidth;
+    final ph = _pixelHeight;
+    if (pw != null && ph != null && pw > 0 && ph > 0) {
+      h = maxW * ph / pw;
+      if (h > maxH) {
+        h = maxH;
+        w = maxH * pw / ph;
+      }
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: widget.maxWidth.clamp(40, 900),
-          maxHeight: 260,
-        ),
+      child: SizedBox(
+        width: w,
+        height: h,
         child: Image.memory(
           b,
+          width: w,
+          height: h,
           fit: BoxFit.contain,
           gaplessPlayback: true,
+          filterQuality: FilterQuality.medium,
         ),
       ),
     );
