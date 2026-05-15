@@ -212,6 +212,11 @@ abstract class AppLocalizations {
   String get signupGenderMale;
   String get signupGenderFemale;
   String get signupGenderRequired;
+  String get signupBirthLabel;
+  String get signupBirthHint;
+  String get signupBirthInvalid;
+  String get signupBirthRrnMismatch;
+  String get signupBirthRequired;
   String get signupRrnLabel;
   String get signupRrnHint;
   String get signupRrnInvalid;

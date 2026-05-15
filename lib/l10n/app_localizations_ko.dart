@@ -549,6 +549,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signupGenderRequired => '성별을 선택하세요.';
 
   @override
+  String get signupBirthLabel => '생년월일';
+
+  @override
+  String get signupBirthHint => 'YYYYMMDD (예: 20040522)';
+
+  @override
+  String get signupBirthInvalid => '생년월일 8자리(YYYYMMDD)를 올바르게 입력하세요.';
+
+  @override
+  String get signupBirthRrnMismatch =>
+      '생년월일과 주민등록번호 앞자리가 맞지 않습니다.';
+
+  @override
+  String get signupBirthRequired => '생년월일을 입력하세요.';
+
+  @override
   String get signupRrnLabel => '주민등록번호';
 
   @override

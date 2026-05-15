@@ -348,12 +348,15 @@ Future<void> _handle(HttpRequest request) async {
                 tilkoFindPlainString(tilkoResLifted, 'TargetCode');
             final apiTxKey =
                 tilkoFindPlainString(tilkoResLifted, 'ApiTxKey');
+            final errLog = tilkoFindPlainString(tilkoResLifted, 'ErrorLog');
+            final status = tilkoFindPlainString(tilkoResLifted, 'Status');
             // ignore: avoid_print
             print(
               'BFF ① NHIS simpleauth(PrivateAuthType=$patTry, '
               'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}, phone=$cellWire) '
-              '실패 Message=${nhisMsg ?? '-'} TargetCode=${nhisTarget ?? '-'} '
-              'ApiTxKey=${apiTxKey ?? '-'}',
+              '실패 Status=${status ?? '-'} Message=${nhisMsg ?? '-'} '
+              'TargetCode=${nhisTarget ?? '-'} ApiTxKey=${apiTxKey ?? '-'} '
+              'ErrorLog=${errLog ?? '-'}',
             );
 
             if (!kakaoOnly) {
@@ -384,8 +387,42 @@ Future<void> _handle(HttpRequest request) async {
           }
         }
         if (!broke) {
-          // ignore: avoid_print
-          print('BFF ① simpleauth 모든 후보 소진');
+          final idDigits = tilkoIdentityDigits13(
+            '${tilkoMap['IdentityNumber'] ?? tilkoMap['identityNumber'] ?? ''}',
+          );
+          if (idDigits.length == 13 && kakaoOnly) {
+            final retryMap = Map<String, dynamic>.from(tilkoMap)
+              ..['PrivateAuthType'] = patCandidates.first
+              ..['UserCellphoneNumber'] = phoneCandidates.first;
+            // ignore: avoid_print
+            print(
+              'BFF ① NHIS simpleauth + IdentityNumber(13) 재시도 — '
+              '${tilkoSimpleAuthRequestLogLine(retryMap)} rrn7=${idDigits[6]}',
+            );
+            authChannel = 'NHIS';
+            tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
+              retryMap,
+              includeIdentityNumber: true,
+            );
+            tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+            lastNhisLifted = tilkoResLifted;
+            if (tilkoRes['http_status'] == null &&
+                !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+              broke = true;
+            } else {
+              final m = tilkoFindPlainString(tilkoResLifted, 'Message');
+              final log = tilkoFindPlainString(tilkoResLifted, 'ErrorLog');
+              // ignore: avoid_print
+              print(
+                'BFF ① NHIS+주민번호 재시도 실패 Message=${m ?? '-'} '
+                'ErrorLog=${log ?? '-'}',
+              );
+            }
+          }
+          if (!broke) {
+            // ignore: avoid_print
+            print('BFF ① simpleauth 모든 후보 소진');
+          }
         }
 
         tilkoRes ??= <String, dynamic>{};

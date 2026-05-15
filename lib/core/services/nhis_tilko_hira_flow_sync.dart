@@ -31,6 +31,7 @@ abstract final class NhisTilkoHiraFlowSync {
     required String phoneDigits,
     required String gender,
     required String residentRegistrationDigits13,
+    String? birthDateYmd,
     String? codefConnectedId,
   }) async {
     if (NhisRuntimeConfig.useMock) {
@@ -55,12 +56,14 @@ abstract final class NhisTilkoHiraFlowSync {
       return null;
     }
 
-    final birth =
-        TilkoRrnFields.birthYmdFromRrn(residentRegistrationDigits13.trim());
-    if (birth == null) {
+    final birthFromDb = birthDateYmd?.replaceAll(RegExp(r'\D'), '') ?? '';
+    final birth = birthFromDb.length == 8
+        ? birthFromDb
+        : TilkoRrnFields.birthYmdFromRrn(residentRegistrationDigits13.trim());
+    if (birth == null || birth.length != 8) {
       return const NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.failed,
-        detail: '주민등록번호에서 생년월일을 해석하지 못했습니다.',
+        detail: '생년월일(YYYYMMDD)이 없습니다. 회원가입 시 생년월일을 입력했는지 확인하세요.',
       );
     }
 
@@ -201,6 +204,7 @@ abstract final class NhisTilkoHiraFlowSync {
     required String phoneDigits,
     required String gender,
     required String residentRegistrationDigits13,
+    String? birthDateYmd,
     String? codefConnectedId,
   }) async {
     final first = await runTilkoThenHira(
@@ -208,6 +212,7 @@ abstract final class NhisTilkoHiraFlowSync {
       phoneDigits: phoneDigits,
       gender: gender,
       residentRegistrationDigits13: residentRegistrationDigits13,
+      birthDateYmd: birthDateYmd,
       codefConnectedId: codefConnectedId,
     );
     if (first == null) return null;

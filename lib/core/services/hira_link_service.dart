@@ -8,6 +8,7 @@ import 'package:link26_app/core/services/nhis_tilko_hira_flow_sync.dart';
 import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
+import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 /// 가입·로그인·홈에서 틸코 간편인증 → BFF 심평원 복약(hiraa050300000100) 조회.
@@ -18,6 +19,7 @@ abstract final class HiraLinkService {
     required String displayName,
     required String phoneDigits,
     required String gender,
+    required String birthDateYmd,
     required String residentRegistrationDigits13,
     String? codefConnectedId,
   }) async {
@@ -36,6 +38,7 @@ abstract final class HiraLinkService {
       displayName: displayName,
       phoneDigits: phoneDigits,
       gender: gender,
+      birthDateYmd: birthDateYmd,
       residentRegistrationDigits13: residentRegistrationDigits13,
       codefConnectedId: codefConnectedId,
     );
@@ -153,10 +156,23 @@ abstract final class HiraLinkService {
       );
     }
 
+    var birthYmd = user.birthDateYmd;
+    if (birthYmd == null || birthYmd.length != 8) {
+      final fromRrn = TilkoRrnFields.birthYmdFromRrn(rrn);
+      if (fromRrn != null) {
+        birthYmd = fromRrn;
+        await UserLocalRepository.updateBirthDateYmd(
+          user.phoneDigits,
+          birthDateYmd: fromRrn,
+        );
+      }
+    }
+
     final out = await NhisTilkoHiraFlowSync.runTilkoThenHiraWithMedicationsFallback(
       displayName: user.displayName,
       phoneDigits: user.phoneDigits,
       gender: user.gender,
+      birthDateYmd: birthYmd,
       residentRegistrationDigits13: rrn,
       codefConnectedId: user.codefConnectedId,
     );

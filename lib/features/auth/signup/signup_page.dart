@@ -32,6 +32,7 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _birthCtrl = TextEditingController();
   final _rrnCtrl = TextEditingController();
 
   /// `male` | `female`
@@ -43,6 +44,7 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _birthCtrl.dispose();
     _rrnCtrl.dispose();
     super.dispose();
   }
@@ -51,6 +53,7 @@ class _SignupPageState extends State<SignupPage> {
     if (_nameCtrl.text.trim().isEmpty) return false;
     if (!SignupValidators.isPhoneKr(_phoneCtrl.text)) return false;
     if (_gender == null) return false;
+    if (!SignupValidators.isBirthYmd8(_birthCtrl.text)) return false;
     if (!SignupValidators.isRrn13Digits(_rrnCtrl.text)) return false;
     if (!_privacyAgreed) return false;
     return true;
@@ -76,9 +79,23 @@ class _SignupPageState extends State<SignupPage> {
       );
       return;
     }
+    if (!SignupValidators.isBirthYmd8(_birthCtrl.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupBirthInvalid)),
+      );
+      return;
+    }
+    final birthYmd = SignupValidators.digitsOnly(_birthCtrl.text);
     if (!SignupValidators.isRrn13Digits(_rrnCtrl.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.signupRrnInvalid)),
+      );
+      return;
+    }
+    final rrnDigits = SignupValidators.digitsOnly(_rrnCtrl.text);
+    if (!SignupValidators.birthYmdMatchesRrn(birthYmd, rrnDigits)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupBirthRrnMismatch)),
       );
       return;
     }
@@ -105,8 +122,8 @@ class _SignupPageState extends State<SignupPage> {
           displayName: _nameCtrl.text.trim(),
           phone: SignupValidators.digitsOnly(_phoneCtrl.text),
           gender: _gender!,
-          residentRegistrationDigits13:
-              SignupValidators.digitsOnly(_rrnCtrl.text),
+          birthDateYmd: birthYmd,
+          residentRegistrationDigits13: rrnDigits,
           privacyConsent: true,
         );
       } on DatabaseException {
@@ -118,7 +135,6 @@ class _SignupPageState extends State<SignupPage> {
       }
 
       final phoneDigits = SignupValidators.digitsOnly(_phoneCtrl.text);
-      final rrnDigits = SignupValidators.digitsOnly(_rrnCtrl.text);
       final rrnHash =
           UserLocalRepository.residentRegistrationSha256(rrnDigits);
 
@@ -150,6 +166,7 @@ class _SignupPageState extends State<SignupPage> {
         displayName: _nameCtrl.text.trim(),
         phoneDigits: phoneDigits,
         gender: _gender!,
+        birthDateYmd: birthYmd,
         residentRegistrationDigits13: rrnDigits,
       );
       await AuthSession.signIn(
@@ -281,6 +298,31 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                           decoration: Link26Surface.inputDecoration(
                             labelText: l10n.signupPhoneLabel,
+                          ),
+                        ),
+                        SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                        TextField(
+                          controller: _birthCtrl,
+                          onChanged: (_) => setState(() {}),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(8),
+                          ],
+                          textInputAction: TextInputAction.next,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Link26Surface.textPrimary,
+                            fontSize: Link26ResponsiveUi.body(w),
+                          ),
+                          decoration: Link26Surface.inputDecoration(
+                            labelText: l10n.signupBirthLabel,
+                          ).copyWith(
+                            hintText: l10n.signupBirthHint,
+                            hintStyle: TextStyle(
+                              color: Link26Surface.textMuted,
+                              fontSize: Link26ResponsiveUi.bodySmall(w),
+                            ),
                           ),
                         ),
                         SizedBox(height: Link26ResponsiveUi.gapMd(w)),

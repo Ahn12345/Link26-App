@@ -558,6 +558,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupGenderRequired => 'Please select a gender.';
 
   @override
+  String get signupBirthLabel => 'Date of birth';
+
+  @override
+  String get signupBirthHint => 'YYYYMMDD (e.g. 20040522)';
+
+  @override
+  String get signupBirthInvalid => 'Enter a valid date as 8 digits (YYYYMMDD).';
+
+  @override
+  String get signupBirthRrnMismatch =>
+      'Date of birth does not match the first digits of your resident ID.';
+
+  @override
+  String get signupBirthRequired => 'Please enter your date of birth.';
+
+  @override
   String get signupRrnLabel => 'Resident ID (KR, 13 digits)';
 
   @override

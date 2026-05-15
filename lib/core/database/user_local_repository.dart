@@ -19,6 +19,7 @@ class LocalUserRecord {
     required this.gender,
     required this.residentRegistrationHash,
     required this.privacyConsent,
+    this.birthDateYmd,
     this.codefConnectedId,
   });
 
@@ -29,6 +30,9 @@ class LocalUserRecord {
   final String gender;
   final String? residentRegistrationHash;
   final bool privacyConsent;
+
+  /// 틸코·건강 연동용 생년월일 `YYYYMMDD` (평문, 기기 로컬 DB).
+  final String? birthDateYmd;
 
   /// CODEF 기관 연동 후 발급되는 connectedId — BFF 복약 실연동 시 쿼리로 전달.
   final String? codefConnectedId;
@@ -110,7 +114,7 @@ abstract final class UserLocalRepository {
     Future<Database> openOnce() async {
       return openDatabase(
         dbPath,
-        version: 4,
+        version: 5,
         onCreate: (db, version) async {
           await db.execute('''
           CREATE TABLE users (
@@ -120,6 +124,7 @@ abstract final class UserLocalRepository {
             display_name TEXT,
             phone TEXT,
             gender TEXT,
+            birth_date_ymd TEXT,
             resident_registration_hash TEXT,
             privacy_consent INTEGER NOT NULL DEFAULT 0,
             nhis_sync_ok INTEGER,
@@ -164,6 +169,13 @@ abstract final class UserLocalRepository {
               db,
               'codef_connected_id',
               'codef_connected_id TEXT',
+            );
+          }
+          if (oldVersion < 5) {
+            await _addUsersColumnIfMissing(
+              db,
+              'birth_date_ymd',
+              'birth_date_ymd TEXT',
             );
           }
         },
@@ -313,14 +325,32 @@ abstract final class UserLocalRepository {
     return p.isEmpty ? null : p;
   }
 
+  static Future<void> updateBirthDateYmd(
+    String phoneDigits, {
+    required String birthDateYmd,
+  }) async {
+    final p = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    final b = birthDateYmd.replaceAll(RegExp(r'\D'), '');
+    if (p.length < 10 || b.length != 8) return;
+    final db = await _open();
+    await db.update(
+      'users',
+      {'birth_date_ymd': b},
+      where: 'phone = ?',
+      whereArgs: [p],
+    );
+  }
+
   static Future<int> register({
     required String displayName,
     required String phone,
     required String gender,
+    required String birthDateYmd,
     required String residentRegistrationDigits13,
     required bool privacyConsent,
   }) async {
     final p = phone.replaceAll(RegExp(r'\D'), '');
+    final birth = birthDateYmd.replaceAll(RegExp(r'\D'), '');
     final email = _syntheticEmailFromPhone(p);
     final db = await _open();
     final id = await db.insert(
@@ -331,6 +361,7 @@ abstract final class UserLocalRepository {
         'display_name': normalizeDisplayName(displayName),
         'phone': p,
         'gender': gender,
+        'birth_date_ymd': birth,
         'resident_registration_hash':
             _hashResidentRegistration(residentRegistrationDigits13),
         'privacy_consent': privacyConsent ? 1 : 0,
@@ -356,6 +387,8 @@ abstract final class UserLocalRepository {
       final gender = (row['gender'] as String?)?.trim() ?? '';
       final rrn = row['resident_registration_hash'] as String?;
       final privacy = _intFromSql(row['privacy_consent']) == 1;
+      final birthRaw = (row['birth_date_ymd'] as String?)?.trim() ?? '';
+      final birthYmd = birthRaw.replaceAll(RegExp(r'\D'), '');
       final codefId = (row['codef_connected_id'] as String?)?.trim();
       if (phoneDigits.length < 10) return null;
       return LocalUserRecord(
@@ -366,6 +399,7 @@ abstract final class UserLocalRepository {
         gender: gender,
         residentRegistrationHash: rrn,
         privacyConsent: privacy,
+        birthDateYmd: birthYmd.length == 8 ? birthYmd : null,
         codefConnectedId:
             (codefId == null || codefId.isEmpty) ? null : codefId,
       );

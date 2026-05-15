@@ -264,6 +264,12 @@ String tilkoUserFacingMessageKo(String raw) {
   return raw;
 }
 
+String tilkoHintWithApiTxKey(String base, Map<String, dynamic> lifted) {
+  final key = (tilkoFindPlainString(lifted, 'ApiTxKey') ?? '').trim();
+  if (key.isEmpty) return base;
+  return '$base\n(틸코 고객센터 문의 시 ApiTxKey: $key)';
+}
+
 /// simpleauthrequest 실패 시 BFF·앱 공통 `hint_ko`.
 String tilkoFriendlyHintFromLifted(Map<String, dynamic> lifted) {
   final target = (tilkoFindPlainString(lifted, 'TargetMessage') ?? '').trim();
@@ -275,9 +281,9 @@ String tilkoFriendlyHintFromLifted(Map<String, dynamic> lifted) {
   }
   final msg = (tilkoFindPlainString(lifted, 'Message') ?? '').trim();
   if (msg.isNotEmpty) {
-    return tilkoUserFacingMessageKo(msg);
+    return tilkoHintWithApiTxKey(tilkoUserFacingMessageKo(msg), lifted);
   }
-  return _tilkoSimpleAuthDefaultHintKo;
+  return tilkoHintWithApiTxKey(_tilkoSimpleAuthDefaultHintKo, lifted);
 }
 
 /// 틸코 간편인증 API — 휴대폰 `010-1234-5678` (apidemo·샘플 코드 형식).
@@ -294,6 +300,10 @@ String tilkoFormatCellphoneHyphen(String phone) {
 
 /// 주민등록번호 13자리(숫자만).
 String tilkoIdentityDigits13(String raw) => raw.replaceAll(RegExp(r'\D'), '');
+
+/// 틸코·카카오 실명 비교용 — 앞뒤 공백·연속 공백 제거.
+String tilkoNormalizeUserName(String raw) =>
+    raw.trim().replaceAll(RegExp(r'\s+'), '');
 
 /// logincheck·simpleauth 응답에 토큰 4종이 채워졌는지(값은 출력하지 않음).
 String tilkoNhisTokenPresenceSummary(Map<String, dynamic> root) {
@@ -473,7 +483,10 @@ class TilkoHiraSimpleAuthClient {
     final id = tilkoIdentityDigits13(identityNumber);
     final body = <String, dynamic>{
       'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
-      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName.trim()),
+      'UserName': tilkoAesEncryptFieldOrEmpty(
+        aesKey,
+        tilkoNormalizeUserName(userName),
+      ),
       'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate.trim()),
       'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
       'IdentityNumber': tilkoAesEncryptFieldOrEmpty(aesKey, id),
@@ -509,14 +522,15 @@ class TilkoHiraSimpleAuthClient {
   /// 공단(NHIS) 간편인증 요청 — `POST …/nhissimpleauth/simpleauthrequest`
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
   ///
-  /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber 만 전송합니다.
-  /// (IdentityNumber 는 심평원 hirasimpleauth 등 다른 API용 — NHIS 요청에 넣으면 틸코가 거절할 수 있음)
+  /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber.
+  /// [includeIdentityNumber] — 운영 환경에서 4필드만으로 `찾을 수 없습니다`일 때만 1회 재시도용.
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
     required String birthDate,
     required String userCellphoneNumber,
     String? identityNumber,
+    bool includeIdentityNumber = false,
   }) async {
     if (apiKey.isEmpty) {
       throw StateError('TILKO_API_KEY 가 비어 있습니다.');
@@ -531,12 +545,19 @@ class TilkoHiraSimpleAuthClient {
 
     final pat = tilkoPrivateAuthTypeWirePlain(privateAuthType);
     final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
+    final name = tilkoNormalizeUserName(userName);
     final body = <String, dynamic>{
       'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
-      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName.trim()),
+      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, name),
       'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate.trim()),
       'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
     };
+    if (includeIdentityNumber) {
+      final id = tilkoIdentityDigits13(identityNumber ?? '');
+      if (id.length == 13) {
+        body['IdentityNumber'] = tilkoAesEncryptFieldOrEmpty(aesKey, id);
+      }
+    }
 
     final uri = Uri.parse('$_root/api/v1.0/nhissimpleauth/simpleauthrequest');
     final res = await http.post(
@@ -820,8 +841,9 @@ class TilkoHiraSimpleAuthClient {
   }
 
   Future<Map<String, dynamic>> requestNhisSimpleAuthFromJsonMap(
-    Map<String, dynamic> m,
-  ) {
+    Map<String, dynamic> m, {
+    bool includeIdentityNumber = false,
+  }) {
     final phone =
         '${m['UserCellphoneNumber'] ?? m['userCellphoneNumber'] ?? ''}'.trim();
     return requestNhisSimpleAuth(
@@ -830,6 +852,7 @@ class TilkoHiraSimpleAuthClient {
       birthDate: '${m['BirthDate'] ?? m['birthDate'] ?? ''}',
       userCellphoneNumber: phone,
       identityNumber: '${m['IdentityNumber'] ?? m['identityNumber'] ?? ''}',
+      includeIdentityNumber: includeIdentityNumber,
     );
   }
 
