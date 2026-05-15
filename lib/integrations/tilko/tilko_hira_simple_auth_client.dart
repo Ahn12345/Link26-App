@@ -59,6 +59,17 @@ bool tilkoNhisAuthTokensComplete(dynamic root) {
   return true;
 }
 
+/// logincheck·simpleauth 응답에 토큰 4종이 채워졌는지(값은 출력하지 않음).
+String tilkoNhisTokenPresenceSummary(Map<String, dynamic> root) {
+  const keys = ['CxId', 'ReqTxId', 'Token', 'TxId'];
+  final parts = <String>[];
+  for (final k in keys) {
+    final v = (tilkoFindPlainString(root, k) ?? '').trim();
+    parts.add(v.isEmpty ? '$k=비어있음' : '$k=있음');
+  }
+  return parts.join(', ');
+}
+
 /// 틸코 NHIS 간편인증 응답에서 토큰이 [ResultData]·[Auth] 등 안쪽에만 있을 때 상위와 합쳐 조회에 쓰기 좋게 만듭니다.
 Map<String, dynamic> tilkoNhisLiftNestedSession(Map<String, dynamic> m) {
   var out = Map<String, dynamic>.from(m);
@@ -419,12 +430,28 @@ class TilkoHiraSimpleAuthClient {
     required Map<String, dynamic> initialSimpleAuthResponse,
     int maxAttempts = 36,
     Duration interval = const Duration(seconds: 2),
+    bool logPollProgress = false,
   }) async {
     var session = tilkoNhisLiftNestedSession(
       Map<String, dynamic>.from(initialSimpleAuthResponse),
     );
     if (tilkoNhisAuthTokensComplete(session)) {
+      if (logPollProgress) {
+        // ignore: avoid_print
+        print(
+          'Tilko logincheck: 초기 응답에 토큰 완비 — '
+          '${tilkoNhisTokenPresenceSummary(session)}',
+        );
+      }
       return session;
+    }
+    if (logPollProgress) {
+      // ignore: avoid_print
+      print(
+        'Tilko logincheck: 폴링 시작 (최대 $maxAttempts회, '
+        '${interval.inSeconds}초 간격) — '
+        '${tilkoNhisTokenPresenceSummary(session)}',
+      );
     }
     String? lastPollError;
     for (var i = 0; i < maxAttempts; i++) {
@@ -436,6 +463,10 @@ class TilkoHiraSimpleAuthClient {
         );
       } catch (e) {
         lastPollError = '$e';
+        if (logPollProgress && (i == 0 || (i + 1) % 6 == 0)) {
+          // ignore: avoid_print
+          print('Tilko logincheck #${i + 1}: 예외 $e');
+        }
         await Future<void>.delayed(interval);
         continue;
       }
@@ -448,7 +479,17 @@ class TilkoHiraSimpleAuthClient {
         session = tilkoMergeJsonMaps(session, lc);
       }
       session = tilkoNhisLiftNestedSession(session);
+      if (logPollProgress && ((i + 1) % 6 == 0 || i == 0)) {
+        // ignore: avoid_print
+        print(
+          'Tilko logincheck #${i + 1}: ${tilkoNhisTokenPresenceSummary(session)}',
+        );
+      }
       if (tilkoNhisAuthTokensComplete(session)) {
+        if (logPollProgress) {
+          // ignore: avoid_print
+          print('Tilko logincheck: 토큰 완비 (#${i + 1})');
+        }
         return session;
       }
       await Future<void>.delayed(interval);

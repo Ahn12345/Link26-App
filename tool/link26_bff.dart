@@ -290,6 +290,8 @@ Future<void> _handle(HttpRequest request) async {
           tilkoMap,
         );
         if (tilkoRes['http_status'] != null) {
+          // ignore: avoid_print
+          print('BFF ① simpleauthrequest: HTTP ${tilkoRes['http_status']}');
           await _json(request, 200, {
             'ok': false,
             'detail': '틸코 국민건강보험공단 간편인증(simpleauthrequest)이 HTTP 오류로 끝났습니다.',
@@ -301,11 +303,20 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
 
+        // ignore: avoid_print
+        print(
+          'BFF ① simpleauthrequest OK — ${tilkoNhisTokenPresenceSummary(tilkoRes)}',
+        );
         final tilkoAuth = await tilkoClient.waitForNhisAuthForTreatmentInjection(
           tilkoRequestMap: tilkoMap,
           initialSimpleAuthResponse: tilkoRes,
+          logPollProgress: true,
         );
         if (!tilkoNhisAuthTokensComplete(tilkoAuth)) {
+          // ignore: avoid_print
+          print(
+            'BFF ② logincheck 실패 — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}',
+          );
           final pollErr = tilkoAuth['_link26_poll_error'];
           final errBit = pollErr is String && pollErr.trim().isNotEmpty
               ? ' ($pollErr)'
@@ -325,6 +336,8 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
 
+        // ignore: avoid_print
+        print('BFF ② logincheck OK — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}');
         final nhisRes =
             await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
           tilkoRequestMap: tilkoMap,

@@ -3,7 +3,7 @@
 # =============================================================================
 
 NHIS_USE_MOCK=false
-NHIS_BASE_URL=http://127.0.0.1:8787,http://192.168.150.143:8787,http://192.168.193.209:8787
+NHIS_BASE_URL=http://127.0.0.1:8787,http://127.0.0.1:8788,http://192.168.150.143:8787,http://192.168.150.143:8788,http://192.168.193.209:8787,http://192.168.193.209:8788
 NHIS_SHOW_SYNC_SNACKBARS=false
 
 GEMINI_API_KEY="AIzaSyAH91tPYhoabPC7ffMl0CjY5O9PCk8Ge_g"
