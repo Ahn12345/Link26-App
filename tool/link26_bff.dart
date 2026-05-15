@@ -374,12 +374,15 @@ Future<void> _handle(HttpRequest request) async {
                 );
           final passChannel =
               tilkoPrivateAuthTypeName(patForFlow) == 'PASS';
-          // PASS: 4필드(PASS 문자열) → 실패 시 주민 포함·코드 5. 카카오: 1회.
+          // PASS: 한 번만 요청 — 주민 13자리 있으면 예전 2차와 동일(코드 5 + IdentityNumber).
+          // 없으면 4필드만(PASS).
           final kakaoAttempts = passChannel
               ? <({String channel, String pat, bool identity})>[
-                  (channel: 'NHIS', pat: 'PASS', identity: false),
-                  if (id13.length == 13)
-                    (channel: 'NHIS', pat: '5', identity: true),
+                  (
+                    channel: 'NHIS',
+                    pat: id13.length == 13 ? '5' : 'PASS',
+                    identity: id13.length == 13,
+                  ),
                 ]
               : <({String channel, String pat, bool identity})>[
                   (
@@ -427,9 +430,6 @@ Future<void> _handle(HttpRequest request) async {
               att.identity,
               tilkoResLifted,
             );
-            // PASS: 4필드 → 주민 포함 재시도까지 리스트에 넣었으므로 여기서 조기 종료하지 않음.
-            // tilkoSimpleAuthMessageRetryable 은 "동일 요청" 재호출 억제용인데,
-            // '찾을 수 없습니다' 가 나와도 다음 시도(IdentityNumber 포함)는 다른 요청임.
           }
         } else if (!broke) {
           outer:

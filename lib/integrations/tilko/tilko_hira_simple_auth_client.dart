@@ -636,7 +636,7 @@ class TilkoHiraSimpleAuthClient {
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
   ///
   /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber.
-  /// [includeIdentityNumber] — 운영 환경에서 4필드만으로 `찾을 수 없습니다`일 때만 1회 재시도용.
+  /// [includeIdentityNumber] — 주민 13자리를 AES 필드 `IdentityNumber`로 함께 보냄(PC BFF PASS는 1회 호출로 보냄).
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
