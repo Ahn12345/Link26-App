@@ -9,6 +9,7 @@ import 'package:link26_app/features/auth/signup/signup_validators.dart';
 import 'package:link26_app/features/health/kakao_cert_readiness.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
+import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
@@ -154,7 +155,7 @@ abstract final class HiraLinkService {
       return null;
     }
 
-    var birthYmd = user.birthDateYmd;
+    var birthYmd = user.birthDateYmd?.replaceAll(RegExp(r'\D'), '');
     if (birthYmd == null || birthYmd.length != 8) {
       final fromRrn = TilkoRrnFields.birthYmdFromRrn(rrn);
       if (fromRrn != null) {
@@ -164,6 +165,32 @@ abstract final class HiraLinkService {
           birthDateYmd: fromRrn,
         );
       }
+    }
+    if (birthYmd != null &&
+        birthYmd.length == 8 &&
+        !SignupValidators.birthYmdMatchesRrn(birthYmd, rrn)) {
+      final fromRrn = TilkoRrnFields.birthYmdFromRrn(rrn);
+      if (fromRrn != null) {
+        birthYmd = fromRrn;
+        await UserLocalRepository.updateBirthDateYmd(
+          user.phoneDigits,
+          birthDateYmd: fromRrn,
+        );
+      }
+    }
+    final coherent = tilkoCoherentBirthYmd(
+      birthDateYmd: birthYmd,
+      identityNumber: rrn,
+    );
+    if (coherent != null) {
+      birthYmd = coherent;
+    }
+    if (birthYmd == null || birthYmd.length != 8) {
+      if (!context.mounted) return null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.signupBirthInvalid)),
+      );
+      return null;
     }
 
     if (!context.mounted) return null;

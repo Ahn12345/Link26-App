@@ -278,7 +278,9 @@ Future<void> _handle(HttpRequest request) async {
       final env = loadBffDotEnv();
       try {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
-        final tilkoMap = map['tilko'] as Map<String, dynamic>? ?? map;
+        var tilkoMap = tilkoPrepareSimpleAuthRequestMap(
+          map['tilko'] as Map<String, dynamic>? ?? map,
+        );
         // ignore: avoid_print
         final envPat =
             (env['TILKO_PRIVATE_AUTH_TYPE'] ?? 'KAKAO').trim();
@@ -287,79 +289,138 @@ Future<void> _handle(HttpRequest request) async {
             : '${tilkoMap['PrivateAuthType'] ?? tilkoMap['privateAuthType'] ?? 'KAKAO'}'
                 .trim();
         final patForFlow = patRaw.isEmpty ? 'KAKAO' : patRaw;
+        final kakaoOnly =
+            tilkoPrivateAuthTypeName(patForFlow) == 'KAKAO';
         // ignore: avoid_print
         print(
           'BFF flow tilko-hira-medications: 요청 수신 '
-          '(UserName=${tilkoMap['UserName'] ?? tilkoMap['userName']}, '
-          '간편인증=카카오만, PrivateAuthType 후보='
-          '${tilkoPrivateAuthTypeCandidates(patForFlow).join('→')})',
+          '(UserName=${tilkoMap['UserName']}, '
+          '간편인증=${kakaoOnly ? '카카오' : patForFlow}, '
+          'BirthDate=${tilkoMap['BirthDate']}, '
+          'rrn13=${tilkoIdentityDigits13('${tilkoMap['IdentityNumber'] ?? ''}').length == 13})',
         );
         // flow_extras: 앱이 BFF로 넘기는 부가 필드(connectedId 등). 현재 NHIS 플로우 본문에서는 미사용.
         final tilkoClient = TilkoHiraSimpleAuthClient.fromBffEnv(env);
         var patCandidates = tilkoPrivateAuthTypeCandidates(patForFlow);
-        final kakaoOnly =
-            tilkoPrivateAuthTypeName(patForFlow) == 'KAKAO';
         var phoneCandidates = tilkoCellphoneWireCandidates(
-          '${tilkoMap['UserCellphoneNumber'] ?? tilkoMap['userCellphoneNumber'] ?? ''}',
+          '${tilkoMap['UserCellphoneNumber'] ?? ''}',
         );
-        if (kakaoOnly) {
-          // 카카오만: NHIS 1회(1 + 010-1234-5678). 동일 오류 반복 호출은 포인트만 소모.
-          patCandidates = patCandidates.isNotEmpty
-              ? <String>[patCandidates.first]
-              : patCandidates;
-          phoneCandidates = phoneCandidates.isNotEmpty
-              ? <String>[phoneCandidates.first]
-              : phoneCandidates;
-        }
         var authChannel = 'NHIS';
         Map<String, dynamic>? tilkoRes;
         Map<String, dynamic>? tilkoResLifted;
         Map<String, dynamic>? lastNhisLifted;
         Map<String, dynamic>? lastHiraLifted;
-        var usedPat = patCandidates.first;
+        var usedPat = patCandidates.isNotEmpty ? patCandidates.first : '1';
         var broke = false;
 
-        outer:
-        for (final patTry in patCandidates) {
-          for (final cellWire in phoneCandidates) {
-            usedPat = patTry;
+        void logSimpleAuthFail(
+          String channel,
+          String patTry,
+          String cellWire,
+          Map<String, dynamic> lifted,
+        ) {
+          final nhisMsg = tilkoFindPlainString(lifted, 'Message');
+          final nhisTarget = tilkoFindPlainString(lifted, 'TargetCode');
+          final apiTxKey = tilkoFindPlainString(lifted, 'ApiTxKey');
+          final errLog = tilkoFindPlainString(lifted, 'ErrorLog');
+          final status = tilkoFindPlainString(lifted, 'Status');
+          // ignore: avoid_print
+          print(
+            'BFF ① $channel simpleauth(PrivateAuthType=$patTry, '
+            'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}, phone=$cellWire, '
+            'identity=${tilkoIdentityDigits13('${tilkoMap['IdentityNumber'] ?? ''}').length == 13}) '
+            '실패 Status=${status ?? '-'} Message=${nhisMsg ?? '-'} '
+            'TargetCode=${nhisTarget ?? '-'} ApiTxKey=${apiTxKey ?? '-'} '
+            'ErrorLog=${errLog ?? '-'}',
+          );
+        }
+
+        if (kakaoOnly) {
+          final id13 = tilkoIdentityDigits13(
+            '${tilkoMap['IdentityNumber'] ?? ''}',
+          );
+          final cellWire = phoneCandidates.isNotEmpty
+              ? phoneCandidates.first
+              : tilkoFormatCellphoneHyphen(
+                  '${tilkoMap['UserCellphoneNumber'] ?? ''}',
+                );
+          final pNum = patCandidates.isNotEmpty ? patCandidates.first : '1';
+          final pName = patCandidates.length > 1 ? patCandidates.last : 'KAKAO';
+          final kakaoAttempts = <({String channel, String pat, bool identity})>[
+            (channel: 'NHIS', pat: pNum, identity: false),
+            if (id13.length == 13) (channel: 'NHIS', pat: pNum, identity: true),
+            if (id13.length == 13 && pName != pNum)
+              (channel: 'NHIS', pat: pName, identity: true),
+            if (id13.length == 13) (channel: 'HIRA', pat: pNum, identity: true),
+          ];
+          for (final att in kakaoAttempts) {
+            usedPat = att.pat;
+            authChannel = att.channel;
             final reqMap = Map<String, dynamic>.from(tilkoMap)
-              ..['PrivateAuthType'] = patTry
+              ..['PrivateAuthType'] = att.pat
               ..['UserCellphoneNumber'] = cellWire;
             // ignore: avoid_print
             print(
-              'BFF ① simpleauthrequest 요청 필드 — '
+              'BFF ① simpleauthrequest (${att.channel}, identity=${att.identity}) — '
               '${tilkoSimpleAuthRequestLogLine(reqMap)}',
             );
-
-            authChannel = 'NHIS';
-            tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
-              reqMap,
-            );
+            if (att.channel == 'NHIS') {
+              tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
+                reqMap,
+                includeIdentityNumber: att.identity,
+              );
+            } else {
+              tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
+            }
             tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
-            lastNhisLifted = tilkoResLifted;
+            if (att.channel == 'NHIS') {
+              lastNhisLifted = tilkoResLifted;
+            } else {
+              lastHiraLifted = tilkoResLifted;
+            }
             if (tilkoRes['http_status'] == null &&
                 !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
               broke = true;
-              break outer;
+              break;
             }
-            final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
-            final nhisTarget =
-                tilkoFindPlainString(tilkoResLifted, 'TargetCode');
-            final apiTxKey =
-                tilkoFindPlainString(tilkoResLifted, 'ApiTxKey');
-            final errLog = tilkoFindPlainString(tilkoResLifted, 'ErrorLog');
-            final status = tilkoFindPlainString(tilkoResLifted, 'Status');
-            // ignore: avoid_print
-            print(
-              'BFF ① NHIS simpleauth(PrivateAuthType=$patTry, '
-              'wire=${tilkoPrivateAuthTypeWirePlain(patTry)}, phone=$cellWire) '
-              '실패 Status=${status ?? '-'} Message=${nhisMsg ?? '-'} '
-              'TargetCode=${nhisTarget ?? '-'} ApiTxKey=${apiTxKey ?? '-'} '
-              'ErrorLog=${errLog ?? '-'}',
-            );
+            logSimpleAuthFail(att.channel, att.pat, cellWire, tilkoResLifted);
+            final msg = tilkoFindPlainString(tilkoResLifted, 'Message') ?? '';
+            if (!tilkoSimpleAuthMessageRetryable(msg)) {
+              break;
+            }
+          }
+        } else {
+          outer:
+          for (final patTry in patCandidates) {
+            for (final cellWire in phoneCandidates) {
+              usedPat = patTry;
+              final reqMap = Map<String, dynamic>.from(tilkoMap)
+                ..['PrivateAuthType'] = patTry
+                ..['UserCellphoneNumber'] = cellWire;
+              // ignore: avoid_print
+              print(
+                'BFF ① simpleauthrequest 요청 필드 — '
+                '${tilkoSimpleAuthRequestLogLine(reqMap)}',
+              );
 
-            if (!kakaoOnly) {
+              authChannel = 'NHIS';
+              tilkoRes = await tilkoClient.requestNhisSimpleAuthFromJsonMap(
+                reqMap,
+                includeIdentityNumber: tilkoIdentityDigits13(
+                      '${tilkoMap['IdentityNumber'] ?? ''}',
+                    ).length ==
+                    13,
+              );
+              tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
+              lastNhisLifted = tilkoResLifted;
+              if (tilkoRes['http_status'] == null &&
+                  !tilkoNhisSimpleAuthIndicatesError(tilkoResLifted)) {
+                broke = true;
+                break outer;
+              }
+              final nhisMsg = tilkoFindPlainString(tilkoResLifted, 'Message');
+              logSimpleAuthFail('NHIS', patTry, cellWire, tilkoResLifted);
+
               authChannel = 'HIRA';
               tilkoRes = await tilkoClient.requestFromJsonMap(reqMap);
               tilkoResLifted = tilkoNhisLiftNestedSession(tilkoRes);
@@ -380,15 +441,14 @@ Future<void> _handle(HttpRequest request) async {
                 'BFF ① HIRA simpleauth(PrivateAuthType=$patTry) — '
                 '다음 후보 시도',
               );
-            } else {
-              broke = true;
-              break outer;
             }
           }
         }
         if (!broke) {
           // ignore: avoid_print
-          print('BFF ① simpleauth 실패(카카오 1회 시도)');
+          print(
+            'BFF ① simpleauth 실패(카카오 ${kakaoOnly ? '순차 시도' : '후보 소진'})',
+          );
         }
 
         tilkoRes ??= <String, dynamic>{};

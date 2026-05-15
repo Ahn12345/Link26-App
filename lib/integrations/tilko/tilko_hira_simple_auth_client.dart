@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart';
 import 'package:http/http.dart' as http;
 import 'package:link26_app/integrations/tilko/tilko_env_resolver.dart';
+import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
 
 /// 틸코 **건강보험공단(NHIS) 간편인증** 및 진료·투약 조회.
@@ -304,6 +305,59 @@ String tilkoIdentityDigits13(String raw) => raw.replaceAll(RegExp(r'\D'), '');
 /// 틸코·카카오 실명 비교용 — 앞뒤 공백·연속 공백 제거.
 String tilkoNormalizeUserName(String raw) =>
     raw.trim().replaceAll(RegExp(r'\s+'), '');
+
+/// 주민번호·생년월일이 함께 올 때 틸코에 넣을 YYYYMMDD — 불일치 시 주민 앞자리 기준.
+String? tilkoCoherentBirthYmd({
+  String? birthDateYmd,
+  String? identityNumber,
+}) {
+  final birthDigits = (birthDateYmd ?? '').replaceAll(RegExp(r'\D'), '');
+  final id = tilkoIdentityDigits13(identityNumber ?? '');
+  final fromRrn = id.length == 13 ? TilkoRrnFields.birthYmdFromRrn(id) : null;
+  if (fromRrn != null) {
+    if (birthDigits.length == 8 && birthDigits != fromRrn) {
+      return fromRrn;
+    }
+    return fromRrn;
+  }
+  if (birthDigits.length == 8) return birthDigits;
+  return null;
+}
+
+/// `simpleauthrequest` 직전 — 이름·전화·생년월일·주민번호 정규화·정합.
+Map<String, dynamic> tilkoPrepareSimpleAuthRequestMap(Map<String, dynamic> raw) {
+  final out = Map<String, dynamic>.from(raw);
+  final phone = tilkoFormatCellphoneHyphen(
+    '${out['UserCellphoneNumber'] ?? out['userCellphoneNumber'] ?? ''}',
+  );
+  if (phone.isNotEmpty) {
+    out['UserCellphoneNumber'] = phone;
+  }
+  final name = tilkoNormalizeUserName(
+    '${out['UserName'] ?? out['userName'] ?? ''}',
+  );
+  if (name.isNotEmpty) {
+    out['UserName'] = name;
+  }
+  final id = tilkoIdentityDigits13(
+    '${out['IdentityNumber'] ?? out['identityNumber'] ?? ''}',
+  );
+  if (id.length == 13) {
+    out['IdentityNumber'] = id;
+  }
+  final birthRaw =
+      '${out['BirthDate'] ?? out['birthDate'] ?? ''}'.replaceAll(RegExp(r'\D'), '');
+  final coherent = tilkoCoherentBirthYmd(
+    birthDateYmd: birthRaw,
+    identityNumber: id,
+  );
+  if (coherent != null) {
+    out['BirthDate'] = coherent;
+  } else if (birthRaw.length == 8) {
+    out['BirthDate'] = birthRaw;
+  }
+  return out;
+}
 
 /// logincheck·simpleauth 응답에 토큰 4종이 채워졌는지(값은 출력하지 않음).
 String tilkoNhisTokenPresenceSummary(Map<String, dynamic> root) {

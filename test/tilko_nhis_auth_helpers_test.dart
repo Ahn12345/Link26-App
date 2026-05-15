@@ -66,6 +66,29 @@ void main() {
     expect(hint, isNot(contains('abc==')));
   });
 
+  test('tilkoCoherentBirthYmd prefers RRN when birth mismatches', () {
+    expect(
+      tilkoCoherentBirthYmd(
+        birthDateYmd: '19990101',
+        identityNumber: '0405223123456',
+      ),
+      '20040522',
+    );
+  });
+
+  test('tilkoPrepareSimpleAuthRequestMap normalizes phone and birth', () {
+    final m = tilkoPrepareSimpleAuthRequestMap({
+      'UserName': '  안병찬 ',
+      'BirthDate': '20040522',
+      'UserCellphoneNumber': '01090891562',
+      'IdentityNumber': '040522-3123456',
+    });
+    expect(m['UserName'], '안병찬');
+    expect(m['UserCellphoneNumber'], '010-9089-1562');
+    expect(m['BirthDate'], '20040522');
+    expect(m['IdentityNumber'], '0405223123456');
+  });
+
   test('tilkoFormatCellphoneHyphen formats mobile', () {
     expect(
       tilkoFormatCellphoneHyphen('01012345678'),

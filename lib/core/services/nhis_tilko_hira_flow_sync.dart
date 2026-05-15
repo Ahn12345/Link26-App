@@ -9,6 +9,7 @@ import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_env.dart';
+import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
 
@@ -77,14 +78,15 @@ abstract final class NhisTilkoHiraFlowSync {
     }
 
     try {
+      final tilkoBody = tilkoPrepareSimpleAuthRequestMap({
+        'PrivateAuthType': TilkoEnv.privateAuthTypePlain,
+        'UserName': displayName.trim(),
+        'BirthDate': birth,
+        'UserCellphoneNumber': _tilkoCellphone(phoneDigits),
+        'IdentityNumber': residentRegistrationDigits13.trim(),
+      });
       final res = await Link26BffIntegrationsClient.flowTilkoHiraMedications(
-        tilko: {
-          'PrivateAuthType': TilkoEnv.privateAuthTypePlain,
-          'UserName': displayName.trim(),
-          'BirthDate': birth,
-          'UserCellphoneNumber': _tilkoCellphone(phoneDigits),
-          'IdentityNumber': residentRegistrationDigits13.trim(),
-        },
+        tilko: tilkoBody,
         flowExtras: flowExtras.isEmpty ? null : flowExtras,
       );
 
