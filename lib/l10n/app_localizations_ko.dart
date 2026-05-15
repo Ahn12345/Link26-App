@@ -608,8 +608,8 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get passCertDialogBody =>
-      '「PASS 인증 요청」은 통신사 PASS 앱만 엽니다. OTP·승인 화면은 '
-      '「심평원에서 불러오기」→ 연동 시작 후 틸코가 요청을 받아들일 때 옵니다.';
+      '「연동 시작」 후 틸코가 PASS 인증을 요청하면 PASS 앱 인증 화면이 '
+      '자동으로 열립니다. OTP·승인은 그 화면에서 완료하세요.';
 
   @override
   String get passCertDialogDbNote =>
@@ -630,7 +630,7 @@ class AppLocalizationsKo extends AppLocalizations {
       'PASS(통신사 본인인증)에 아래와 같은 실명·휴대폰·생년월일이 등록되어 있음을 확인했습니다.';
 
   @override
-  String get passCertContinue => 'PASS 인증 요청';
+  String get passCertContinue => '연동 시작';
 
   @override
   String get passCertSignupNote =>

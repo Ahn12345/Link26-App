@@ -87,5 +87,21 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="tel" />
         </intent>
+        <!-- PASS 간편인증 앱 (package visibility, Android 11+) -->
+        <package android:name="com.sktelecom.tauth" />
+        <package android:name="com.kt.ktauth" />
+        <package android:name="com.lguplus.smartotp" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="tauthlink" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="ktauthexternalcall" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upluscorporation" />
+        </intent>
     </queries>
 </manifest>

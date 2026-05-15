@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
+import 'package:link26_app/integrations/tilko/tilko_pass_launch.dart';
 import 'package:link26_app/integrations/tilko/tilko_response_meta.dart';
 
 import 'link26_bff_codef.dart';
@@ -278,6 +279,7 @@ Future<void> _handle(HttpRequest request) async {
       final env = loadBffDotEnv();
       try {
         final map = jsonDecode(bodyStr) as Map<String, dynamic>;
+        final phase = (map['phase'] as String?)?.trim().toLowerCase() ?? 'full';
         var tilkoMap = tilkoPrepareSimpleAuthRequestMap(
           map['tilko'] as Map<String, dynamic>? ?? map,
         );
@@ -312,6 +314,32 @@ Future<void> _handle(HttpRequest request) async {
         var usedPat = patCandidates.isNotEmpty ? patCandidates.first : '1';
         var broke = false;
 
+        if (phase == 'continue') {
+          final liftedRaw = map['tilko_simple_auth'];
+          if (liftedRaw is! Map) {
+            await _json(request, 200, {
+              'ok': false,
+              'detail': 'tilko_simple_auth 세션이 없습니다.',
+              'hint_ko': '먼저 간편인증 요청(phase=start)을 한 뒤 다시 시도하세요.',
+            });
+            return;
+          }
+          tilkoResLifted = Map<String, dynamic>.from(
+            liftedRaw.map((k, v) => MapEntry('$k', v)),
+          );
+          tilkoRes = Map<String, dynamic>.from(tilkoResLifted);
+          authChannel =
+              (map['auth_channel'] as String?)?.trim().isNotEmpty == true
+                  ? '${map['auth_channel']}'.trim()
+                  : 'NHIS';
+          broke = true;
+          // ignore: avoid_print
+          print(
+            'BFF flow continue: logincheck 폴링 — '
+            '${tilkoNhisTokenPresenceSummary(tilkoResLifted)}',
+          );
+        }
+
         void logSimpleAuthFail(
           String channel,
           String patTry,
@@ -335,7 +363,7 @@ Future<void> _handle(HttpRequest request) async {
           );
         }
 
-        if (singleShotAuth) {
+        if (!broke && singleShotAuth) {
           final id13 = tilkoIdentityDigits13(
             '${tilkoMap['IdentityNumber'] ?? ''}',
           );
@@ -404,7 +432,7 @@ Future<void> _handle(HttpRequest request) async {
               break;
             }
           }
-        } else {
+        } else if (!broke) {
           outer:
           for (final patTry in patCandidates) {
             for (final cellWire in phoneCandidates) {
@@ -527,6 +555,26 @@ Future<void> _handle(HttpRequest request) async {
               'api_tx_key': tilkoFindPlainString(tilkoResLifted, 'ApiTxKey'),
             },
             'tilko': tilkoRes,
+          });
+          return;
+        }
+        if (phase == 'start') {
+          final passUris =
+              TilkoPassLaunch.extractLaunchUrisFromTilko(tilkoResLifted);
+          // ignore: avoid_print
+          print(
+            'BFF ① phase=start — PASS 실행 URL ${passUris.length}건, '
+            '${tilkoNhisTokenPresenceSummary(tilkoResLifted)}',
+          );
+          await _json(request, 200, {
+            'ok': true,
+            'phase': 'await_user_auth',
+            'pass_launch_uris': passUris,
+            'tilko_simple_auth': tilkoResLifted,
+            'auth_channel': authChannel,
+            'hint_ko': passUris.isEmpty
+                ? 'PASS 앱 알림 또는 문자 OTP에서 간편인증을 완료해 주세요.'
+                : 'PASS 앱 인증 화면에서 승인해 주세요.',
           });
           return;
         }

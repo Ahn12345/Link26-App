@@ -217,13 +217,8 @@ class _SimpleAuthCertReadinessDialogState
         ),
         FilledButton(
           onPressed: _ack
-              ? () async {
-                  if (_isPass) {
-                    await SimpleAuthCertReadiness.openPassApp();
-                  }
-                  if (context.mounted) {
-                    Navigator.of(context).pop(true);
-                  }
+              ? () {
+                  Navigator.of(context).pop(true);
                 }
               : null,
           style: FilledButton.styleFrom(

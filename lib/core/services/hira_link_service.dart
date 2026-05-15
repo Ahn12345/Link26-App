@@ -248,7 +248,8 @@ abstract final class HiraLinkService {
     final pass = TilkoEnv.isPassAuth;
     final message = pass
         ? '틸코에 PASS 간편인증을 요청했습니다.\n'
-            'PASS 앱·문자 OTP를 확인해 주세요.\n'
+            '곧 PASS 앱 인증 화면이 열립니다.\n'
+            '없으면 알림·문자 OTP를 확인해 주세요.\n'
             '(최대 약 2분)'
         : '틸코·건강보험 연동 중입니다.\n'
             '(최대 약 2분)';

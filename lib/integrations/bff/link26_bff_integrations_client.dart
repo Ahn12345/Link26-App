@@ -199,13 +199,24 @@ abstract final class Link26BffIntegrationsClient {
   static Future<Map<String, dynamic>?> flowTilkoHiraMedications({
     required Map<String, dynamic> tilko,
     Map<String, dynamic>? flowExtras,
+    String phase = 'full',
+    Map<String, dynamic>? tilkoSimpleAuth,
+    String? authChannel,
   }) async {
     if (!canCall) return null;
     final extras = flowExtras ?? <String, dynamic>{};
-    final body = jsonEncode({
+    final payload = <String, dynamic>{
       'tilko': tilko,
       'flow_extras': extras,
-    });
+      'phase': phase,
+    };
+    if (tilkoSimpleAuth != null) {
+      payload['tilko_simple_auth'] = tilkoSimpleAuth;
+    }
+    if (authChannel != null && authChannel.trim().isNotEmpty) {
+      payload['auth_channel'] = authChannel.trim();
+    }
+    final body = jsonEncode(payload);
     Object? lastErr;
     final bases = _baseList;
     for (var i = 0; i < bases.length; i++) {

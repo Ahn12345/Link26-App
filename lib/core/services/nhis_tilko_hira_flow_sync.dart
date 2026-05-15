@@ -10,6 +10,7 @@ import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_env.dart';
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
+import 'package:link26_app/integrations/tilko/tilko_pass_launch.dart';
 import 'package:link26_app/integrations/tilko/tilko_rrn_fields.dart';
 import 'package:link26_app/models/medicine.dart';
 
@@ -85,8 +86,8 @@ abstract final class NhisTilkoHiraFlowSync {
         'UserCellphoneNumber': _tilkoCellphone(phoneDigits),
         'IdentityNumber': residentRegistrationDigits13.trim(),
       });
-      final res = await Link26BffIntegrationsClient.flowTilkoHiraMedications(
-        tilko: tilkoBody,
+      final res = await _callTilkoHiraFlow(
+        tilkoBody: tilkoBody,
         flowExtras: flowExtras.isEmpty ? null : flowExtras,
       );
 
@@ -221,6 +222,53 @@ abstract final class NhisTilkoHiraFlowSync {
     if (NhisRuntimeConfig.useMock) return first;
     if (!Link26BffIntegrationsClient.canCall) return first;
     return first;
+  }
+
+  /// PASS: `phase=start` → PASS 앱 인증 화면 → `phase=continue` 폴링.
+  /// 그 외 채널: 기존 단일 BFF 호출.
+  static Future<Map<String, dynamic>?> _callTilkoHiraFlow({
+    required Map<String, dynamic> tilkoBody,
+    Map<String, dynamic>? flowExtras,
+  }) async {
+    if (!TilkoEnv.isPassAuth) {
+      return Link26BffIntegrationsClient.flowTilkoHiraMedications(
+        tilko: tilkoBody,
+        flowExtras: flowExtras,
+      );
+    }
+
+    final start = await Link26BffIntegrationsClient.flowTilkoHiraMedications(
+      tilko: tilkoBody,
+      flowExtras: flowExtras,
+      phase: 'start',
+    );
+    if (start == null) return null;
+    if (start['ok'] != true) return start;
+
+    final urisRaw = start['pass_launch_uris'];
+    final uris = urisRaw is List
+        ? urisRaw.map((e) => '$e').where((s) => s.trim().isNotEmpty).toList()
+        : TilkoPassLaunch.extractLaunchUrisFromTilko(start['tilko_simple_auth']);
+
+    final opened = await TilkoPassLaunch.openAuthScreen(tilkoUris: uris);
+    if (kDebugMode) {
+      debugPrint(
+        'Tilko→HIRA: PASS 앱 실행 ${opened ? "성공" : "실패"} (URL ${uris.length}건)',
+      );
+    }
+
+    final lifted = start['tilko_simple_auth'];
+    if (lifted is! Map) return start;
+
+    return Link26BffIntegrationsClient.flowTilkoHiraMedications(
+      tilko: tilkoBody,
+      flowExtras: flowExtras,
+      phase: 'continue',
+      tilkoSimpleAuth: Map<String, dynamic>.from(
+        lifted.map((k, v) => MapEntry('$k', v)),
+      ),
+      authChannel: start['auth_channel'] as String?,
+    );
   }
 
   static Future<void> _persistConnectedIdFromFlowResponse(
