@@ -478,9 +478,7 @@ Future<void> _handle(HttpRequest request) async {
           }
         }
         final emptyParsed = items.isEmpty;
-        final st = tilkoApiStatusFields(
-          (hiraRes ?? nhisRes ?? tilkoAuth) as Map<String, dynamic>,
-        );
+        final st = tilkoApiStatusFields(hiraRes ?? nhisRes ?? tilkoAuth);
         // ignore: avoid_print
         print('BFF flow tilko-hira-medications: ok items=${items.length}');
         await _json(request, 200, {
