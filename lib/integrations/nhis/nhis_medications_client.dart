@@ -32,6 +32,17 @@ class NhisMedicationsClient {
   static const AppFailure _missing =
       AppFailure('NHIS_BASE_URL 이 비어 있습니다.', code: 'NHIS_CONFIG');
 
+  static String _dioErrorDetail(DioException e) {
+    final m = e.message?.trim();
+    if (m != null && m.isNotEmpty) return m;
+    final err = e.error;
+    if (err != null) {
+      final s = '$err'.trim();
+      if (s.isNotEmpty) return s;
+    }
+    return '${e.type}';
+  }
+
   Future<Result<String>> fetchMedicationsRaw({
     required String phoneDigits,
     String? displayName,
@@ -87,7 +98,7 @@ class NhisMedicationsClient {
         if (hasAnotherNonEmptyBase(bi) && dioExceptionLooksUnreachable(e)) {
           continue;
         }
-        return Failure(AppFailure('GET 오류: ${e.message}', cause: e));
+        return Failure(AppFailure('GET 오류: ${_dioErrorDetail(e)}', cause: e));
       } catch (e, st) {
         lastOther = e;
         lastSt = st;
@@ -99,7 +110,9 @@ class NhisMedicationsClient {
     }
 
     if (lastDio != null) {
-      return Failure(AppFailure('GET 오류: ${lastDio.message}', cause: lastDio));
+      return Failure(
+        AppFailure('GET 오류: ${_dioErrorDetail(lastDio)}', cause: lastDio),
+      );
     }
     if (lastOther != null && lastSt != null) {
       return Failure(mapHttpException(lastOther, lastSt));

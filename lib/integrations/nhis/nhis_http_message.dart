@@ -26,8 +26,17 @@ String nhisHttpUserMessage(AppFailure failure) {
             ? '서버 응답 $code — 경로·JSON 스펙이 BFF와 맞는지 확인하세요.'
             : '서버 오류 응답 — BFF 로그를 확인하세요.';
       default:
+        final m = c.message?.trim();
+        if (m != null && m.isNotEmpty) {
+          return 'GET/연동 오류: $m';
+        }
         break;
     }
+  }
+  final msg = failure.message.trim();
+  if (msg.contains(': null') || msg.endsWith('null')) {
+    return '서버에 연결할 수 없습니다. PC에서 BFF(8787) 실행·USB면 adb reverse, '
+        'Wi‑Fi면 NHIS_BASE_URL IP를 확인하세요.';
   }
   return failure.message;
 }
