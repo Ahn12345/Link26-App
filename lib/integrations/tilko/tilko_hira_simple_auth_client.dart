@@ -116,6 +116,9 @@ String tilkoPublicKeyToPem(String tilkoPublicKeyB64) {
 }
 
 String _aesEncryptField(Uint8List aesKey, String plain) {
+  // encrypt 패키지는 빈 문자열 CBC 암호화 시 RangeError(start: -16) 를 냅니다.
+  // logincheck 폴링 초반에는 CxId·Token 등이 비어 있을 수 있어 빈 값은 그대로 둡니다.
+  if (plain.isEmpty) return '';
   final key = Key(aesKey);
   final iv = IV.allZerosOfLength(16);
   final enc = Encrypter(AES(key, mode: AESMode.cbc));

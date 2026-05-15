@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
 
 import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
+import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -13,12 +14,32 @@ import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
 import 'package:link26_app/core/widgets/link26_standard_frame.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
+import 'package:link26_app/features/shell/main_shell.dart';
 
 /// 스플래시 이후 — 브랜드 + 로그인 / 회원가입.
-class AuthWelcomeScreen extends StatelessWidget {
+class AuthWelcomeScreen extends StatefulWidget {
   const AuthWelcomeScreen({super.key});
 
   static const routeName = '/auth/welcome';
+
+  @override
+  State<AuthWelcomeScreen> createState() => _AuthWelcomeScreenState();
+}
+
+class _AuthWelcomeScreenState extends State<AuthWelcomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _resumeHomeIfSignedIn());
+  }
+
+  Future<void> _resumeHomeIfSignedIn() async {
+    if (!await AuthSession.isSignedIn()) return;
+    if (!mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,14 +176,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                                           ),
                                         );
                                       },
-                                      style: outlineBtn.copyWith(
-                                        minimumSize: const WidgetStatePropertyAll(
-                                          Size.fromHeight(48),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        l10n.authKakaoLogin,
-                                        style: const TextStyle(fontWeight: FontWeight.w800),
+                                      style: outlineBtn.copyWith(minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48),),backgroundColor: const WidgetStatePropertyAll(Colors.white),),child: Text(l10n.authKakaoLogin,style: TextStyle(fontWeight: FontWeight.w800,color: Link26UnifiedPage.ctaBlue,),
                                       ),
                                     ),
                                   ),
