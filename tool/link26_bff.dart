@@ -213,6 +213,11 @@ Future<void> _handle(HttpRequest request) async {
   try {
     final path = request.uri.path;
     final method = request.method;
+    if (!(method == 'GET' && path == '/health')) {
+      final peer = request.connectionInfo?.remoteAddress.address ?? '?';
+      // ignore: avoid_print
+      print('BFF ← $method $path (from $peer)');
+    }
 
     if (method == 'GET' && path == '/health') {
       final env = loadBffDotEnv();
@@ -313,6 +318,7 @@ Future<void> _handle(HttpRequest request) async {
         Map<String, dynamic>? lastHiraLifted;
         var usedPat = patCandidates.isNotEmpty ? patCandidates.first : '1';
         var broke = false;
+        var simpleAuthAttemptsLabel = '1회';
 
         if (phase == 'continue') {
           final liftedRaw = map['tilko_simple_auth'];
@@ -374,9 +380,10 @@ Future<void> _handle(HttpRequest request) async {
                 );
           final passChannel =
               tilkoPrivateAuthTypeName(patForFlow) == 'PASS';
-          // PASS·NHIS: apidemo NhisSimpleAuth-SimpleAuthRequest — 4필드만(주민번호 없음).
+          // PASS·NHIS: 4필드만(identity=false). 틸코 wire 후보 5 → PASS (최대 2회).
           final kakaoAttempts = passChannel
               ? <({String channel, String pat, bool identity})>[
+                  (channel: 'NHIS', pat: '5', identity: false),
                   (channel: 'NHIS', pat: 'PASS', identity: false),
                 ]
               : <({String channel, String pat, bool identity})>[
@@ -388,6 +395,7 @@ Future<void> _handle(HttpRequest request) async {
                     identity: id13.length == 13,
                   ),
                 ];
+          simpleAuthAttemptsLabel = '${kakaoAttempts.length}회';
           for (final att in kakaoAttempts) {
             usedPat = att.pat;
             authChannel = att.channel;
@@ -494,7 +502,7 @@ Future<void> _handle(HttpRequest request) async {
           // ignore: avoid_print
           print(
             'BFF ① simpleauth 실패(${tilkoSimpleAuthChannelLabelKo(patForFlow)} '
-            '${singleShotAuth ? '1회' : '후보 소진'})',
+            '${singleShotAuth ? simpleAuthAttemptsLabel : '후보 소진'})',
           );
         }
 
