@@ -635,8 +635,9 @@ class TilkoHiraSimpleAuthClient {
   /// 공단(NHIS) 간편인증 요청 — `POST …/nhissimpleauth/simpleauthrequest`
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
   ///
-  /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber.
-  /// [includeIdentityNumber] — 주민 13자리를 AES 필드 `IdentityNumber`로 함께 보냄(PC BFF PASS는 1회 호출로 보냄).
+  /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber 만 (암호화).
+  /// apidemo `NhisSimpleAuth-SimpleAuthRequest` — **IdentityNumber 없음**.
+  /// 주민번호는 [requestSimpleAuth](HIRA) 등 다른 API용.
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
@@ -665,12 +666,8 @@ class TilkoHiraSimpleAuthClient {
       'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate.trim()),
       'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
     };
-    if (includeIdentityNumber) {
-      final id = tilkoIdentityDigits13(identityNumber ?? '');
-      if (id.length == 13) {
-        body['IdentityNumber'] = tilkoAesEncryptFieldOrEmpty(aesKey, id);
-      }
-    }
+    // NHIS 간편인증 요청 본문에 IdentityNumber 를 넣으면 틸코가
+    // 「요청한 값 '…'을(를) 찾을 수 없습니다」로 거절하는 경우가 있음.
 
     final uri = Uri.parse('$_root/api/v1.0/nhissimpleauth/simpleauthrequest');
     final res = await http.post(
