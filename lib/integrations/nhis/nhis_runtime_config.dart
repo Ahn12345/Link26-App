@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../core/constants/api_keys.dart';
+import '../../core/services/link26_bff_reachability.dart';
 import '../../core/services/link26_lan_bff_discovery.dart';
 import '../../core/services/link26_remote_bff_bootstrap.dart';
 
@@ -23,10 +24,25 @@ abstract final class NhisRuntimeConfig {
     return s == 'true' || s == '1' || s == 'yes';
   }
 
+  /// [refreshBffReachability] 이후: 도달 가능한 BFF만, 없으면 `''`(빠른 오프라인).
   static String get baseUrl {
+    if (Link26BffReachability.fastProbeEnabled) {
+      final hit = Link26BffReachability.firstReachable(
+        Link26BffReachability.lastOrderedBases,
+      );
+      if (hit != null && hit.isNotEmpty) return hit;
+      if (Link26BffReachability.recentlyAllUnreachable) return '';
+    }
     final list = baseUrlCandidates;
     if (list.isNotEmpty) return list.first;
     return '';
+  }
+
+  static String? envRaw(String key) => dotenv.env[key];
+
+  /// BFF `/health` 프로브 — [main]·당겨서 새로고침 전에 호출 권장.
+  static Future<void> refreshBffReachability() async {
+    await Link26BffReachability.warmUp(baseUrlCandidates);
   }
 
   /// [main] 에서 LAN UDP 비콘([Link26LanBffDiscovery])으로 찾은 BFF 베이스 URL.

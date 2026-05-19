@@ -303,6 +303,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   }
 
   Future<void> _refreshMedicinesFromServer() async {
+    await NhisRuntimeConfig.refreshBffReachability();
     final shouldSync =
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
     if (shouldSync) {

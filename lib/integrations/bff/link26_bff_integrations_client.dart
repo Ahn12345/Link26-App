@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:link26_app/core/services/link26_bff_reachability.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
 import 'package:link26_app/integrations/tilko/tilko_hira_simple_auth_client.dart';
@@ -119,7 +120,24 @@ abstract final class Link26BffIntegrationsClient {
 
   static List<String> get _baseList => NhisRuntimeConfig.baseUrlCandidates;
 
-  static bool get canCall => _baseList.isNotEmpty;
+  static bool get canCall {
+    if (_baseList.isEmpty) return false;
+    if (Link26BffReachability.fastProbeEnabled &&
+        Link26BffReachability.recentlyAllUnreachable) {
+      return false;
+    }
+    return true;
+  }
+
+  static List<String> get _activeBases {
+    if (!canCall) return const [];
+    final reachable = Link26BffReachability.reachableOnly(
+      Link26BffReachability.lastOrderedBases,
+    );
+    if (reachable.isNotEmpty) return reachable;
+    if (Link26BffReachability.recentlyAllUnreachable) return const [];
+    return _baseList;
+  }
 
   static bool _shouldRetryBffOn(Object e, int index, int total) {
     if (index >= total - 1) return false;
@@ -134,7 +152,7 @@ abstract final class Link26BffIntegrationsClient {
   }) async {
     if (!canCall) return null;
     Object? lastErr;
-    final bases = _baseList;
+    final bases = _activeBases;
     for (var i = 0; i < bases.length; i++) {
       final base = bases[i];
       try {
@@ -147,7 +165,7 @@ abstract final class Link26BffIntegrationsClient {
         );
         final res = await http
             .get(uri)
-            .timeout(const Duration(seconds: 20));
+            .timeout(const Duration(seconds: 8));
         if (res.statusCode < 200 || res.statusCode >= 300) {
           throw StateError('easy-drug HTTP ${res.statusCode}: ${res.body}');
         }
@@ -167,7 +185,7 @@ abstract final class Link26BffIntegrationsClient {
     if (!canCall) return null;
     final encoded = jsonEncode(body);
     Object? lastErr;
-    final bases = _baseList;
+    final bases = _activeBases;
     for (var i = 0; i < bases.length; i++) {
       final base = bases[i];
       try {
@@ -178,7 +196,7 @@ abstract final class Link26BffIntegrationsClient {
               headers: {'Content-Type': 'application/json'},
               body: encoded,
             )
-            .timeout(const Duration(seconds: 25));
+            .timeout(const Duration(seconds: 12));
         if (res.statusCode < 200 || res.statusCode >= 300) {
           final detail = _flowHttpErrorDetail(res.statusCode, res.body);
           throw StateError('tilko HTTP ${res.statusCode}: $detail');
@@ -204,6 +222,8 @@ abstract final class Link26BffIntegrationsClient {
     String? authChannel,
   }) async {
     if (!canCall) return null;
+    final bases = _activeBases;
+    if (bases.isEmpty) return null;
     final extras = flowExtras ?? <String, dynamic>{};
     final payload = <String, dynamic>{
       'tilko': tilko,
@@ -218,7 +238,6 @@ abstract final class Link26BffIntegrationsClient {
     }
     final body = jsonEncode(payload);
     Object? lastErr;
-    final bases = _baseList;
     for (var i = 0; i < bases.length; i++) {
       final base = bases[i];
       try {

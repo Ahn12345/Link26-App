@@ -8,6 +8,8 @@ import '../../core/network/api_endpoints.dart';
 import '../../core/network/auth_interceptor.dart';
 import '../../core/network/network_error_mapper.dart';
 import '../../core/network/nhis_token_manager.dart';
+import 'package:link26_app/core/services/link26_bff_reachability.dart';
+
 import 'nhis_http_message.dart';
 import 'nhis_runtime_config.dart';
 
@@ -23,8 +25,8 @@ class NhisMedicationsClient {
 
   static final Dio _dio = Dio(
     BaseOptions(
-      connectTimeout: const Duration(seconds: 14),
-      receiveTimeout: const Duration(seconds: 28),
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 12),
       headers: {'Content-Type': 'application/json'},
     ),
   );
@@ -49,7 +51,15 @@ class NhisMedicationsClient {
     String? gender,
     String? connectedId,
   }) async {
-    final bases = NhisRuntimeConfig.baseUrlCandidates;
+    var bases = Link26BffReachability.reachableOnly(
+      Link26BffReachability.lastOrderedBases,
+    );
+    if (bases.isEmpty && Link26BffReachability.recentlyAllUnreachable) {
+      return const Failure(_missing);
+    }
+    if (bases.isEmpty) {
+      bases = NhisRuntimeConfig.baseUrlCandidates;
+    }
     if (bases.isEmpty) {
       return const Failure(_missing);
     }

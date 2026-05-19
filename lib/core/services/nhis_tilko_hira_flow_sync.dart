@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
+import 'package:link26_app/core/services/link26_bff_reachability.dart';
 import 'package:link26_app/core/services/link26_lan_bff_discovery.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
@@ -43,9 +44,11 @@ abstract final class NhisTilkoHiraFlowSync {
       return null;
     }
 
-    if (!kIsWeb && NhisRuntimeConfig.lanAutoDiscoverEnabled) {
+    if (!kIsWeb &&
+        NhisRuntimeConfig.lanAutoDiscoverEnabled &&
+        !Link26BffReachability.recentlyAllUnreachable) {
       final more = await Link26LanBffDiscovery.discoverOnce(
-        listenFor: const Duration(milliseconds: 6500),
+        listenFor: const Duration(milliseconds: 1500),
       );
       NhisRuntimeConfig.mergeLanDiscoveredBases(more);
       await NhisRuntimeConfig.reorderLanDiscoveredForCurrentDevice();
