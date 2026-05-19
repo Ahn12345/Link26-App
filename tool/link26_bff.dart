@@ -380,11 +380,11 @@ Future<void> _handle(HttpRequest request) async {
                 );
           final passChannel =
               tilkoPrivateAuthTypeName(patForFlow) == 'PASS';
-          // PASS·NHIS: 4필드만(identity=false). 틸코 wire 후보 5 → PASS (최대 2회).
+          // PASS·NHIS: PrivateAuthType 평문 — PASS 먼저(통신사 푸시), 실패 시 5.
           final kakaoAttempts = passChannel
               ? <({String channel, String pat, bool identity})>[
-                  (channel: 'NHIS', pat: '5', identity: false),
                   (channel: 'NHIS', pat: 'PASS', identity: false),
+                  (channel: 'NHIS', pat: '5', identity: false),
                 ]
               : <({String channel, String pat, bool identity})>[
                   (
@@ -564,10 +564,22 @@ Future<void> _handle(HttpRequest request) async {
           final passUris =
               TilkoPassUriExtract.extractLaunchUrisFromTilko(tilkoResLifted);
           // ignore: avoid_print
+          final apiTx = tilkoFindPlainString(tilkoResLifted, 'ApiTxKey');
+          final targetMsg = tilkoFindPlainString(tilkoResLifted, 'TargetMessage');
+          // ignore: avoid_print
           print(
             'BFF ① phase=start — PASS 실행 URL ${passUris.length}건, '
-            '${tilkoNhisTokenPresenceSummary(tilkoResLifted)}',
+            '${tilkoNhisTokenPresenceSummary(tilkoResLifted)} '
+            'ApiTxKey=${apiTx ?? '-'} TargetMessage=${targetMsg ?? '-'}',
           );
+          if (passUris.isEmpty) {
+            // ignore: avoid_print
+            print(
+              'BFF ① PASS URL 없음 — 틸코는 성공이나 통신사 푸시·딥링크가 없을 수 있습니다. '
+              '① 문자(SMS) OTP ② PASS 「나의 인증내역」 ③ 가입 통신사 PASS 앱(SKT/KT/LGU) ④ '
+              '이름·010 번호·생년월일이 PASS 가입 정보와 동일한지 확인.',
+            );
+          }
           await _json(request, 200, {
             'ok': true,
             'phase': 'await_user_auth',
@@ -575,7 +587,11 @@ Future<void> _handle(HttpRequest request) async {
             'tilko_simple_auth': tilkoResLifted,
             'auth_channel': authChannel,
             'hint_ko': passUris.isEmpty
-                ? 'PASS 앱 알림 또는 문자 OTP에서 간편인증을 완료해 주세요.'
+                ? '틸코 요청은 성공했습니다. PASS 홈만 보이면: '
+                    '① 휴대폰 **문자(SMS)** 에 인증번호·링크가 왔는지 확인 '
+                    '② PASS **나의 인증내역**·**알림(종)** 확인 '
+                    '③ SKT·KT·LGU **본인 통신사** PASS 앱인지 확인 '
+                    '④ 이름·010-9089-1562·생년월일이 PASS 가입 정보와 같은지 확인'
                 : 'PASS 앱 인증 화면에서 승인해 주세요.',
           });
           return;

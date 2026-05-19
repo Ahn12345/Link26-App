@@ -24,7 +24,11 @@ abstract final class TilkoPassUriExtract {
               key.contains('deeplink') ||
               key.contains('authurl') ||
               key.contains('applink') ||
-              key.contains('launch')) {
+              key.contains('launch') ||
+              key.contains('redirect') ||
+              key.contains('openurl') ||
+              key.contains('callurl') ||
+              key.contains('tauth')) {
             _collectUriStrings(found, '${e.value}');
           }
           walk(e.value);
