@@ -380,10 +380,9 @@ Future<void> _handle(HttpRequest request) async {
                 );
           final passChannel =
               tilkoPrivateAuthTypeName(patForFlow) == 'PASS';
-          // PASS·NHIS: PrivateAuthType 평문 — PASS 먼저(통신사 푸시), 실패 시 5.
+          // PASS·NHIS: PrivateAuthType 평문 `5` 만 (문자열 PASS 는 틸코가 「찾을 수 없습니다」).
           final kakaoAttempts = passChannel
               ? <({String channel, String pat, bool identity})>[
-                  (channel: 'NHIS', pat: 'PASS', identity: false),
                   (channel: 'NHIS', pat: '5', identity: false),
                 ]
               : <({String channel, String pat, bool identity})>[
