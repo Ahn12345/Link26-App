@@ -1,0 +1,9 @@
+# Play 업로드용 — 이 파일을 key.properties 로 복사한 뒤 값을 채우세요.
+# key.properties · *.jks 는 git에 올리지 마세요.
+#
+# 최초 생성:  .\tool\create_android_upload_keystore.ps1
+#
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=upload-keystore.jks

@@ -209,7 +209,7 @@ String tilkoSimpleAuthRequestLogLine(Map<String, dynamic> m) {
   );
   final name = '${m['UserName'] ?? m['userName'] ?? ''}'.trim();
   return 'UserName=$name BirthDate=$birth phone=$maskedPhone '
-      'PrivateAuthType(wire)=$pat';
+      'PrivateAuthType(wire)=$pat plain=NHIS';
 }
 
 bool tilkoSimpleAuthMessageRetryable(String? message) {
@@ -498,6 +498,30 @@ String tilkoPublicKeyToPem(String tilkoPublicKeyB64) {
 }
 
 /// Tilko AES-CBC 필드 암호화. 빈·공백만 값은 암호화하지 않습니다(logincheck 초반 토큰).
+/// NHIS `simpleauthrequest` JSON 본문 — 4필드, 주민번호 없음.
+Map<String, dynamic> tilkoNhisSimpleAuthRequestBody({
+  required Uint8List aesKey,
+  required String privateAuthTypePlain,
+  required String userName,
+  required String birthDateYmd,
+  required String userCellphoneHyphen,
+}) {
+  return <String, dynamic>{
+    'PrivateAuthType': privateAuthTypePlain,
+    'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+    'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDateYmd),
+    'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneHyphen),
+  };
+}
+
+/// Tilko AES-CBC 필드 암호화 여부(로그·검증).
+bool tilkoFieldLooksAesEncrypted(String value) {
+  final t = value.trim();
+  if (t.isEmpty) return false;
+  if (!RegExp(r'^[A-Za-z0-9+/]+=*$').hasMatch(t)) return false;
+  return t.length >= 16;
+}
+
 String tilkoAesEncryptFieldOrEmpty(Uint8List aesKey, String plain) {
   // encrypt 패키지는 빈 문자열 CBC 암호화 시 RangeError(start: -16) 를 냅니다.
   if (plain.trim().isEmpty) return '';
@@ -635,9 +659,9 @@ class TilkoHiraSimpleAuthClient {
   /// 공단(NHIS) 간편인증 요청 — `POST …/nhissimpleauth/simpleauthrequest`
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
   ///
-  /// 문서 BODY: PrivateAuthType, UserName, BirthDate, UserCellphoneNumber 만 (암호화).
-  /// apidemo `NhisSimpleAuth-SimpleAuthRequest` — **IdentityNumber 없음**.
-  /// 주민번호는 [requestSimpleAuth](HIRA) 등 다른 API용.
+  /// BODY 4필드만 — **IdentityNumber 없음** (틸코·apidemo NHIS SimpleAuthRequest).
+  /// 암호화: UserName·BirthDate·UserCellphoneNumber 만 AES.
+  /// **PrivateAuthType 은 평문**(틸코 운영 회신 2025 — 「PrivateAuthType 제외 암호화」).
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
@@ -660,14 +684,13 @@ class TilkoHiraSimpleAuthClient {
     final pat = tilkoPrivateAuthTypeWirePlain(privateAuthType);
     final cell = tilkoFormatCellphoneHyphen(userCellphoneNumber);
     final name = tilkoNormalizeUserName(userName);
-    final body = <String, dynamic>{
-      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
-      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, name),
-      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDate.trim()),
-      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
-    };
-    // NHIS 간편인증 요청 본문에 IdentityNumber 를 넣으면 틸코가
-    // 「요청한 값 '…'을(를) 찾을 수 없습니다」로 거절하는 경우가 있음.
+    final body = tilkoNhisSimpleAuthRequestBody(
+      aesKey: aesKey,
+      privateAuthTypePlain: pat,
+      userName: name,
+      birthDateYmd: birthDate.trim(),
+      userCellphoneHyphen: cell,
+    );
 
     final uri = Uri.parse('$_root/api/v1.0/nhissimpleauth/simpleauthrequest');
     final res = await http.post(
