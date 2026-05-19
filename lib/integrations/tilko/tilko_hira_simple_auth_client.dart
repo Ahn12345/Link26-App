@@ -861,7 +861,7 @@ class TilkoHiraSimpleAuthClient {
   Future<Map<String, dynamic>> waitForNhisAuthForTreatmentInjection({
     required Map<String, dynamic> tilkoRequestMap,
     required Map<String, dynamic> initialSimpleAuthResponse,
-    int maxAttempts = 36,
+    int maxAttempts = 90,
     Duration interval = const Duration(seconds: 2),
     bool logPollProgress = false,
     List<String> loginCheckPathCandidates = const [

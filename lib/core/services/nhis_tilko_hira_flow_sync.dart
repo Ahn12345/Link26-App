@@ -256,6 +256,8 @@ abstract final class NhisTilkoHiraFlowSync {
         'Tilko→HIRA: PASS 앱 실행 ${opened ? "성공" : "실패"} (URL ${uris.length}건)',
       );
     }
+    // logincheck 폴링(~3분) 전에 PASS 화면으로 전환할 시간.
+    await Future<void>.delayed(const Duration(seconds: 8));
 
     final lifted = start['tilko_simple_auth'];
     if (lifted is! Map) return start;
