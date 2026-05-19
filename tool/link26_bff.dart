@@ -595,12 +595,14 @@ Future<void> _handle(HttpRequest request) async {
           logPollProgress: true,
           loginCheckPathCandidates: loginPaths,
         );
-        if (!tilkoNhisAuthTokensComplete(tilkoAuth)) {
+        final pollErr = tilkoAuth['_link26_poll_error'];
+        final pollFailed = pollErr is String && pollErr.trim().isNotEmpty;
+        if (!tilkoNhisAuthTokensComplete(tilkoAuth) || pollFailed) {
           // ignore: avoid_print
           print(
-            'BFF ② logincheck 실패 — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}',
+            'BFF ② logincheck 실패 — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}'
+            '${pollFailed ? ' (PASS 승인 미완료·Result=대기)' : ''}',
           );
-          final pollErr = tilkoAuth['_link26_poll_error'];
           final errBit = pollErr is String && pollErr.trim().isNotEmpty
               ? ' ($pollErr)'
               : '';
@@ -610,9 +612,9 @@ Future<void> _handle(HttpRequest request) async {
                   '통신사 PASS(`.env` TILKO_PRIVATE_AUTH_TYPE=PASS) 간편인증으로 '
                   'PASS 앱·문자 인증을 완료했는지 확인하세요. '
                   'TILKO_API_KEY·틸코 상품(NHIS·PASS 간편인증) 권한을 확인하세요.'
-              : '휴대폰에서 PASS 앱 또는 문자 인증번호로 간편인증을 완료한 뒤, '
-                  '다시 「심평원에서 불러오기」를 눌러 주세요. '
-                  '서버가 약 1분간 logincheck(Result)로 완료 여부를 확인합니다.$errBit '
+              : 'PASS 앱에서 인증 요청을 승인해 주세요. '
+                  '(알림·나의 인증내역·문자 OTP) 승인은 BFF가 폴링하는 약 2분 안에 해야 합니다. '
+                  '완료 후 회원가입·불러오기를 다시 시도하세요.$errBit '
                   '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
                   '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.';
           await _json(request, 200, {
