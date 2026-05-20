@@ -237,11 +237,11 @@ abstract final class Link26BffIntegrationsClient {
       payload['auth_channel'] = authChannel.trim();
     }
     final body = jsonEncode(payload);
-    // PASS: start + 2초 + continue(logincheck ~28×1.5초) — 전체 약 2분.
+    // PASS continue: BFF logincheck 폴링(~45×1.5초) + 틸코 HTTP — [kLink26BffFlowContinueHttpTimeout].
     final timeout = switch (phase) {
-      'start' => const Duration(seconds: 40),
-      'continue' => const Duration(seconds: 100),
-      _ => const Duration(seconds: 100),
+      'start' => const Duration(seconds: 45),
+      'continue' => kLink26BffFlowContinueHttpTimeout,
+      _ => kLink26BffFlowContinueHttpTimeout,
     };
     Object? lastErr;
     for (var i = 0; i < bases.length; i++) {

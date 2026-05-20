@@ -85,7 +85,9 @@ abstract final class NhisTilkoHiraFlowSync {
 
     try {
       final tilkoBody = tilkoPrepareSimpleAuthRequestMap({
-        'PrivateAuthType': TilkoEnv.privateAuthTypePlain,
+        'PrivateAuthType': tilkoPrivateAuthTypeWirePlain(
+          TilkoEnv.privateAuthType,
+        ),
         'UserName': displayName.trim(),
         'BirthDate': birth,
         'UserCellphoneNumber': _tilkoCellphone(phoneDigits),
@@ -284,7 +286,11 @@ abstract final class NhisTilkoHiraFlowSync {
         }
       }
     }
-    await Future<void>.delayed(kLink26PassPreContinueDelay);
+    await Future<void>.delayed(
+      uris.isEmpty
+          ? kLink26PassPreContinueDelayNoUri
+          : kLink26PassPreContinueDelayWithUri,
+    );
 
     final lifted = start['tilko_simple_auth'];
     if (lifted is! Map) return start;

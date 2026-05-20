@@ -18,13 +18,17 @@ import 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
 ///
 /// 운영에서는 BFF에만 키를 두고 [Link26BffIntegrationsClient]로 프록시하는 편이 안전합니다.
 
-/// PASS `logincheck` 폴링 상한 — 앱·BFF **전체 약 2분** 목표.
-const int kTilkoNhisLoginCheckMaxAttempts = 28;
+/// PASS `logincheck` 폴링 — 승인 대기와 2분 상한의 균형(28회는 너무 짧았음).
+const int kTilkoNhisLoginCheckMaxAttempts = 45;
 const Duration kTilkoNhisLoginCheckPollInterval =
     Duration(milliseconds: 1500);
 
-/// 앱: `phase=continue` 호출 전 PASS 앱 전환 대기.
-const Duration kLink26PassPreContinueDelay = Duration(seconds: 2);
+/// 앱: `phase=continue` 전 PASS 앱·문자 확인 시간.
+const Duration kLink26PassPreContinueDelayNoUri = Duration(seconds: 6);
+const Duration kLink26PassPreContinueDelayWithUri = Duration(seconds: 2);
+
+/// BFF `phase=continue` 한 번의 HTTP 상한(폴링+틸코 호출).
+const Duration kLink26BffFlowContinueHttpTimeout = Duration(seconds: 125);
 
 /// 틸코 JSON(중첩·리스트)에서 키 [want]와 대소문자만 다른 첫 문자열 값을 찾습니다.
 String? tilkoFindPlainString(dynamic root, String want) {

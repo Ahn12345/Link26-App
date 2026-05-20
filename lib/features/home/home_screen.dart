@@ -369,11 +369,21 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     final out = await HiraLinkService.promptRrnAndSyncHiraMedications(
       context: context,
       user: user,
-      announceSuccess: true,
+      announceSuccess: false,
     );
     if (!mounted) return;
     await _reloadMedicinesFromStores();
     if (!mounted || out == null) return;
+    if (out.result == NhisMedicinesSyncResult.failed ||
+        out.showBannerOnBootstrap) {
+      final msg = out.userMessageKo.trim();
+      if (msg.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 8)),
+        );
+      }
+      return;
+    }
     if (out.remoteItemCount > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -382,6 +392,13 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
           ),
         ),
       );
+    } else if (out.result == NhisMedicinesSyncResult.success) {
+      final msg = out.userMessageKo.trim();
+      if (msg.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 8)),
+        );
+      }
     }
   }
 
