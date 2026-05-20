@@ -237,10 +237,12 @@ abstract final class Link26BffIntegrationsClient {
       payload['auth_channel'] = authChannel.trim();
     }
     final body = jsonEncode(payload);
-    // continue/full: BFF logincheck 최대 ~90×2초 + 틸코 HTTP — 200초면 앱이 먼저 끊김.
-    final timeout = phase == 'start'
-        ? const Duration(seconds: 90)
-        : const Duration(seconds: 320);
+    // PASS: start + 2초 + continue(logincheck ~28×1.5초) — 전체 약 2분.
+    final timeout = switch (phase) {
+      'start' => const Duration(seconds: 40),
+      'continue' => const Duration(seconds: 100),
+      _ => const Duration(seconds: 100),
+    };
     Object? lastErr;
     for (var i = 0; i < bases.length; i++) {
       final base = bases[i];

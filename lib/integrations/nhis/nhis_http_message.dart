@@ -64,9 +64,10 @@ bool dioExceptionLooksUnreachable(DioException e) {
   }
 }
 
-/// `package:http` BFF 플로우 등 [catch (e)] 에서 동일 판별.
+/// `package:http` BFF 플로우 등 [catch (e)] 에서 연결 실패 판별.
+/// [TimeoutException] 은 호출부에서 「응답 시간 초과」로 따로 처리합니다.
 bool link26ErrorLooksLikeUnreachableHost(Object e) {
-  if (e is TimeoutException) return true;
+  if (e is TimeoutException) return false;
   if (e is SocketException) return true;
   if (e is HttpException) return true;
   final s = e.toString().toLowerCase();
@@ -75,7 +76,6 @@ bool link26ErrorLooksLikeUnreachableHost(Object e) {
       s.contains('failed host lookup') ||
       s.contains('network is unreachable') ||
       s.contains('connection timed out') ||
-      s.contains('timed out') ||
       s.contains('errno = 65') ||
       s.contains('errno = 61') ||
       s.contains('no route to host');

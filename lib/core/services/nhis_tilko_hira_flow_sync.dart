@@ -173,18 +173,21 @@ abstract final class NhisTilkoHiraFlowSync {
         metaNote: metaNoteStr.isEmpty ? null : metaNoteStr,
       );
     } catch (e, st) {
-      if (e is TimeoutException && TilkoEnv.isPassAuth) {
+      if (e is TimeoutException) {
         if (kDebugMode) {
           debugPrint(
-            'Tilko→HIRA: BFF phase=continue 시간 초과 — PASS 앱·문자에서 승인 후 다시 시도 ($e)',
+            'Tilko→HIRA: BFF 응답 시간 초과(약 2분) — $e',
           );
         }
-        return const NhisMedicinesSyncOutcome(
+        final detail = TilkoEnv.isPassAuth
+            ? 'PASS 인증 대기 시간(약 2분)이 초과되었습니다. '
+                '통신사 PASS 앱·문자·나의 인증내역에서 승인한 뒤 다시 시도해 주세요. '
+                'PC에서 BFF는 계속 실행 중인지 확인하세요.'
+            : '건강·복약 연동 응답 시간(약 2분)이 초과되었습니다. '
+                '잠시 후 다시 시도해 주세요.';
+        return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
-          detail:
-              'PASS 인증 대기 시간이 초과되었습니다. '
-              '통신사 PASS 앱(또는 문자·나의 인증내역)에서 승인한 뒤 「심평원에서 불러오기」를 다시 눌러 주세요. '
-              'PC BFF는 켜 둔 채로 시도하세요.',
+          detail: detail,
         );
       }
       if (link26ErrorLooksLikeUnreachableHost(e)) {
@@ -281,8 +284,7 @@ abstract final class NhisTilkoHiraFlowSync {
         }
       }
     }
-    // logincheck 폴링(~3분) 전에 PASS 화면으로 전환할 시간.
-    await Future<void>.delayed(const Duration(seconds: 8));
+    await Future<void>.delayed(kLink26PassPreContinueDelay);
 
     final lifted = start['tilko_simple_auth'];
     if (lifted is! Map) return start;
