@@ -237,6 +237,10 @@ abstract final class Link26BffIntegrationsClient {
       payload['auth_channel'] = authChannel.trim();
     }
     final body = jsonEncode(payload);
+    // continue/full: BFF logincheck 최대 ~90×2초 + 틸코 HTTP — 200초면 앱이 먼저 끊김.
+    final timeout = phase == 'start'
+        ? const Duration(seconds: 90)
+        : const Duration(seconds: 320);
     Object? lastErr;
     for (var i = 0; i < bases.length; i++) {
       final base = bases[i];
@@ -248,7 +252,7 @@ abstract final class Link26BffIntegrationsClient {
               headers: {'Content-Type': 'application/json'},
               body: body,
             )
-            .timeout(const Duration(seconds: 200));
+            .timeout(timeout);
         if (res.statusCode < 200 || res.statusCode >= 300) {
           final detail = _flowHttpErrorDetail(res.statusCode, res.body);
           throw StateError('flow HTTP ${res.statusCode}: $detail');

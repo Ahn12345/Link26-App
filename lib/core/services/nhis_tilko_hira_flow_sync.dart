@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:link26_app/core/database/user_local_repository.dart';
@@ -171,6 +173,20 @@ abstract final class NhisTilkoHiraFlowSync {
         metaNote: metaNoteStr.isEmpty ? null : metaNoteStr,
       );
     } catch (e, st) {
+      if (e is TimeoutException && TilkoEnv.isPassAuth) {
+        if (kDebugMode) {
+          debugPrint(
+            'Tilko→HIRA: BFF phase=continue 시간 초과 — PASS 앱·문자에서 승인 후 다시 시도 ($e)',
+          );
+        }
+        return const NhisMedicinesSyncOutcome(
+          result: NhisMedicinesSyncResult.failed,
+          detail:
+              'PASS 인증 대기 시간이 초과되었습니다. '
+              '통신사 PASS 앱(또는 문자·나의 인증내역)에서 승인한 뒤 「심평원에서 불러오기」를 다시 눌러 주세요. '
+              'PC BFF는 켜 둔 채로 시도하세요.',
+        );
+      }
       if (link26ErrorLooksLikeUnreachableHost(e)) {
         if (kDebugMode) {
           debugPrint('Tilko→HIRA: BFF 연결 불가 — $e');
@@ -258,6 +274,12 @@ abstract final class NhisTilkoHiraFlowSync {
       debugPrint(
         'Tilko→HIRA: PASS 앱 실행 ${opened ? "성공" : "실패"} (URL ${uris.length}건)',
       );
+      if (uris.isEmpty) {
+        final hint = start['hint_ko'];
+        if (hint is String && hint.trim().isNotEmpty) {
+          debugPrint('Tilko→HIRA: $hint');
+        }
+      }
     }
     // logincheck 폴링(~3분) 전에 PASS 화면으로 전환할 시간.
     await Future<void>.delayed(const Duration(seconds: 8));
