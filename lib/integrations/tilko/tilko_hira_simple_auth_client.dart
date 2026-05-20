@@ -102,23 +102,24 @@ bool tilkoNhisSimpleAuthIndicatesError(Map<String, dynamic> root) {
 String tilkoPrivateAuthTypeName(String raw) {
   final t = raw.trim();
   if (t.isEmpty) return 'KAKAO';
+  // 틸코 apidemo·운영 회신(2025): 0=카카오 … 4=통신사PASS, 5=신한, 6=네이버
   if (RegExp(r'^\d{1,2}$').hasMatch(t)) {
     switch (t) {
-      case '1':
+      case '0':
         return 'KAKAO';
-      case '2':
+      case '1':
         return 'PAYCO';
+      case '2':
+        return 'KB';
       case '3':
         return 'SAMSUNG';
       case '4':
-        return 'KB';
-      case '5':
         return 'PASS';
+      case '5':
+        return 'SHINHAN';
       case '6':
         return 'NAVER';
       case '7':
-        return 'SHINHAN';
-      case '8':
         return 'TOSS';
       default:
         return 'KAKAO';
@@ -132,27 +133,27 @@ String tilkoPrivateAuthTypeNumeric(String raw) {
   final name = tilkoPrivateAuthTypeName(raw);
   switch (name) {
     case 'KAKAO':
-      return '1';
+      return '0';
     case 'PAYCO':
+      return '1';
+    case 'KB':
+    case 'KBMOBILE':
       return '2';
     case 'SAMSUNG':
     case 'SAMSUNGPASS':
       return '3';
-    case 'KB':
-    case 'KBMOBILE':
-      return '4';
     case 'PASS':
     case 'TELCO':
     case 'PHONE':
+      return '4';
+    case 'SHINHAN':
       return '5';
     case 'NAVER':
       return '6';
-    case 'SHINHAN':
-      return '7';
     case 'TOSS':
-      return '8';
+      return '7';
     default:
-      return '1';
+      return '0';
   }
 }
 
@@ -188,11 +189,23 @@ List<String> tilkoPrivateAuthTypeCandidates(String raw) {
 /// 단일 호출 경로 기본값(이름).
 String tilkoPrivateAuthTypePlain(String raw) => tilkoPrivateAuthTypeName(raw);
 
-/// 틸코 API AES 필드용 — 숫자 코드(`1`=카카오)는 그대로, 그 외는 채널 이름.
+/// 틸코 API AES 필드용 — 숫자 코드는 그대로. NHIS PASS 등은 틸코 숫자 코드(4=통신사PASS).
 String tilkoPrivateAuthTypeWirePlain(String raw) {
   final t = raw.trim();
   if (RegExp(r'^\d{1,2}$').hasMatch(t)) return t;
-  return tilkoPrivateAuthTypeName(raw);
+  final name = tilkoPrivateAuthTypeName(raw);
+  // 문자열 "PASS" 는 틸코가 거절 — 통신사 PASS 는 `4` (5=신한인증서).
+  if (name == 'PASS' ||
+      name == 'KAKAO' ||
+      name == 'PAYCO' ||
+      name == 'KB' ||
+      name == 'SAMSUNG' ||
+      name == 'SHINHAN' ||
+      name == 'NAVER' ||
+      name == 'TOSS') {
+    return tilkoPrivateAuthTypeNumeric(raw);
+  }
+  return name;
 }
 
 /// BFF 로그용(마스킹) — simpleauthrequest 직전 필드 요약.
