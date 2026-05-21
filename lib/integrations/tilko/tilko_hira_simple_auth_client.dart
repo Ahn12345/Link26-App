@@ -87,6 +87,33 @@ bool tilkoNhisAuthTokensComplete(dynamic root) {
   return true;
 }
 
+/// v2 LoginCheck 등 — `Status=Error`·비정상 Message 이면 폴링 중단(틸코 서버 오류).
+bool tilkoNhisLoginCheckIndicatesError(Map<String, dynamic>? root) {
+  if (root == null) return false;
+  return tilkoNhisSimpleAuthIndicatesError(root);
+}
+
+/// logincheck 실패 시 사용자·BFF hint용.
+String tilkoNhisLoginCheckHintKo(Map<String, dynamic>? root) {
+  if (root == null) {
+    return '간편인증 완료 확인(logincheck) 응답이 없습니다.';
+  }
+  final msg = (tilkoFindPlainString(root, 'Message') ?? '').trim();
+  final status = (tilkoFindPlainString(root, 'Status') ?? '').trim();
+  final apiTx = (tilkoFindPlainString(root, 'ApiTxKey') ?? '').trim();
+  if (msg.contains('일시적인 장애')) {
+    return '틸코 API가 LoginCheck(간편인증 완료 확인)에서 일시 오류를 반환했습니다. '
+        '잠시 후 다시 시도하거나 틸코에 ApiTxKey${apiTx.isEmpty ? '' : '($apiTx)'} 로 문의하세요. '
+        'PASS 「나의 인증내역」이 「PASS인증서」로만 보이면 통신사 PASS(코드 4)와 다를 수 있습니다.';
+  }
+  if (status.toUpperCase() == 'ERROR' || msg.isNotEmpty) {
+    return msg.isNotEmpty
+        ? '틸코 LoginCheck: $msg'
+        : '틸코 LoginCheck Status=$status — PASS 승인 후 다시 시도하세요.';
+  }
+  return 'PASS 앱·문자에서 인증을 승인한 뒤, 요청 후 2분 안에 다시 시도하세요.';
+}
+
 /// NHIS `logincheck` — 휴대폰 간편인증 완료 여부(`Result` boolean). 토큰은 포함하지 않음.
 bool tilkoNhisLoginCheckSucceeded(Map<String, dynamic> root) {
   final v = root['Result'] ?? root['result'];
@@ -951,7 +978,8 @@ class TilkoHiraSimpleAuthClient {
               : null)
           : lc;
       final loginOk = lcBody != null && tilkoNhisLoginCheckSucceeded(lcBody);
-      if (logPollProgress && ((i + 1) % 6 == 0 || i == 0)) {
+      final lcErr = lcBody != null && tilkoNhisLoginCheckIndicatesError(lcBody);
+      if (logPollProgress && ((i + 1) % 6 == 0 || i == 0 || lcErr)) {
         final msg = tilkoFindPlainString(lcBody ?? lc, 'Message') ?? '-';
         final st = tilkoFindPlainString(lcBody ?? lc, 'Status') ?? '-';
         // ignore: avoid_print
@@ -960,6 +988,11 @@ class TilkoHiraSimpleAuthClient {
           'Status=$st Message=$msg '
           '${tilkoNhisTokenPresenceSummary(session)}',
         );
+      }
+      if (lcErr) {
+        lastPollError =
+            '틸코 LoginCheck 오류: ${tilkoFindPlainString(lcBody, 'Message') ?? tilkoFindPlainString(lcBody, 'Status') ?? ''}';
+        break;
       }
       if (loginOk && tilkoNhisAuthTokensComplete(session)) {
         if (logPollProgress) {
@@ -977,6 +1010,15 @@ class TilkoHiraSimpleAuthClient {
     }
     if (lastPollError != null && lastPollError.trim().isNotEmpty) {
       out['_link26_poll_error'] = lastPollError;
+    } else if (lastLoginCheck != null) {
+      final lcBody = lastLoginCheck['http_status'] != null
+          ? (lastLoginCheck['body'] is Map<String, dynamic>
+              ? lastLoginCheck['body'] as Map<String, dynamic>
+              : null)
+          : lastLoginCheck;
+      out['_link26_poll_error'] = tilkoNhisLoginCheckHintKo(
+        lcBody is Map<String, dynamic> ? lcBody : null,
+      );
     } else {
       out['_link26_poll_error'] =
           'logincheck에서 간편인증 완료(Result=true)를 받지 못했습니다. '

@@ -617,17 +617,32 @@ Future<void> _handle(HttpRequest request) async {
           final errBit = pollErr is String && pollErr.trim().isNotEmpty
               ? ' ($pollErr)'
               : '';
+          final lastLc = tilkoAuth['_link26_last_logincheck'];
+          Map<String, dynamic>? lastLcBody;
+          if (lastLc is Map) {
+            lastLcBody = lastLc['body'] is Map
+                ? Map<String, dynamic>.from(
+                    (lastLc['body'] as Map).map(
+                      (k, v) => MapEntry('$k', v),
+                    ),
+                  )
+                : Map<String, dynamic>.from(
+                    lastLc.map((k, v) => MapEntry('$k', v)),
+                  );
+          }
           final pollHint = pollErr is String &&
-                  pollErr.contains('simpleauthrequest 응답에 CxId')
-              ? '틸코 simpleauthrequest 단계에서 세션 토큰을 받지 못했습니다. '
-                  '통신사 PASS(`.env` TILKO_PRIVATE_AUTH_TYPE=PASS) 간편인증으로 '
-                  'PASS 앱·문자 인증을 완료했는지 확인하세요. '
-                  'TILKO_API_KEY·틸코 상품(NHIS·PASS 간편인증) 권한을 확인하세요.'
-              : 'PASS 앱에서 인증 요청을 승인해 주세요. '
-                  '(알림·나의 인증내역·문자 OTP) 승인은 요청 후 약 2분 안에 해야 합니다. '
-                  '완료 후 회원가입·불러오기를 다시 시도하세요.$errBit '
-                  '여전히 같다면 PC에서 `dart run tool/link26_bff.dart`를 **최신 코드로 다시 실행**하고, '
-                  '앱도 **디버그 APK를 다시 설치**했는지 확인하세요.';
+                  pollErr.contains('일시적인 장애')
+              ? tilkoNhisLoginCheckHintKo(lastLcBody)
+              : pollErr is String && pollErr.contains('LoginCheck 오류')
+                  ? tilkoNhisLoginCheckHintKo(lastLcBody)
+                  : pollErr is String &&
+                      pollErr.contains('simpleauthrequest 응답에 CxId')
+                  ? '틸코 simpleauthrequest 단계에서 세션 토큰을 받지 못했습니다. '
+                      '통신사 PASS(`.env` TILKO_PRIVATE_AUTH_TYPE=PASS) 간편인증으로 '
+                      'PASS 앱·문자 인증을 완료했는지 확인하세요. '
+                      'TILKO_API_KEY·틸코 상품(NHIS·PASS 간편인증) 권한을 확인하세요.'
+                  : tilkoNhisLoginCheckHintKo(lastLcBody) +
+                      (errBit.isNotEmpty ? errBit : '');
           await _json(request, 200, {
             'ok': false,
             'detail': 'NHIS 간편인증을 마치지 못했습니다.',
