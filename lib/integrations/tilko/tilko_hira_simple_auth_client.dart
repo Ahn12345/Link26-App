@@ -564,7 +564,7 @@ String tilkoPublicKeyToPem(String tilkoPublicKeyB64) {
 }
 
 /// Tilko AES-CBC 필드 암호화. 빈·공백만 값은 암호화하지 않습니다(logincheck 초반 토큰).
-/// NHIS `simpleauthrequest` JSON 본문 — 4필드, 주민번호 없음.
+/// NHIS `simpleauthrequest` JSON 본문 — 4필드 AES, 주민번호 없음.
 Map<String, dynamic> tilkoNhisSimpleAuthRequestBody({
   required Uint8List aesKey,
   required String privateAuthTypePlain,
@@ -573,11 +573,23 @@ Map<String, dynamic> tilkoNhisSimpleAuthRequestBody({
   required String userCellphoneHyphen,
 }) {
   return <String, dynamic>{
-    'PrivateAuthType': privateAuthTypePlain,
+    'PrivateAuthType':
+        tilkoAesEncryptFieldOrEmpty(aesKey, privateAuthTypePlain),
     'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
     'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDateYmd),
     'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneHyphen),
   };
+}
+
+/// LoginCheck 본문 — 틸코 안내 OAuth(또는 Auth) 하위에 암호화 필드.
+List<Map<String, dynamic>> tilkoNhisLoginCheckRequestBodies(
+  Map<String, dynamic> encryptedFields,
+) {
+  return <Map<String, dynamic>>[
+    <String, dynamic>{'OAuth': encryptedFields},
+    <String, dynamic>{'Auth': encryptedFields},
+    encryptedFields,
+  ];
 }
 
 /// Tilko AES-CBC 필드 암호화 여부(로그·검증).
@@ -726,8 +738,7 @@ class TilkoHiraSimpleAuthClient {
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
   ///
   /// BODY 4필드만 — **IdentityNumber 없음** (틸코·apidemo NHIS SimpleAuthRequest).
-  /// 암호화: UserName·BirthDate·UserCellphoneNumber 만 AES.
-  /// **PrivateAuthType 은 평문**(틸코 운영 회신 2025 — 「PrivateAuthType 제외 암호화」).
+  /// 암호화: PrivateAuthType·UserName·BirthDate·UserCellphoneNumber 전부 AES.
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
@@ -867,14 +878,11 @@ class TilkoHiraSimpleAuthClient {
 
     Map<String, dynamic>? out;
     for (final path in paths) {
-      out = await postLogin(
-        path,
-        <String, dynamic>{'Auth': flatAuth},
-        encKeyHeader,
-      );
-      if (out['http_status'] != 404) break;
-      out = await postLogin(path, flatAuth, encKeyHeader);
-      if (out['http_status'] != 404) break;
+      for (final body in tilkoNhisLoginCheckRequestBodies(flatAuth)) {
+        out = await postLogin(path, body, encKeyHeader);
+        if (out['http_status'] != 404) break;
+      }
+      if (out != null && out['http_status'] != 404) break;
     }
     return out ?? <String, dynamic>{'http_status': 404};
   }
