@@ -54,6 +54,15 @@ abstract final class Link26BffReachability {
     return out;
   }
 
+  /// 「심평원에서 불러오기」 직전 등 — 이전 /health 실패 캐시를 비웁니다.
+  static void clearProbeCache() {
+    _lastProbeAt = null;
+    _ordered = const [];
+    _anyReachable = false;
+    _hostOkUntil.clear();
+    _hostFailUntil.clear();
+  }
+
   /// 앱 기동·당겨서 새로고침 시 호출. 도달 가능한 BFF를 앞에 둡니다.
   static Future<void> warmUp(List<String> candidates) async {
     if (!fastProbeEnabled || candidates.isEmpty) {

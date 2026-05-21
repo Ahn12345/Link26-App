@@ -41,8 +41,8 @@ List<String> tilkoNhisLoginCheckPathCandidates({bool includeHiraV1 = false}) {
 const Duration kLink26PassPreContinueDelayNoUri = Duration(seconds: 6);
 const Duration kLink26PassPreContinueDelayWithUri = Duration(seconds: 2);
 
-/// BFF `phase=continue` 한 번의 HTTP 상한(폴링+틸코 호출).
-const Duration kLink26BffFlowContinueHttpTimeout = Duration(seconds: 125);
+/// BFF `phase=continue` 한 번의 HTTP 상한(폴링 45회×1.5초 + 틸코 HTTP).
+const Duration kLink26BffFlowContinueHttpTimeout = Duration(seconds: 180);
 
 /// 틸코 JSON(중첩·리스트)에서 키 [want]와 대소문자만 다른 첫 문자열 값을 찾습니다.
 String? tilkoFindPlainString(dynamic root, String want) {

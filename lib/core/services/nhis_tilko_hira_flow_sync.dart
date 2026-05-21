@@ -56,6 +56,9 @@ abstract final class NhisTilkoHiraFlowSync {
       await NhisRuntimeConfig.reorderLanDiscoveredForCurrentDevice();
     }
 
+    Link26BffReachability.clearProbeCache();
+    await NhisRuntimeConfig.refreshBffReachability();
+
     if (!Link26BffIntegrationsClient.canCall) {
       if (kDebugMode) {
         debugPrint('Tilko→HIRA: NHIS_BASE_URL 없음 — 플로우 생략');
@@ -192,6 +195,16 @@ abstract final class NhisTilkoHiraFlowSync {
           detail: detail,
         );
       }
+      if (_looksLikeBffDroppedMidFlow(e)) {
+        return NhisMedicinesSyncOutcome(
+          result: NhisMedicinesSyncResult.failed,
+          detail: TilkoEnv.isPassAuth
+              ? '연동 중 PC BFF와 연결이 끊겼습니다. '
+                  'BFF를 계속 실행한 채 「심평원에서 불러오기」를 다시 눌러 주세요. '
+                  'PASS 승인 후 최대 약 2분 걸릴 수 있습니다.'
+              : '연동 중 PC BFF와 연결이 끊겼습니다. BFF를 실행한 뒤 다시 시도해 주세요.',
+        );
+      }
       if (link26ErrorLooksLikeUnreachableHost(e)) {
         if (kDebugMode) {
           debugPrint('Tilko→HIRA: BFF 연결 불가 — $e');
@@ -304,6 +317,15 @@ abstract final class NhisTilkoHiraFlowSync {
       ),
       authChannel: start['auth_channel'] as String?,
     );
+  }
+
+  /// start는 됐는데 continue HTTP가 끊긴 경우(앱 타임아웃·Wi‑Fi 순간 끊김).
+  static bool _looksLikeBffDroppedMidFlow(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('connection closed') ||
+        s.contains('connection reset') ||
+        s.contains('broken pipe') ||
+        s.contains('software caused connection abort');
   }
 
   static Future<void> _persistConnectedIdFromFlowResponse(

@@ -12,6 +12,7 @@ import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
+import 'package:link26_app/core/services/link26_bff_reachability.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
@@ -351,6 +352,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       );
       return;
     }
+    Link26BffReachability.clearProbeCache();
+    await NhisRuntimeConfig.refreshBffReachability();
+    if (!mounted) return;
     if (!Link26BffIntegrationsClient.canCall) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
