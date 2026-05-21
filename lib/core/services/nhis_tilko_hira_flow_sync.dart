@@ -61,9 +61,19 @@ abstract final class NhisTilkoHiraFlowSync {
 
     if (!Link26BffIntegrationsClient.canCall) {
       if (kDebugMode) {
-        debugPrint('Tilko→HIRA: NHIS_BASE_URL 없음 — 플로우 생략');
+        debugPrint(
+          'Tilko→HIRA: BFF /health 불가 — '
+          '${NhisRuntimeConfig.baseUrlCandidates.join(", ")}',
+        );
       }
-      return null;
+      return const NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.failed,
+        detail:
+            'PC BFF에 연결할 수 없습니다. '
+            'PC에서 `dart run tool/link26_bff.dart`를 실행했는지, '
+            '폰·PC가 같은 Wi‑Fi(또는 USB면 adb reverse)인지 확인하세요. '
+            'BFF 콘솔에 나온 PC IP를 NHIS_BASE_URL에 넣고 앱을 다시 설치하세요.',
+      );
     }
 
     final birthFromDb = birthDateYmd?.replaceAll(RegExp(r'\D'), '') ?? '';
@@ -219,12 +229,13 @@ abstract final class NhisTilkoHiraFlowSync {
             '• USB만: `adb reverse tcp:8787 tcp:8787` 후 http://127.0.0.1:8787',
           );
         }
+        final bases = NhisRuntimeConfig.baseUrlCandidates.join(', ');
         final short = kReleaseMode
             ? '건강·복약 서버(BFF)에 연결하지 못했습니다. '
                 '인터넷과 운영 주소(NHIS_PRODUCTION_BASE_URL·원격 설정)를 확인해 주세요.'
             : 'PC BFF에 연결하지 못했습니다. '
-                'BFF 실행·Wi‑Fi·포트·방화벽을 확인해 주세요. '
-                '(자세한 점검 항목은 디버그 콘솔 로그를 참고하세요.)';
+                'BFF가 실행 중인지, 주소($bases)가 PC IP·포트 8787과 같은지 확인하세요. '
+                'USB 연결 시 `adb reverse tcp:8787 tcp:8787` 후 다시 시도하세요.';
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail: short,
@@ -308,6 +319,9 @@ abstract final class NhisTilkoHiraFlowSync {
     final lifted = start['tilko_simple_auth'];
     if (lifted is! Map) return start;
 
+    if (kDebugMode) {
+      debugPrint('Tilko→HIRA: phase=continue 요청 시작 (PASS 승인 후 logincheck·복약 조회)');
+    }
     return Link26BffIntegrationsClient.flowTilkoHiraMedications(
       tilko: tilkoBody,
       flowExtras: flowExtras,

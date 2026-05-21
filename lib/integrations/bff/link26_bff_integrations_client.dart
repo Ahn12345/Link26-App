@@ -88,6 +88,11 @@ String _flowHttpErrorDetail(int statusCode, String body) {
 /// [NhisRuntimeConfig.useMock] 은 가입·로그인·복약 동기화용 목 데이터에만 쓰이고,
 /// 여기 BFF 프록시(e약은요·틸코·플로우)는 막지 않습니다.
 abstract final class Link26BffIntegrationsClient {
+  /// `phase=start` 가 성공한 BFF 베이스 — `continue` 에 같은 주소만 사용(다른 IP 재시도 방지).
+  static String? _lastSuccessfulFlowBase;
+
+  static void clearLastSuccessfulFlowBase() => _lastSuccessfulFlowBase = null;
+
   /// [NhisTilkoHiraFlowSync] 등 catch 블록에서 `StateError` 전체 문자열을 넣을 때 —
   /// `flow HTTP 502: {"detail":"…"}` 형태를 스낵바용 한글로 줄입니다.
   static String sanitizeIntegrationErrorMessage(String raw) {
@@ -139,10 +144,24 @@ abstract final class Link26BffIntegrationsClient {
     return _baseList;
   }
 
-  static bool _shouldRetryBffOn(Object e, int index, int total) {
+  static bool _shouldRetryBffOn(
+    Object e,
+    int index,
+    int total, {
+    bool allowTimeoutRetry = true,
+  }) {
     if (index >= total - 1) return false;
-    if (e is TimeoutException) return true;
+    if (e is TimeoutException) return allowTimeoutRetry;
     return link26ErrorLooksLikeUnreachableHost(e);
+  }
+
+  static List<String> _basesForFlowPhase(String phase) {
+    if (phase == 'continue' &&
+        _lastSuccessfulFlowBase != null &&
+        _lastSuccessfulFlowBase!.trim().isNotEmpty) {
+      return <String>[_lastSuccessfulFlowBase!.trim()];
+    }
+    return _activeBases;
   }
 
   static Future<Map<String, dynamic>?> searchEasyDrug({
@@ -222,8 +241,11 @@ abstract final class Link26BffIntegrationsClient {
     String? authChannel,
   }) async {
     if (!canCall) return null;
-    final bases = _activeBases;
+    final bases = _basesForFlowPhase(phase);
     if (bases.isEmpty) return null;
+    if (phase == 'start') {
+      clearLastSuccessfulFlowBase();
+    }
     final extras = flowExtras ?? <String, dynamic>{};
     final payload = <String, dynamic>{
       'tilko': tilko,
@@ -259,14 +281,31 @@ abstract final class Link26BffIntegrationsClient {
           final detail = _flowHttpErrorDetail(res.statusCode, res.body);
           throw StateError('flow HTTP ${res.statusCode}: $detail');
         }
-        return jsonDecode(res.body) as Map<String, dynamic>;
+        final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+        _lastSuccessfulFlowBase = base;
+        if (kDebugMode) {
+          debugPrint('Link26BFF: flow $phase OK via $base');
+        }
+        return decoded;
       } catch (e, st) {
         lastErr = e;
-        if (_shouldRetryBffOn(e, i, bases.length)) continue;
+        if (kDebugMode) {
+          debugPrint('Link26BFF: flow $phase 실패 ($base) — $e');
+        }
+        final retryTimeout = phase != 'continue';
+        if (_shouldRetryBffOn(
+          e,
+          i,
+          bases.length,
+          allowTimeoutRetry: retryTimeout,
+        )) {
+          continue;
+        }
         Error.throwWithStackTrace(e, st);
       }
     }
-    throw lastErr ?? StateError('flow: BFF 요청 실패 ($_basesDebug)');
+    throw lastErr ??
+        StateError('flow: BFF 요청 실패 (phase=$phase, tried=$_basesDebug)');
   }
 
   /// BFF가 HTTP 200 + `ok:false` 로 준 `hint_ko` / `detail` 을 스낵바에 넣기 전에 가공합니다.
