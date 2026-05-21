@@ -18,10 +18,24 @@ import 'package:pointycastle/asymmetric/api.dart' show RSAPublicKey;
 ///
 /// 운영에서는 BFF에만 키를 두고 [Link26BffIntegrationsClient]로 프록시하는 편이 안전합니다.
 
-/// PASS `logincheck` 폴링 — 승인 대기와 2분 상한의 균형(28회는 너무 짧았음).
+/// NHIS 간편인증 완료 확인 — 틸코 최신 v2 (v1 `logincheck`는 Result=대기만 올 수 있음).
+const String kTilkoNhisLoginCheckV2Path =
+    '/api/v2.0/NhisSimpleAuth/LoginCheck';
+
+/// PASS `logincheck` 폴링 — 틸코: 승인 후 약 5초 내 Result=true (여유 포함).
 const int kTilkoNhisLoginCheckMaxAttempts = 45;
 const Duration kTilkoNhisLoginCheckPollInterval =
     Duration(milliseconds: 1500);
+
+/// NHIS `LoginCheck` 경로 — v2 우선, v1은 404·구환경 폴백만.
+List<String> tilkoNhisLoginCheckPathCandidates({bool includeHiraV1 = false}) {
+  final paths = <String>[kTilkoNhisLoginCheckV2Path];
+  paths.add('/api/v1.0/nhissimpleauth/logincheck');
+  if (includeHiraV1) {
+    paths.add('/api/v1.0/hirasimpleauth/logincheck');
+  }
+  return paths;
+}
 
 /// 앱: `phase=continue` 전 PASS 앱·문자 확인 시간.
 const Duration kLink26PassPreContinueDelayNoUri = Duration(seconds: 6);
@@ -744,15 +758,13 @@ class TilkoHiraSimpleAuthClient {
     return decoded;
   }
 
-  /// 간편인증 **[완료여부 확인]** — HIRA·NHIS `logincheck` (및 v2 LoginCheck 폴백).
+  /// 간편인증 **[완료여부 확인]** — NHIS는 v2 [kTilkoNhisLoginCheckV2Path] 우선.
   Future<Map<String, dynamic>> requestTilkoLoginCheck({
     required Map<String, dynamic> tilkoRequestMap,
     required Map<String, dynamic> sessionTokens,
-    List<String> pathCandidates = const [
-      '/api/v1.0/hirasimpleauth/logincheck',
-      '/api/v1.0/nhissimpleauth/logincheck',
-    ],
+    List<String>? pathCandidates,
   }) async {
+    final paths = pathCandidates ?? tilkoNhisLoginCheckPathCandidates();
     if (apiKey.isEmpty) {
       throw StateError('TILKO_API_KEY 가 비어 있습니다.');
     }
@@ -827,7 +839,7 @@ class TilkoHiraSimpleAuthClient {
     }
 
     Map<String, dynamic>? out;
-    for (final path in pathCandidates) {
+    for (final path in paths) {
       out = await postLogin(
         path,
         <String, dynamic>{'Auth': flatAuth},
@@ -837,35 +849,10 @@ class TilkoHiraSimpleAuthClient {
       out = await postLogin(path, flatAuth, encKeyHeader);
       if (out['http_status'] != 404) break;
     }
-    out ??= <String, dynamic>{'http_status': 404};
-    if (out['http_status'] == 404) {
-      final pub2 = await fetchPublicKey();
-      final rnd2 = Random.secure();
-      final aesKey2 = Uint8List(16);
-      for (var i = 0; i < 16; i++) {
-        aesKey2[i] = rnd2.nextInt(256);
-      }
-      final enc2 = _rsaEncryptAesKeyB64(pub2, aesKey2);
-      final flat2 = <String, dynamic>{
-        'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey2, birth),
-        'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey2, pat),
-        'UserName': tilkoAesEncryptFieldOrEmpty(aesKey2, userName),
-        'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey2, cell),
-        'Token': tilkoAesEncryptFieldOrEmpty(aesKey2, token),
-        'CxId': tilkoAesEncryptFieldOrEmpty(aesKey2, cx),
-        'TxId': tilkoAesEncryptFieldOrEmpty(aesKey2, tx),
-        'ReqTxId': tilkoAesEncryptFieldOrEmpty(aesKey2, reqTx),
-      };
-      out = await postLogin(
-        '/api/v2.0/NhisSimpleAuth/LoginCheck',
-        <String, dynamic>{'Auth': flat2},
-        enc2,
-      );
-    }
-    return out;
+    return out ?? <String, dynamic>{'http_status': 404};
   }
 
-  /// NHIS logincheck — [requestTilkoLoginCheck] NHIS 경로 우선.
+  /// NHIS logincheck — v2 LoginCheck 우선.
   Future<Map<String, dynamic>> requestNhisLoginCheck({
     required Map<String, dynamic> tilkoRequestMap,
     required Map<String, dynamic> sessionTokens,
@@ -873,10 +860,7 @@ class TilkoHiraSimpleAuthClient {
       requestTilkoLoginCheck(
         tilkoRequestMap: tilkoRequestMap,
         sessionTokens: sessionTokens,
-        pathCandidates: const [
-          '/api/v1.0/nhissimpleauth/logincheck',
-          '/api/v1.0/hirasimpleauth/logincheck',
-        ],
+        pathCandidates: tilkoNhisLoginCheckPathCandidates(),
       );
 
   /// `simpleauthrequest`의 ResultData에서 받은 토큰으로 `logincheck`를 폴링해
@@ -889,11 +873,10 @@ class TilkoHiraSimpleAuthClient {
     int maxAttempts = kTilkoNhisLoginCheckMaxAttempts,
     Duration interval = kTilkoNhisLoginCheckPollInterval,
     bool logPollProgress = false,
-    List<String> loginCheckPathCandidates = const [
-      '/api/v1.0/hirasimpleauth/logincheck',
-      '/api/v1.0/nhissimpleauth/logincheck',
-    ],
+    List<String>? loginCheckPathCandidates,
   }) async {
+    final loginPaths =
+        loginCheckPathCandidates ?? tilkoNhisLoginCheckPathCandidates();
     var session = tilkoNhisLiftNestedSession(
       Map<String, dynamic>.from(initialSimpleAuthResponse),
     );
@@ -937,7 +920,8 @@ class TilkoHiraSimpleAuthClient {
       // ignore: avoid_print
       print(
         'Tilko logincheck: 폴링 시작 (최대 $maxAttempts회, '
-        '${interval.inSeconds}초 간격) — ${tilkoNhisTokenPresenceSummary(session)}',
+        '${interval.inSeconds}초 간격, paths=${loginPaths.join(' → ')}) — '
+        '${tilkoNhisTokenPresenceSummary(session)}',
       );
     }
 
@@ -949,7 +933,7 @@ class TilkoHiraSimpleAuthClient {
         lc = await requestTilkoLoginCheck(
           tilkoRequestMap: tilkoRequestMap,
           sessionTokens: session,
-          pathCandidates: loginCheckPathCandidates,
+          pathCandidates: loginPaths,
         );
       } catch (e) {
         lastPollError = '$e';
@@ -968,9 +952,12 @@ class TilkoHiraSimpleAuthClient {
           : lc;
       final loginOk = lcBody != null && tilkoNhisLoginCheckSucceeded(lcBody);
       if (logPollProgress && ((i + 1) % 6 == 0 || i == 0)) {
+        final msg = tilkoFindPlainString(lcBody ?? lc, 'Message') ?? '-';
+        final st = tilkoFindPlainString(lcBody ?? lc, 'Status') ?? '-';
         // ignore: avoid_print
         print(
           'Tilko logincheck #${i + 1}: Result=${loginOk ? '완료' : '대기'} '
+          'Status=$st Message=$msg '
           '${tilkoNhisTokenPresenceSummary(session)}',
         );
       }

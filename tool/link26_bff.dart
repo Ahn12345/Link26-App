@@ -596,14 +596,8 @@ Future<void> _handle(HttpRequest request) async {
           return;
         }
         final loginPaths = authChannel == 'HIRA'
-            ? const [
-                '/api/v1.0/hirasimpleauth/logincheck',
-                '/api/v1.0/nhissimpleauth/logincheck',
-              ]
-            : const [
-                '/api/v1.0/nhissimpleauth/logincheck',
-                '/api/v1.0/hirasimpleauth/logincheck',
-              ];
+            ? tilkoNhisLoginCheckPathCandidates(includeHiraV1: true)
+            : tilkoNhisLoginCheckPathCandidates();
         final tilkoAuth = await tilkoClient.waitForNhisAuthForTreatmentInjection(
           tilkoRequestMap: tilkoMap,
           initialSimpleAuthResponse: tilkoRes,
