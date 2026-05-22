@@ -43,7 +43,9 @@ app.*.map.json
 
 # Android build outputs
 *.apk
+!docs/link26.apk
 *.aab
+/dist/
 app-debug.apk
 /android/app/debug
 /android/app/profile

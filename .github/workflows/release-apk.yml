@@ -1,0 +1,43 @@
+# 공개 APK — GitHub Releases (Vercel APK 문제 시 백업 다운로드)
+name: Release APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Public dotenv for release
+        run: |
+          cp assets/env/dotenv.public.example assets/env/dotenv
+
+      - name: Build release APK
+        run: |
+          flutter build apk --release \
+            --dart-define=LINK26_REMOTE_CONFIG_URL=https://link26-frontend.vercel.app/link26-bff.json
+
+      - name: Rename APK
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk Link26-1.0.0.apk
+          ls -la Link26-1.0.0.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-v1.0.0
+          name: Link26 Android 1.0.0
+          body: |
+            공개 배포용 release APK (API 키·사설 IP 미포함).
+            Vercel: https://link26-frontend.vercel.app/Link26-1.0.0.apk (프론트 public/ 반영 후)
+          files: Link26-1.0.0.apk
+          overwrite_files: true

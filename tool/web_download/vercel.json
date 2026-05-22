@@ -1,0 +1,37 @@
+{
+  "redirects": [
+    {
+      "source": "/link26.apk",
+      "destination": "https://ahn12345.github.io/Link26-App/link26.apk",
+      "permanent": false
+    },
+    {
+      "source": "/Link26-1.0.0.apk",
+      "destination": "https://ahn12345.github.io/Link26-App/link26.apk",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*\\.apk)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        }
+      ]
+    },
+    {
+      "source": "/link26-bff.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.(apk|json|png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|css|js|map|txt|xml)$).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
