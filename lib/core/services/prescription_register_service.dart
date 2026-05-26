@@ -44,11 +44,18 @@ abstract final class PrescriptionRegisterService {
 
   static String _errorMessageKo(Object error, {String? triedModel}) {
     final s = error.toString();
+    if (s.contains('leaked') ||
+        s.contains('reported as leaked')) {
+      return 'GEMINI_API_KEY가 Google에 의해 차단되었습니다(유출 신고). '
+          'AI Studio에서 새 키를 발급해 .env에 넣고 sync_dotenv_asset.ps1 후 앱을 재설치하세요. '
+          '기존 키는 Git·채팅에 올리지 마세요.';
+    }
     if (s.contains('API_KEY_INVALID') ||
         s.contains('API key not valid') ||
-        s.contains('PERMISSION_DENIED')) {
-      return 'GEMINI_API_KEY가 거부되었습니다. Google AI Studio 키를 확인한 뒤 '
-          'sync_dotenv_asset.ps1 · 앱 재설치를 해 주세요.';
+        s.contains('PERMISSION_DENIED') ||
+        s.contains('403')) {
+      return 'GEMINI_API_KEY가 거부되었습니다. Google AI Studio에서 키를 새로 발급한 뒤 '
+          '.env → sync_dotenv_asset.ps1 → 앱 재설치를 해 주세요.';
     }
     if (s.contains('NOT_FOUND') ||
         s.contains('not found') ||

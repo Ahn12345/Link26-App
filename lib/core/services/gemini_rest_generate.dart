@@ -72,10 +72,11 @@ abstract final class GeminiRestGenerate {
         }
         if (kDebugMode) {
           debugPrint(
-            'GeminiRestGenerate $apiPrefix/$model HTTP ${res.statusCode}',
+            'GeminiRestGenerate $apiPrefix/$model HTTP ${res.statusCode}: '
+            '${res.body.length > 200 ? res.body.substring(0, 200) : res.body}',
           );
         }
-        lastErr = StateError('HTTP ${res.statusCode} $apiPrefix/$model');
+        lastErr = StateError('${res.statusCode} $apiPrefix/$model ${res.body}');
       } catch (e) {
         lastErr = e;
       }
