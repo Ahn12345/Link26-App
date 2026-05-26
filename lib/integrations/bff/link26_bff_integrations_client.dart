@@ -127,7 +127,9 @@ abstract final class Link26BffIntegrationsClient {
 
   static bool get canCall {
     if (_baseList.isEmpty) return false;
-    if (Link26BffReachability.fastProbeEnabled &&
+    // 디버그: /health 프로브 실패만으로 막지 않음(USB·Wi‑Fi 전환·BFF 늦게 켬).
+    if (kReleaseMode &&
+        Link26BffReachability.fastProbeEnabled &&
         Link26BffReachability.recentlyAllUnreachable) {
       return false;
     }
