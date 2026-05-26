@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/services/prescription_medicine_persistence.dart';
 import 'package:link26_app/core/services/prescription_register_service.dart';
 import 'package:link26_app/core/services/user_pinned_medicine_store.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
@@ -14,7 +15,6 @@ import 'package:link26_app/models/medicine.dart';
 class PrescriptionRegisterSheet extends StatefulWidget {
   const PrescriptionRegisterSheet({super.key, this.openCameraOnStart = false});
 
-  /// true 이면 시트가 열리자마자 카메라를 띄웁니다.
   final bool openCameraOnStart;
 
   @override
@@ -50,12 +50,12 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
     super.dispose();
   }
 
-  Medicine _stub(String name) => Medicine(
-        name: name,
-        dose: '-',
-        frequency: '-',
-        time: '09:00',
-      );
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 5)),
+    );
+  }
 
   void _setCandidates(List<String> names) {
     _normToLabel.clear();
@@ -65,30 +65,62 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
       _normToLabel[norm] = n;
       _selected[norm] = true;
     }
-    _status = names.isEmpty ? null : '아래에서 등록할 약을 선택하세요.';
+  }
+
+  Future<void> _addNamesToConfirmed(Iterable<String> names) async {
+    for (final raw in names) {
+      final name = raw.trim();
+      if (name.isEmpty) continue;
+      final norm = UserPinnedMedicineStore.norm(name);
+      if (_confirmed.any((m) => UserPinnedMedicineStore.norm(m.name) == norm)) {
+        continue;
+      }
+      await UserPinnedMedicineStore.pin(name);
+      _confirmed.add(PrescriptionMedicinePersistence.stub(name));
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
     if (_busy) return;
-    final file = await _picker.pickImage(source: source, imageQuality: 88);
-    if (file == null || !mounted) return;
-    final bytes = await file.readAsBytes();
-    setState(() {
-      _busy = true;
-      _status = '처방전을 분석하는 중…';
-    });
-    final result = await PrescriptionRegisterService.extractFromImage(
-      bytes: Uint8List.fromList(bytes),
-      mimeType: _mimeFromPath(file.path),
-    );
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _setCandidates(result.names);
-      if (result.errorMessageKo != null) {
-        _status = result.errorMessageKo;
+    try {
+      final file = await _picker.pickImage(source: source, imageQuality: 88);
+      if (file == null) return;
+      if (!mounted) return;
+      setState(() {
+        _busy = true;
+        _status = '처방전을 분석하는 중…';
+      });
+      final bytes = await file.readAsBytes();
+      final result = await PrescriptionRegisterService.extractFromImage(
+        bytes: Uint8List.fromList(bytes),
+        mimeType: _mimeFromPath(file.path),
+      );
+      if (!mounted) return;
+      if (result.names.isNotEmpty) {
+        _setCandidates(result.names);
+        await _addNamesToConfirmed(result.names);
+        setState(() {
+          _busy = false;
+          _status =
+              '약 ${result.names.length}건을 인식했습니다. 아래 「목록에 반영」을 눌러 주세요.';
+        });
+        return;
       }
-    });
+      setState(() {
+        _busy = false;
+        _setCandidates([]);
+        _status = result.errorMessageKo ??
+            '사진에서 약 이름을 찾지 못했습니다. 직접 입력하거나 텍스트 붙여넣기를 이용해 주세요.';
+      });
+      _toast(_status!);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _status = '사진을 불러오지 못했습니다. ($e)';
+      });
+      _toast(_status!);
+    }
   }
 
   String _mimeFromPath(String path) {
@@ -103,6 +135,7 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
     final text = _pasteCtrl.text.trim();
     if (text.isEmpty) {
       setState(() => _status = '처방전에서 복사한 텍스트를 붙여넣어 주세요.');
+      _toast(_status!);
       return;
     }
     setState(() {
@@ -112,50 +145,57 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
     final result =
         await PrescriptionRegisterService.extractFromPastedText(text);
     if (!mounted) return;
+    if (result.names.isNotEmpty) {
+      _setCandidates(result.names);
+      await _addNamesToConfirmed(result.names);
+      setState(() {
+        _busy = false;
+        _status = '약 ${result.names.length}건을 찾았습니다. 「목록에 반영」을 눌러 주세요.';
+      });
+      return;
+    }
     setState(() {
       _busy = false;
-      _setCandidates(result.names);
-      if (result.errorMessageKo != null) {
-        _status = result.errorMessageKo;
-      }
+      _setCandidates([]);
+      _status = result.errorMessageKo ?? '텍스트에서 약 이름을 찾지 못했습니다.';
     });
+    _toast(_status!);
   }
 
   Future<void> _addManual() async {
     final name = _manualCtrl.text.trim();
     if (name.isEmpty) return;
-    final norm = UserPinnedMedicineStore.norm(name);
-    if (_confirmed.any((m) => UserPinnedMedicineStore.norm(m.name) == norm)) {
-      _manualCtrl.clear();
-      return;
-    }
-    await UserPinnedMedicineStore.pin(name);
+    await _addNamesToConfirmed([name]);
     if (!mounted) return;
     setState(() {
-      _confirmed.add(_stub(name));
       _manualCtrl.clear();
+      _status = '「$name」을 등록 목록에 넣었습니다. 「목록에 반영」을 눌러 주세요.';
     });
   }
 
-  Future<void> _registerSelected() async {
+  Future<void> _mergeSelectedIntoConfirmed() async {
+    final names = <String>[];
     for (final entry in _selected.entries) {
       if (!entry.value) continue;
       final label = _normToLabel[entry.key];
-      if (label == null || label.isEmpty) continue;
-      final norm = entry.key;
-      if (_confirmed.any((m) => UserPinnedMedicineStore.norm(m.name) == norm)) {
-        continue;
-      }
-      await UserPinnedMedicineStore.pin(label);
-      _confirmed.add(_stub(label));
+      if (label != null && label.isNotEmpty) names.add(label);
     }
-    _selected.clear();
-    _normToLabel.clear();
-    if (!mounted) return;
-    setState(() => _status = '선택한 약을 등록 목록에 넣었습니다.');
+    await _addNamesToConfirmed(names);
   }
 
-  void _finish() {
+  Future<void> _applyToMyList() async {
+    await _mergeSelectedIntoConfirmed();
+    if (_confirmed.isEmpty) {
+      _toast(
+        GeminiRuntimeConfig.isConfigured
+            ? '등록할 약이 없습니다. 사진·텍스트·직접 입력으로 약을 추가한 뒤 다시 시도하세요.'
+            : '사진 인식에는 GEMINI_API_KEY가 필요합니다. '
+                '아래에서 약 이름을 직접 입력한 뒤 「목록에 반영」을 눌러 주세요.',
+      );
+      return;
+    }
+    await PrescriptionMedicinePersistence.saveAll(_confirmed);
+    if (!mounted) return;
     Navigator.pop(context, List<Medicine>.from(_confirmed));
   }
 
@@ -203,9 +243,7 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
               ],
             ),
             Text(
-              '병원 처방전을 앱 「내 복약」에 등록합니다. '
-              '건강보험·심평원 DB에 자동 신고되지는 않으며, '
-              '약국 조제 후에는 「심평원에서 불러오기」로 맞춰 주세요.',
+              '사진·텍스트로 약을 찾은 뒤 반드시 아래 「목록에 반영」을 눌러 주세요.',
               style: TextStyle(
                 fontSize: 14,
                 height: 1.4,
@@ -216,12 +254,13 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
             if (!GeminiRuntimeConfig.isConfigured) ...[
               const SizedBox(height: 8),
               Text(
-                '사진 인식: .env에 GEMINI_API_KEY 설정 후 앱 재빌드. '
-                '키 없이도 텍스트 붙여넣기·직접 입력은 가능합니다.',
+                '사진 자동 인식: 루트 .env에 GEMINI_API_KEY → '
+                'tool/sync_dotenv_asset.ps1 후 앱 재빌드. '
+                '지금은 직접 입력이 가장 빠릅니다.',
                 style: TextStyle(
                   fontSize: 13,
                   color: Link26Surface.textMuted,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -246,13 +285,14 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
                 FilledButton.tonalIcon(
                   onPressed: _busy
                       ? null
-                      : () => _pickImage(ImageSource.camera),
+                      : () => unawaited(_pickImage(ImageSource.camera)),
                   icon: const Icon(Icons.photo_camera_outlined),
                   label: const Text('사진 촬영'),
                 ),
                 FilledButton.tonalIcon(
-                  onPressed:
-                      _busy ? null : () => _pickImage(ImageSource.gallery),
+                  onPressed: _busy
+                      ? null
+                      : () => unawaited(_pickImage(ImageSource.gallery)),
                   icon: const Icon(Icons.photo_library_outlined),
                   label: const Text('앨범'),
                 ),
@@ -271,7 +311,7 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
             Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton(
-                onPressed: _busy ? null : _analyzePaste,
+                onPressed: _busy ? null : () => unawaited(_analyzePaste()),
                 child: const Text('텍스트에서 약 찾기'),
               ),
             ),
@@ -292,14 +332,6 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
                   ),
                 );
               }),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton(
-                  onPressed: _busy ? null : () => unawaited(_registerSelected()),
-                  style: Link26UnifiedPage.filledCtaButton(),
-                  child: const Text('선택 약 등록'),
-                ),
-              ),
             ],
             const SizedBox(height: 16),
             TextField(
@@ -342,10 +374,12 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: _busy ? null : _finish,
+                onPressed: _busy ? null : () => unawaited(_applyToMyList()),
                 style: Link26UnifiedPage.filledCtaButton(),
                 child: Text(
-                  _confirmed.isEmpty ? '닫기' : '완료 (${_confirmed.length}건)',
+                  _confirmed.isEmpty
+                      ? '목록에 반영'
+                      : '목록에 반영 (${_confirmed.length}건)',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,

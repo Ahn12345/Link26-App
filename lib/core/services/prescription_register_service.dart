@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/services/prescription_image_prepare.dart';
 import 'package:link26_app/core/services/prescription_register_parser.dart';
 
 enum PrescriptionExtractSource { image, pastedText }
@@ -52,6 +53,7 @@ abstract final class PrescriptionRegisterService {
       );
     }
     try {
+      final prepared = PrescriptionImagePrepare.forVisionApi(bytes);
       final model = GenerativeModel(
         model: GeminiRuntimeConfig.modelId,
         apiKey: GeminiRuntimeConfig.apiKey,
@@ -60,7 +62,7 @@ abstract final class PrescriptionRegisterService {
           .generateContent([
             Content.multi([
               TextPart(_imagePrompt),
-              DataPart(mimeType, bytes),
+              DataPart('image/jpeg', prepared),
             ]),
           ])
           .timeout(_budget);

@@ -18,8 +18,7 @@ import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/medication_list_display_prefs.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/services/medicine_list_loader.dart';
-import 'package:link26_app/core/services/local_medicine_list_store.dart';
-import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/core/services/prescription_medicine_persistence.dart';
 import 'package:link26_app/features/medicine/prescription_register_sheet.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
@@ -480,10 +479,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       builder: (_) => PrescriptionRegisterSheet(openCameraOnStart: openCamera),
     );
     if (added == null || added.isEmpty) return;
-    for (final m in added) {
-      await LocalMedicineListStore.add(m.name);
-      await NhisMedicineCacheStore.upsert(m);
-    }
+    await PrescriptionMedicinePersistence.saveAll(added);
     if (!mounted) return;
     await _reloadMedicinesFromStores();
     if (!mounted) return;

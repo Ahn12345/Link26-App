@@ -32,16 +32,28 @@ abstract final class MedicineListLoader {
     var merged = byName.values.toList()
       ..sort((a, b) => a.name.compareTo(b.name));
 
-    // 틸코·심평원 API 중단 시: 예전 서버 동기화 목록은 숨기고 직접·처방전 등록만 표시
+    // 틸코·심평원 API 중단 시: 수동·처방전 등록 약만 표시 (예전 서버 57건 숨김)
     if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
       final pinned = await UserPinnedMedicineStore.loadNorms();
-      if (pinned.isNotEmpty) {
+      final manualNorms = manualNames.map(normName).where((k) => k.isNotEmpty);
+      final allowed = {...pinned, ...manualNorms};
+      if (allowed.isEmpty) {
+        merged = [];
+      } else {
         merged = [
           for (final m in merged)
-            if (pinned.contains(normName(m.name))) m,
+            if (allowed.contains(normName(m.name))) m,
         ];
-      } else {
-        merged = [];
+        final have = merged.map((m) => normName(m.name)).toSet();
+        for (final n in manualNames) {
+          final k = normName(n);
+          if (k.isEmpty || have.contains(k)) continue;
+          merged.add(
+            Medicine(name: n.trim(), dose: '-', frequency: '-', time: '-'),
+          );
+          have.add(k);
+        }
+        merged.sort((a, b) => a.name.compareTo(b.name));
       }
     }
 
