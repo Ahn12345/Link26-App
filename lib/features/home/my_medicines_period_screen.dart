@@ -8,7 +8,7 @@ import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/medication_list_display_prefs.dart';
 import 'package:link26_app/core/services/medicine_list_loader.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
-import 'package:link26_app/features/medicine/prescription_only_add_sheet.dart';
+import 'package:link26_app/features/medicine/prescription_register_sheet.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -91,7 +91,7 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const PrescriptionOnlyAddSheet(),
+      builder: (_) => const PrescriptionRegisterSheet(),
     );
     if (added == null || added.isEmpty) return;
     for (final m in added) {
@@ -211,7 +211,7 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
                       ),
                       ActionChip(
                         avatar: const Icon(Icons.medication_outlined, size: 18),
-                        label: const Text('처방전 약 추가'),
+                        label: const Text('처방전 등록'),
                         onPressed: () => unawaited(_openPrescriptionOnlyAdd()),
                       ),
                     ],

@@ -17,7 +17,7 @@ import 'package:link26_app/core/services/medication_list_display_prefs.dart';
 import 'package:link26_app/core/services/medicine_list_loader.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
-import 'package:link26_app/features/medicine/prescription_only_add_sheet.dart';
+import 'package:link26_app/features/medicine/prescription_register_sheet.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
@@ -425,7 +425,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
             '${l10n.homeHiraMedicationsLoadSuccess} (${out.remoteItemCount}건)',
           ),
           action: SnackBarAction(
-            label: '처방 약 추가',
+            label: '처방전 등록',
             onPressed: () => unawaited(_offerPrescriptionOnlyAdd()),
           ),
           duration: const Duration(seconds: 12),
@@ -457,7 +457,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const PrescriptionOnlyAddSheet(),
+      builder: (_) => const PrescriptionRegisterSheet(),
     );
     if (added == null || added.isEmpty) return;
     for (final m in added) {
@@ -469,7 +469,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('처방 약 ${added.length}건을 목록에 추가했습니다.'),
+        content: Text('처방전 등록 ${added.length}건을 내 복약 목록에 반영했습니다.'),
       ),
     );
   }
