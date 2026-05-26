@@ -31,6 +31,9 @@ abstract final class HiraLinkService {
     String? codefConnectedId,
   }) async {
     if (!context.mounted) return;
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      return;
+    }
     final ready = await SimpleAuthCertReadiness.confirmBeforeTilkoSync(
       context: context,
       displayName: displayName,
@@ -72,6 +75,13 @@ abstract final class HiraLinkService {
     required LocalUserRecord user,
   }) async {
     if (!context.mounted) return;
+
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (kDebugMode) {
+        debugPrint('HIRA: afterLogin skipped — prescription register mode');
+      }
+      return;
+    }
 
     if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
       if (kDebugMode) {

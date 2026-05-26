@@ -44,26 +44,6 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.openCameraOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_pickImage(ImageSource.camera));
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.openCameraOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_pickImage(ImageSource.camera));
-      });
-    }
-  }
-
-  @override
   void dispose() {
     _pasteCtrl.dispose();
     _manualCtrl.dispose();

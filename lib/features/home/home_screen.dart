@@ -13,6 +13,7 @@ import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/services/link26_bff_reachability.dart';
+import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/medication_list_display_prefs.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
@@ -628,6 +629,15 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     ],
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                  Text(
+                    '빌드 $kAppBuildNumber · $kAppBuildTag',
+                    style: TextStyle(
+                      fontSize: Link26ResponsiveUi.caption(w),
+                      color: Link26Surface.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                   _SearchPill(
                     onTap: () async {
                       await Navigator.of(context)
