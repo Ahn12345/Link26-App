@@ -1,0 +1,23 @@
+{
+  "headers": [
+    {
+      "source": "/(.*\\.apk)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"Link26-1.0.0.apk\""
+        }
+      ]
+    },
+    {
+      "source": "/link26-bff.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
+      ]
+    }
+  ]
+}

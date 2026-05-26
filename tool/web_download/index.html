@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Link26 Android 다운로드</title>
+  <style>
+    :root { --blue: #0046ad; --bg: #f3f8ff; }
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; background: var(--bg); color: #1a1a1a; }
+    h1 { color: var(--blue); font-size: 1.5rem; }
+    a.btn { display: inline-block; margin: 1rem 0; padding: 0.75rem 1.25rem; background: var(--blue); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; }
+    a.btn:hover { filter: brightness(1.05); }
+    .note { font-size: 0.9rem; line-height: 1.5; color: #444; }
+    code { background: #e8f0fc; padding: 0.1em 0.35em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Link26 Android</h1>
+  <p class="note">버전 <strong>1.0.0+20</strong> · 배포: <a href="https://link26-frontend.vercel.app/">link26-frontend.vercel.app</a></p>
+  <p><a class="btn" id="apk-link" href="Link26-1.0.0.apk" download>APK 다운로드</a></p>
+  <h2>설치</h2>
+  <ol class="note">
+    <li>Android 설정에서 <strong>출처를 알 수 없는 앱</strong> 설치 허용(브라우저 또는 파일 앱).</li>
+    <li>APK 설치 후 실행.</li>
+    <li>복약·간편인증은 서버 BFF가 필요합니다. 같은 웹 서버의 <code>link26-bff.json</code> 에 HTTPS BFF 주소가 있어야 합니다.</li>
+  </ol>
+  <h2>서버에 함께 올릴 파일</h2>
+  <ul class="note">
+    <li><code>index.html</code> (이 페이지)</li>
+    <li><code>Link26-*.apk</code> (<code>dist/</code> 에서 복사)</li>
+    <li><code>link26-bff.json</code> — 예: <code>tool/web_download/link26-bff.manifest.example.json</code> 참고</li>
+  </ul>
+  <p class="note">디버그 APK·개발용 dotenv(집 IP, API 키)는 공개 업로드하지 마세요.</p>
+</body>
+</html>

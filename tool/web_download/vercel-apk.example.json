@@ -1,0 +1,30 @@
+{
+  "$comment": "link26-frontend(Vercel) repo 루트에 vercel.json 으로 병합하세요. SPA rewrite 가 .apk 를 index.html 로 덮지 않게 합니다.",
+  "headers": [
+    {
+      "source": "/(.*\\.apk)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"Link26-1.0.0.apk\""
+        }
+      ]
+    },
+    {
+      "source": "/link26-bff.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.(apk|json|png|jpg|jpeg|gif|svg|ico|webp|woff2?|css|js|map)$).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

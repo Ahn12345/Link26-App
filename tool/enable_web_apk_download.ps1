@@ -24,21 +24,23 @@ if (-not (Test-Path -LiteralPath $srcApk)) {
 $docsApk = Join-Path $ProjectRoot "docs\link26.apk"
 Copy-Item -LiteralPath $srcApk -Destination $docsApk -Force
 
-if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot ".gitattributes"))) {
-  @"
-*.apk filter=lfs diff=lfs merge=lfs -text
-"@ | Set-Content -Path (Join-Path $ProjectRoot ".gitattributes") -Encoding utf8
-} elseif (-not (Select-String -Path (Join-Path $ProjectRoot ".gitattributes") -Pattern '\.apk' -Quiet)) {
-  Add-Content -Path (Join-Path $ProjectRoot ".gitattributes") -Value "*.apk filter=lfs diff=lfs merge=lfs -text"
+# LFS 사용 금지: Pages/raw 가 포인터 텍스트(~130B)를 .txt 처럼 내려줌
+if (Get-Command git-lfs -ErrorAction SilentlyContinue) {
+  git lfs untrack "docs/link26.apk" 2>$null | Out-Null
 }
-
-git lfs install 2>$null | Out-Null
-git add -f docs/link26.apk docs/link26-bff.json docs/.nojekyll .gitattributes `
-  .github/workflows/deploy-apk-pages.yml .github/workflows/release-apk.yml `
-  tool/web_download/vercel.json 2>$null
+$toAdd = @(
+  "-f", "docs/link26.apk",
+  "docs/link26-bff.json", "docs/.nojekyll", ".gitattributes",
+  ".github/workflows/deploy-apk-pages.yml",
+  "tool/web_download/vercel.json", "tool/enable_web_apk_download.ps1",
+  ".gitignore"
+)
+if (Test-Path (Join-Path $ProjectRoot ".github/workflows/release-apk.yml")) {
+  $toAdd += ".github/workflows/release-apk.yml"
+}
+git add @toAdd 2>$null
 
 if (-not $SkipGitPush) {
-  git add -A docs .github/workflows/deploy-apk-pages.yml tool/web_download/vercel.json 2>$null
   $status = git status --porcelain
   if ($status) {
     git commit -m "fix(web): APK via GitHub Pages + Vercel redirect for link26.apk"

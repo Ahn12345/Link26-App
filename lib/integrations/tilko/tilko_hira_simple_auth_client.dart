@@ -564,7 +564,7 @@ String tilkoPublicKeyToPem(String tilkoPublicKeyB64) {
 }
 
 /// Tilko AES-CBC 필드 암호화. 빈·공백만 값은 암호화하지 않습니다(logincheck 초반 토큰).
-/// NHIS `simpleauthrequest` JSON 본문 — 4필드 AES, 주민번호 없음.
+/// NHIS `simpleauthrequest` JSON 본문 — PrivateAuthType 평문, 나머지 3필드 AES.
 Map<String, dynamic> tilkoNhisSimpleAuthRequestBody({
   required Uint8List aesKey,
   required String privateAuthTypePlain,
@@ -573,22 +573,44 @@ Map<String, dynamic> tilkoNhisSimpleAuthRequestBody({
   required String userCellphoneHyphen,
 }) {
   return <String, dynamic>{
-    'PrivateAuthType':
-        tilkoAesEncryptFieldOrEmpty(aesKey, privateAuthTypePlain),
+    'PrivateAuthType': privateAuthTypePlain,
     'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
     'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDateYmd),
     'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneHyphen),
   };
 }
 
-/// LoginCheck 본문 — 틸코 안내 OAuth(또는 Auth) 하위에 암호화 필드.
+/// NHIS v2 `LoginCheck` — `Auth` 객체. AES는 이름·생년월일·휴대폰만(틸코 명세).
+Map<String, dynamic> tilkoNhisLoginCheckAuthFields({
+  required Uint8List aesKey,
+  required String birthDateYmd,
+  required String userName,
+  required String userCellphoneHyphen,
+  required String privateAuthTypePlain,
+  required String token,
+  required String cxId,
+  required String txId,
+  required String reqTxId,
+}) {
+  return <String, dynamic>{
+    'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birthDateYmd),
+    'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
+    'UserCellphoneNumber':
+        tilkoAesEncryptFieldOrEmpty(aesKey, userCellphoneHyphen),
+    'PrivateAuthType': privateAuthTypePlain,
+    'Token': token,
+    'CxId': cxId,
+    'TxId': txId,
+    'ReqTxId': reqTxId,
+  };
+}
+
+/// LoginCheck POST 본문 — 래퍼 키 `Auth` (틸코 v2 명세).
 List<Map<String, dynamic>> tilkoNhisLoginCheckRequestBodies(
-  Map<String, dynamic> encryptedFields,
+  Map<String, dynamic> authFields,
 ) {
   return <Map<String, dynamic>>[
-    <String, dynamic>{'OAuth': encryptedFields},
-    <String, dynamic>{'Auth': encryptedFields},
-    encryptedFields,
+    <String, dynamic>{'Auth': authFields},
   ];
 }
 
@@ -738,7 +760,7 @@ class TilkoHiraSimpleAuthClient {
   /// ([apidemo](https://apidemo.tilko.net/) · 국민건강보험공단 간편인증용).
   ///
   /// BODY 4필드만 — **IdentityNumber 없음** (틸코·apidemo NHIS SimpleAuthRequest).
-  /// 암호화: PrivateAuthType·UserName·BirthDate·UserCellphoneNumber 전부 AES.
+  /// 암호화: PrivateAuthType 평문, UserName·BirthDate·UserCellphoneNumber AES.
   Future<Map<String, dynamic>> requestNhisSimpleAuth({
     required String privateAuthType,
     required String userName,
@@ -834,16 +856,17 @@ class TilkoHiraSimpleAuthClient {
     }
     final encKeyHeader = _rsaEncryptAesKeyB64(pub, aesKey);
 
-    final flatAuth = <String, dynamic>{
-      'BirthDate': tilkoAesEncryptFieldOrEmpty(aesKey, birth),
-      'PrivateAuthType': tilkoAesEncryptFieldOrEmpty(aesKey, pat),
-      'UserName': tilkoAesEncryptFieldOrEmpty(aesKey, userName),
-      'UserCellphoneNumber': tilkoAesEncryptFieldOrEmpty(aesKey, cell),
-      'Token': tilkoAesEncryptFieldOrEmpty(aesKey, token),
-      'CxId': tilkoAesEncryptFieldOrEmpty(aesKey, cx),
-      'TxId': tilkoAesEncryptFieldOrEmpty(aesKey, tx),
-      'ReqTxId': tilkoAesEncryptFieldOrEmpty(aesKey, reqTx),
-    };
+    final authFields = tilkoNhisLoginCheckAuthFields(
+      aesKey: aesKey,
+      birthDateYmd: birth,
+      userName: userName,
+      userCellphoneHyphen: cell,
+      privateAuthTypePlain: pat,
+      token: token,
+      cxId: cx,
+      txId: tx,
+      reqTxId: reqTx,
+    );
 
     Future<Map<String, dynamic>> postLogin(
       String path,
@@ -878,7 +901,7 @@ class TilkoHiraSimpleAuthClient {
 
     Map<String, dynamic>? out;
     for (final path in paths) {
-      for (final body in tilkoNhisLoginCheckRequestBodies(flatAuth)) {
+      for (final body in tilkoNhisLoginCheckRequestBodies(authFields)) {
         out = await postLogin(path, body, encKeyHeader);
         if (out['http_status'] != 404) break;
       }
