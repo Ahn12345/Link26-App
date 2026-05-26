@@ -35,7 +35,7 @@ DateTime? _bffParseYmd(String? raw) {
   return DateTime(y, m, d);
 }
 
-/// 기본: **올해 1/1 ~ 오늘**. `TILKO_MEDICATION_QUERY_MODE=3y` 이면 최근 3년.
+/// 기본: **최근 1년(365일) ~ 오늘**. `TILKO_MEDICATION_QUERY_MODE=ytd`·`3y` 로 변경 가능.
 /// 앱 `flow_extras.medication_query_start` / `_end` (YYYYMMDD) 로 덮어쓸 수 있습니다.
 ({DateTime start, DateTime end, String mode}) _bffMedicationQueryRange(
   Map<String, String> env,
@@ -51,7 +51,10 @@ DateTime? _bffParseYmd(String? raw) {
   if (startExtra != null && endExtra != null && !endExtra.isBefore(startExtra)) {
     return (start: startExtra, end: endExtra, mode: 'custom');
   }
-  final mode = (env['TILKO_MEDICATION_QUERY_MODE'] ?? 'ytd').trim().toLowerCase();
+  final mode = (env['TILKO_MEDICATION_QUERY_MODE'] ?? '1y').trim().toLowerCase();
+  if (mode == 'ytd') {
+    return (start: DateTime(now.year, 1, 1), end: now, mode: 'ytd');
+  }
   if (mode == '3y' || mode == 'years3' || mode == '3years') {
     return (
       start: DateTime(now.year - 3, now.month, now.day),
@@ -59,7 +62,11 @@ DateTime? _bffParseYmd(String? raw) {
       mode: '3y',
     );
   }
-  return (start: DateTime(now.year, 1, 1), end: now, mode: 'ytd');
+  return (
+    start: now.subtract(const Duration(days: 365)),
+    end: now,
+    mode: '1y',
+  );
 }
 
 Future<void> main() async {
@@ -72,7 +79,7 @@ Future<void> main() async {
   // ignore: avoid_print
   stdout.writeln('>>> link26-bff (Dart) 실제 포트: $port <<<');
   // ignore: avoid_print
-  stdout.writeln('    BFF build: logincheck-fix + hira-ytd');
+  stdout.writeln('    BFF build: logincheck-fix + hira-1y');
   // ignore: avoid_print
   stdout.writeln('    http://127.0.0.1:$port/health');
   // ignore: avoid_print
@@ -837,7 +844,7 @@ Future<void> _handle(HttpRequest request) async {
                   'JSON 필드명이 바뀌었을 수 있습니다.',
             if (!emptyParsed && metaSource == 'tilko_hira_my_medications')
               'notice':
-                  '심평원(HIRA) $startYmd~$endYmd 기간 투약 ${items.length}건을 반영했습니다.',
+                  '심평원(HIRA) 최근 1년($startYmd~$endYmd) 투약 ${items.length}건을 반영했습니다.',
           },
         });
       } catch (e, st) {

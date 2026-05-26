@@ -88,11 +88,13 @@ abstract final class NhisTilkoHiraFlowSync {
     }
 
     final flowExtras = <String, dynamic>{};
-    final now = DateTime.now();
-    flowExtras['medication_query_start'] =
-        '${now.year}0101';
-    flowExtras['medication_query_end'] =
-        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final end = DateTime.now();
+    final start = end.subtract(const Duration(days: 365));
+    String ymd(DateTime d) =>
+        '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
+    flowExtras['medication_query_start'] = ymd(start);
+    flowExtras['medication_query_end'] = ymd(end);
+    flowExtras['medication_query_mode'] = '1y';
     final cid = codefConnectedId?.trim();
     if (cid != null && cid.isNotEmpty) {
       flowExtras['connectedId'] = cid;
