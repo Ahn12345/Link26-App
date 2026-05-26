@@ -46,8 +46,7 @@ abstract final class HiraLinkService {
       codefConnectedId: codefConnectedId,
     );
     if (!context.mounted || out == null) return;
-    if (out.result == NhisMedicinesSyncResult.failed ||
-        out.showBannerOnBootstrap) {
+    if (out.result == NhisMedicinesSyncResult.failed) {
       final msg = out.userMessageKo.trim();
       if (msg.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -211,8 +210,7 @@ abstract final class HiraLinkService {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.homeHiraMedicationsLoadSuccess)),
       );
-    } else if (out.result == NhisMedicinesSyncResult.failed ||
-        out.showBannerOnBootstrap) {
+    } else if (out.result == NhisMedicinesSyncResult.failed) {
       final msg = out.userMessageKo.trim();
       if (msg.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -63,8 +63,9 @@ class NhisMedicinesSyncOutcome {
 
   bool get showBannerOnBootstrap {
     if (suppressBootstrapBanner) return false;
+    // skipped(전화번호·스텁 등)는 홈 하단 스낵바/알림에 반복 표시하지 않음.
+    if (result == NhisMedicinesSyncResult.skipped) return false;
     if (result == NhisMedicinesSyncResult.failed) return true;
-    if (result == NhisMedicinesSyncResult.skipped) return true;
     // BFF 스텁으로 성공한 경우 매 부팅 "데모입니다" 스낵바는 생략(로그만).
     if (result == NhisMedicinesSyncResult.success && isStubDemo) return false;
     if (isStubDemo) return true;

@@ -72,6 +72,11 @@ abstract final class HomeNotificationRepository {
     return id;
   }
 
+  /// 홈 부팅 시 예전 「복약 동기화 건너뜀」 알림 제거.
+  static Future<void> clearSystemSyncNotices() async {
+    await _deleteAllKind(_kindSystemSync);
+  }
+
   static Future<int> insertSystemSyncNotice({
     required String title,
     required String preview,

@@ -209,6 +209,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     await _reloadMedicinesFromStores();
     if (!mounted) return;
 
+    // 이전 부팅의 「전화번호…」 등 system_sync 알림이 홈에 남지 않게.
+    await HomeNotificationRepository.clearSystemSyncNotices();
+
     final bffAdvice = Link26BffAdvice.takePendingNoticeKo();
     final previewParts = <String>[];
     if (bffAdvice != null && bffAdvice.isNotEmpty) {
@@ -253,17 +256,27 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       return;
     }
 
-    final phone = await _phoneForNhisSync();
-    if (kDebugMode && phone.isEmpty && !NhisRuntimeConfig.useMock) {
+    // 실복약은 「심평원에서 불러오기」만. GET /v1/medications 스텁은 부팅 시 생략.
+    final medsPath = NhisRuntimeConfig.medicinesPath;
+    final stubMedsOnly = medsPath == '/v1/medications' ||
+        medsPath.endsWith('/v1/medications');
+    if (!stubMedsOnly) {
+      final phone = await _phoneForNhisSync();
+      if (kDebugMode && phone.isEmpty && !NhisRuntimeConfig.useMock) {
+        debugPrint(
+          'NHIS: 전화번호 없음 — 빈 phone으로 GET 시도 (base=${NhisRuntimeConfig.baseUrl})',
+        );
+      }
+      final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
+      if (mounted) await _reloadMedicinesFromStores();
+      if (mounted && syncOut.showBannerOnBootstrap) {
+        final msg = syncOut.userMessageKo.trim();
+        if (msg.isNotEmpty) previewParts.add(msg);
+      }
+    } else if (kDebugMode) {
       debugPrint(
-        'NHIS: 전화번호 없음 — 빈 phone으로 GET 시도 (base=${NhisRuntimeConfig.baseUrl})',
+        'NHIS: 홈 부팅 — GET $medsPath 스텁 동기화 생략 (심평원에서 불러오기 사용)',
       );
-    }
-    final syncOut = await NhisMedicinesSync.syncNow(phoneDigits: phone);
-    if (mounted) await _reloadMedicinesFromStores();
-    if (mounted && syncOut.showBannerOnBootstrap) {
-      final msg = syncOut.userMessageKo.trim();
-      if (msg.isNotEmpty) previewParts.add(msg);
     }
     if (mounted && previewParts.isNotEmpty) {
       await HomeNotificationRepository.insertSystemSyncNotice(
