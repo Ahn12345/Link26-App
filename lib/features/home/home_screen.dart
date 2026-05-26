@@ -352,6 +352,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       );
       return;
     }
+    await HomeNotificationRepository.markAllSystemSyncRead();
     Link26BffReachability.clearProbeCache();
     await NhisRuntimeConfig.refreshBffReachability();
     if (!mounted) return;
