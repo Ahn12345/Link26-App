@@ -112,8 +112,12 @@ abstract final class NhisTilkoHiraFlowSync {
       );
 
       if (res == null) {
-        return const NhisMedicinesSyncOutcome(
-          result: NhisMedicinesSyncResult.skipped,
+        return NhisMedicinesSyncOutcome(
+          result: NhisMedicinesSyncResult.failed,
+          detail:
+              'PC BFF에 연결하지 못했습니다. '
+              'BFF 실행·USB(adb reverse) 또는 Wi‑Fi(NHIS_BASE_URL)를 확인한 뒤 '
+              '「심평원에서 불러오기」를 다시 눌러 주세요.',
         );
       }
 

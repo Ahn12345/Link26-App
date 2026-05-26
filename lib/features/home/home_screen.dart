@@ -391,9 +391,26 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     );
     if (!mounted) return;
     await _reloadMedicinesFromStores();
-    if (!mounted || out == null) return;
-    if (out.result == NhisMedicinesSyncResult.failed ||
-        out.showBannerOnBootstrap) {
+    if (!mounted) return;
+    if (out == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('연동을 취소했거나 중단되었습니다.'),
+          duration: Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+    if (out.result == NhisMedicinesSyncResult.failed) {
+      final msg = out.userMessageKo.trim();
+      if (msg.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 10)),
+        );
+      }
+      return;
+    }
+    if (out.result == NhisMedicinesSyncResult.skipped) {
       final msg = out.userMessageKo.trim();
       if (msg.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -412,9 +429,19 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       );
     } else if (out.result == NhisMedicinesSyncResult.success) {
       final msg = out.userMessageKo.trim();
-      if (msg.isNotEmpty) {
+      if (out.remoteItemCount == 0 && msg.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), duration: const Duration(seconds: 8)),
+        );
+      } else if (out.remoteItemCount == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '연동은 완료됐지만 조회된 약이 없습니다. '
+              'PASS 승인·조회 기간을 확인하거나 BFF 로그를 확인하세요.',
+            ),
+            duration: Duration(seconds: 8),
+          ),
         );
       }
     }

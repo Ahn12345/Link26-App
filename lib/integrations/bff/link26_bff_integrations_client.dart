@@ -142,7 +142,10 @@ abstract final class Link26BffIntegrationsClient {
       Link26BffReachability.lastOrderedBases,
     );
     if (reachable.isNotEmpty) return reachable;
-    if (Link26BffReachability.recentlyAllUnreachable) return const [];
+    // 릴리스만 프로브 실패 시 빈 목록. 디버그는 dotenv 후보로 POST 시도(canCall 과 동일).
+    if (kReleaseMode && Link26BffReachability.recentlyAllUnreachable) {
+      return const [];
+    }
     return _baseList;
   }
 
