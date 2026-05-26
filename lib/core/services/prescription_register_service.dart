@@ -209,7 +209,7 @@ abstract final class PrescriptionRegisterService {
     String text,
   ) async {
     final local = PrescriptionRegisterParser.parseFromPastedText(text);
-    if (local.length >= 2) {
+    if (local.isNotEmpty) {
       return PrescriptionExtractResult(
         names: local,
         source: PrescriptionExtractSource.pastedText,

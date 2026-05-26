@@ -14,9 +14,15 @@ import 'package:link26_app/models/medicine.dart';
 
 /// 처방전 사진·텍스트로 약을 추출해 내 복약 목록에 등록합니다 (공단 DB 등록 아님).
 class PrescriptionRegisterSheet extends StatefulWidget {
-  const PrescriptionRegisterSheet({super.key, this.openCameraOnStart = false});
+  const PrescriptionRegisterSheet({
+    super.key,
+    this.openCameraOnStart = false,
+    this.focusManualFirst = false,
+  });
 
   final bool openCameraOnStart;
+  /// Gemini 키 문제 시 직접 입력란으로 스크롤·강조.
+  final bool focusManualFirst;
 
   @override
   State<PrescriptionRegisterSheet> createState() =>
@@ -34,6 +40,8 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   final Map<String, String> _normToLabel = {};
   final Map<String, bool> _selected = {};
   final List<Medicine> _confirmed = [];
+  final _manualFocus = FocusNode();
+  final _scrollCtrl = ScrollController();
 
   @override
   void initState() {
@@ -42,10 +50,25 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
       final issue = await GeminiApiKeyStatus.checkBlockingIssueKo();
       if (!mounted) return;
       if (issue != null) {
-        setState(() => _keyWarning = issue);
-        _toast(issue);
+        setState(() {
+          _keyWarning = issue;
+          _status =
+              '사진·AI 인식은 잠시 불가합니다. 아래 「약 이름 직접 입력」으로 등록해 주세요.';
+        });
       }
-      if (widget.openCameraOnStart && issue == null) {
+      if (widget.focusManualFirst || issue != null) {
+        if (mounted) {
+          _manualFocus.requestFocus();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || !_scrollCtrl.hasClients) return;
+            unawaited(_scrollCtrl.animateTo(
+              _scrollCtrl.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            ));
+          });
+        }
+      } else if (widget.openCameraOnStart) {
         if (mounted) unawaited(_pickImage(ImageSource.camera));
       }
     });
@@ -55,6 +78,8 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   void dispose() {
     _pasteCtrl.dispose();
     _manualCtrl.dispose();
+    _manualFocus.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -90,6 +115,13 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
 
   Future<void> _pickImage(ImageSource source) async {
     if (_busy) return;
+    if (_keyWarning != null) {
+      setState(() => _status =
+          '사진 인식은 API 키 설정 후 가능합니다. 지금은 약 이름을 직접 입력해 주세요.');
+      _toast('직접 입력 → 추가 → 목록에 반영 순서로 등록해 주세요.');
+      _manualFocus.requestFocus();
+      return;
+    }
     try {
       final file = await _picker.pickImage(source: source, imageQuality: 88);
       if (file == null) return;
@@ -194,17 +226,10 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   Future<void> _applyToMyList() async {
     await _mergeSelectedIntoConfirmed();
     if (_confirmed.isEmpty) {
-      if (_keyWarning != null) {
-        _toast(_keyWarning!);
-      } else {
-        _toast(
-          GeminiRuntimeConfig.isConfigured
-              ? '등록할 약이 없습니다. 「약 이름 직접 입력」→ 추가 → '
-                  '「목록에 반영」 순서로 진행해 주세요. (사진은 키 정상 후 가능)'
-              : '사진 인식에는 GEMINI_API_KEY가 필요합니다. '
-                  '아래에서 약 이름을 직접 입력한 뒤 「목록에 반영」을 눌러 주세요.',
-        );
-      }
+      _toast(
+        '약 이름을 입력하고 「추가」를 누른 뒤 「목록에 반영」을 눌러 주세요.',
+      );
+      _manualFocus.requestFocus();
       return;
     }
     await PrescriptionMedicinePersistence.saveAll(_confirmed);
@@ -233,6 +258,7 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
         ],
       ),
       child: SingleChildScrollView(
+        controller: _scrollCtrl,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -318,14 +344,14 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
               runSpacing: 8,
               children: [
                 FilledButton.tonalIcon(
-                  onPressed: _busy
+                  onPressed: _busy || _keyWarning != null
                       ? null
                       : () => unawaited(_pickImage(ImageSource.camera)),
                   icon: const Icon(Icons.photo_camera_outlined),
                   label: const Text('사진 촬영'),
                 ),
                 FilledButton.tonalIcon(
-                  onPressed: _busy
+                  onPressed: _busy || _keyWarning != null
                       ? null
                       : () => unawaited(_pickImage(ImageSource.gallery)),
                   icon: const Icon(Icons.photo_library_outlined),
@@ -333,6 +359,18 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
                 ),
               ],
             ),
+            if (_keyWarning != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  '※ 사진·AI: 키 설정 후 사용 (아래 직접 입력은 지금 가능)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Link26Surface.textMuted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             const SizedBox(height: 16),
             TextField(
               controller: _pasteCtrl,
@@ -371,6 +409,7 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _manualCtrl,
+              focusNode: _manualFocus,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => unawaited(_addManual()),
               decoration: Link26Surface.inputDecoration(

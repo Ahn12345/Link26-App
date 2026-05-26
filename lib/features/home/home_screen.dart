@@ -18,6 +18,7 @@ import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/medication_list_display_prefs.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/services/medicine_list_loader.dart';
+import 'package:link26_app/core/services/gemini_api_key_status.dart';
 import 'package:link26_app/core/services/prescription_medicine_persistence.dart';
 import 'package:link26_app/features/medicine/prescription_register_sheet.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
@@ -470,13 +471,68 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
   }
 
+  Future<void> _quickAddMedicineByName() async {
+    if (!mounted) return;
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('약 이름 등록'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: Link26Surface.inputDecoration(
+            labelText: '약 이름',
+            hintText: '예: 케피람정 100mg',
+          ),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            style: Link26UnifiedPage.filledCtaButton(),
+            child: const Text('등록'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (!mounted || name == null || name.isEmpty) return;
+    final med = PrescriptionMedicinePersistence.stub(name);
+    await PrescriptionMedicinePersistence.saveAll([med]);
+    if (!mounted) return;
+    await _reloadMedicinesFromStores();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('「$name」을 내 복약 목록에 등록했습니다.')),
+    );
+  }
+
   Future<void> _openPrescriptionRegister({bool openCamera = false}) async {
+    if (!mounted) return;
+    var useCamera = openCamera;
+    var focusManual = false;
+    if (openCamera) {
+      final issue = await GeminiApiKeyStatus.checkBlockingIssueKo();
+      if (issue != null) {
+        useCamera = false;
+        focusManual = true;
+      }
+    }
     if (!mounted) return;
     final added = await showModalBottomSheet<List<Medicine>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => PrescriptionRegisterSheet(openCameraOnStart: openCamera),
+      builder: (_) => PrescriptionRegisterSheet(
+        openCameraOnStart: useCamera,
+        focusManualFirst: focusManual,
+      ),
     );
     if (added == null || added.isEmpty) return;
     await PrescriptionMedicinePersistence.saveAll(added);
@@ -748,12 +804,27 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                       ),
                     ),
                   ),
+                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => unawaited(_quickAddMedicineByName()),
+                      icon: const Icon(Icons.medication_outlined, size: 22),
+                      label: const Text(
+                        '약 이름으로 바로 등록',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
                   if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled)
                     Padding(
                       padding: EdgeInsets.only(top: Link26ResponsiveUi.gapSm(w)),
                       child: Text(
                         '심평원 자동 불러오기는 잠시 꺼 두었습니다. '
-                        '처방전 사진으로 약을 등록해 주세요.',
+                        '사진 인식은 API 키 설정 후 가능합니다. 지금은 「약 이름으로 바로 등록」을 이용해 주세요.',
                         style: TextStyle(
                           color: Link26Surface.textMuted,
                           fontSize: Link26ResponsiveUi.caption(w),
