@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/codef/codef_medication_mapper.dart';
@@ -93,6 +94,14 @@ class _HealthLinkScreenState extends State<HealthLinkScreen> {
 
   Future<void> _runFlow(bool fullMedicationFlow) async {
     final l10n = AppLocalizations.of(context);
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      setState(() {
+        _result =
+            '틸코·BFF 심평원 API는 일시 중단되었습니다.\n'
+            '홈 「처방전 촬영 등록」을 사용하세요.';
+      });
+      return;
+    }
     setState(() {
       _busy = true;
       _result = null;

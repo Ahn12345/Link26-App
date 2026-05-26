@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/domain/result.dart';
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
@@ -219,6 +220,17 @@ abstract final class NhisMedicinesSync {
   static Future<NhisMedicinesSyncOutcome> syncNow({
     required String phoneDigits,
   }) async {
+    // 임시: GET /v1/medications·원격 복약 동기화 중단
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (kDebugMode) {
+        debugPrint('NHIS medications: remote sync disabled — local cache only');
+      }
+      return const NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.skipped,
+        suppressBootstrapBanner: true,
+      );
+    }
+
     if (NhisRuntimeConfig.useMock) {
       if (kDebugMode) {
         debugPrint('NHIS medications: 목(mock) 병합 — 네트워크 미사용');

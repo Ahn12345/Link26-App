@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/codef_flow_connected_id_parse.dart';
 import 'package:link26_app/core/services/link26_bff_reachability.dart';
@@ -39,6 +40,19 @@ abstract final class NhisTilkoHiraFlowSync {
     String? birthDateYmd,
     String? codefConnectedId,
   }) async {
+    // 임시: 틸코 간편인증 → BFF 심평원/건보 복약 API 전체 중단 (처방전 등록만 사용)
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (kDebugMode) {
+        debugPrint('Tilko→HIRA: remote sync disabled by feature flag');
+      }
+      return const NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.skipped,
+        detail:
+            '틸코·심평원 자동 연동은 일시 중단되었습니다. '
+            '홈 「처방전 촬영 등록」으로 약을 추가해 주세요.',
+      );
+    }
+
     if (NhisRuntimeConfig.useMock) {
       if (kDebugMode) {
         debugPrint('Tilko→HIRA: NHIS_USE_MOCK — 플로우 생략');

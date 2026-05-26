@@ -12,7 +12,10 @@ import 'package:link26_app/models/medicine.dart';
 
 /// 처방전 사진·텍스트로 약을 추출해 내 복약 목록에 등록합니다 (공단 DB 등록 아님).
 class PrescriptionRegisterSheet extends StatefulWidget {
-  const PrescriptionRegisterSheet({super.key});
+  const PrescriptionRegisterSheet({super.key, this.openCameraOnStart = false});
+
+  /// true 이면 시트가 열리자마자 카메라를 띄웁니다.
+  final bool openCameraOnStart;
 
   @override
   State<PrescriptionRegisterSheet> createState() =>
@@ -29,6 +32,36 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   final Map<String, String> _normToLabel = {};
   final Map<String, bool> _selected = {};
   final List<Medicine> _confirmed = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openCameraOnStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_pickImage(ImageSource.camera));
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openCameraOnStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_pickImage(ImageSource.camera));
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openCameraOnStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_pickImage(ImageSource.camera));
+      });
+    }
+  }
 
   @override
   void dispose() {

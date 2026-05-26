@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/database/home_notification_repository.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
@@ -112,6 +115,24 @@ abstract final class HiraLinkService {
     bool announceSuccess = false,
   }) async {
     if (!context.mounted) return null;
+
+    // 임시: 틸코·심평원 복약 API 중단
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '심평원·건보 자동 불러오기는 일시 중단되었습니다. '
+              '홈에서 「처방전 촬영 등록」을 이용해 주세요.',
+            ),
+            duration: Duration(seconds: 6),
+          ),
+        );
+      }
+      return const NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.skipped,
+      );
+    }
 
     if (NhisRuntimeConfig.useMock || !Link26BffIntegrationsClient.canCall) {
       if (context.mounted) {

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/link26_bff_reachability.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_runtime_config.dart';
@@ -251,6 +252,18 @@ abstract final class Link26BffIntegrationsClient {
     Map<String, dynamic>? tilkoSimpleAuth,
     String? authChannel,
   }) async {
+    // 임시: 처방전 등록 모드 — BFF `POST /v1/flow/tilko-hira-medications` 미호출
+    // if (Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) { ... 아래 HTTP ... }
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (kDebugMode) {
+        debugPrint(
+          'Link26BFF: flow tilko-hira-medications skipped '
+          '(Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled=false)',
+        );
+      }
+      return null;
+    }
+
     if (!canCall) return null;
     final bases = _basesForFlowPhase(phase);
     if (bases.isEmpty) return null;

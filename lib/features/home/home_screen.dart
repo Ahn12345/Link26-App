@@ -13,7 +13,9 @@ import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/services/link26_bff_reachability.dart';
+import 'package:link26_app/core/constants/link26_medication_feature_flags.dart';
 import 'package:link26_app/core/services/medication_list_display_prefs.dart';
+import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/services/medicine_list_loader.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
@@ -224,6 +226,14 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
       previewParts.add(bffAdvice);
     }
 
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (kDebugMode) {
+        debugPrint('NHIS: tilko/HIRA remote sync disabled — prescription register only');
+      }
+      if (mounted) await _reloadMedicinesFromStores();
+      return;
+    }
+
     final shouldSync =
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
     if (!shouldSync) {
@@ -259,6 +269,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         );
         await _refreshBellBadge();
       }
+      if (mounted) await _reloadMedicinesFromStores();
       return;
     }
 
@@ -308,6 +319,10 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   }
 
   Future<void> _refreshMedicinesFromServer() async {
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      if (mounted) await _reloadMedicinesFromStores();
+      return;
+    }
     await NhisRuntimeConfig.refreshBffReachability();
     final shouldSync =
         NhisRuntimeConfig.useMock || NhisRuntimeConfig.baseUrl.isNotEmpty;
@@ -333,6 +348,10 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   /// 홈에서 심평원(BFF 틸코 플로우) 복약을 바로 반영합니다.
   Future<void> _importHiraMedicationsFromHome() async {
     if (!mounted) return;
+    if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled) {
+      await _openPrescriptionRegister(openCamera: true);
+      return;
+    }
     final l10n = AppLocalizations.of(context);
     if (!await AuthSession.isSignedIn()) {
       if (!mounted) return;
@@ -426,7 +445,7 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
           ),
           action: SnackBarAction(
             label: '처방전 등록',
-            onPressed: () => unawaited(_offerPrescriptionOnlyAdd()),
+            onPressed: () => unawaited(_openPrescriptionRegister()),
           ),
           duration: const Duration(seconds: 12),
         ),
@@ -451,13 +470,13 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     }
   }
 
-  Future<void> _offerPrescriptionOnlyAdd() async {
+  Future<void> _openPrescriptionRegister({bool openCamera = false}) async {
     if (!mounted) return;
     final added = await showModalBottomSheet<List<Medicine>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const PrescriptionRegisterSheet(),
+      builder: (_) => PrescriptionRegisterSheet(openCameraOnStart: openCamera),
     );
     if (added == null || added.isEmpty) return;
     for (final m in added) {
@@ -707,6 +726,37 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     ),
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () =>
+                          unawaited(_openPrescriptionRegister(openCamera: true)),
+                      style: Link26UnifiedPage.filledCtaButton(),
+                      icon: const Icon(Icons.photo_camera_outlined, size: 22),
+                      label: const Text(
+                        '처방전 촬영 등록',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!Link26MedicationFeatureFlags.tilkoHiraRemoteSyncEnabled)
+                    Padding(
+                      padding: EdgeInsets.only(top: Link26ResponsiveUi.gapSm(w)),
+                      child: Text(
+                        '심평원 자동 불러오기는 잠시 꺼 두었습니다. '
+                        '처방전 사진으로 약을 등록해 주세요.',
+                        style: TextStyle(
+                          color: Link26Surface.textMuted,
+                          fontSize: Link26ResponsiveUi.caption(w),
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  SizedBox(height: Link26ResponsiveUi.gapSm(w)),
                   if (medicines.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.only(
@@ -728,20 +778,24 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            '검색·동기화로 약을 추가해 보세요',
+                            '위 「처방전 촬영 등록」으로 약을 추가하세요.',
                             style: TextStyle(
                               color: Link26Surface.textMuted,
                               fontSize: Link26ResponsiveUi.bodySmall(w),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          if (!NhisRuntimeConfig.useMock) ...[
-                            SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                            FilledButton.tonal(
-                              onPressed: () =>
-                                  unawaited(_importHiraMedicationsFromHome()),
-                              child: Text(l10n.homeHiraMedicationsImport),
-                            ),
+                          if (Link26MedicationFeatureFlags
+                              .tilkoHiraRemoteSyncEnabled) ...[
+                            if (!NhisRuntimeConfig.useMock) ...[
+                              SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                              FilledButton.tonal(
+                                onPressed: () => unawaited(
+                                  _importHiraMedicationsFromHome(),
+                                ),
+                                child: Text(l10n.homeHiraMedicationsImport),
+                              ),
+                            ],
                           ],
                         ],
                       ),
