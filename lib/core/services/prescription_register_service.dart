@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/services/gemini_rest_generate.dart';
 import 'package:link26_app/core/services/prescription_image_prepare.dart';
 import 'package:link26_app/core/services/prescription_register_parser.dart';
 import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
@@ -41,29 +42,19 @@ abstract final class PrescriptionRegisterService {
 
 ''';
 
-  static List<String> get _modelCandidates {
-    final primary = GeminiRuntimeConfig.modelId.trim();
-    const stable = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-    final out = <String>[...stable];
-    if (primary.isNotEmpty && !out.contains(primary)) {
-      out.add(primary);
-    }
-    return out;
-  }
-
-  static String _errorMessageKo(Object error, {String? modelId}) {
+  static String _errorMessageKo(Object error, {String? triedModel}) {
     final s = error.toString();
     if (s.contains('API_KEY_INVALID') ||
         s.contains('API key not valid') ||
         s.contains('PERMISSION_DENIED')) {
       return 'GEMINI_API_KEY가 거부되었습니다. Google AI Studio 키를 확인한 뒤 '
-          'tool/sync_dotenv_asset.ps1 실행·앱 재설치를 해 주세요.';
+          'sync_dotenv_asset.ps1 · 앱 재설치를 해 주세요.';
     }
     if (s.contains('NOT_FOUND') ||
         s.contains('not found') ||
         s.contains('404')) {
-      return 'Gemini 모델(${modelId ?? GeminiRuntimeConfig.modelId})을 찾을 수 없습니다. '
-          '.env의 GEMINI_MODEL_ID를 gemini-2.0-flash 로 바꿔 보세요.';
+      return 'Gemini 모델(${triedModel ?? GeminiRuntimeConfig.modelId})을 찾을 수 없습니다. '
+          '.env의 GEMINI_MODEL_ID=gemini-2.5-flash 인지 확인해 주세요.';
     }
     if (s.contains('SocketException') ||
         s.contains('Failed host lookup') ||
@@ -73,47 +64,66 @@ abstract final class PrescriptionRegisterService {
     if (s.contains('RESOURCE_EXHAUSTED') || s.contains('429')) {
       return 'Gemini 사용 한도에 걸렸습니다. 잠시 후 다시 시도하거나 직접 입력해 주세요.';
     }
-    if (kDebugMode && s.length < 200) {
-      return '처방전 사진 분석 실패: $s';
-    }
-    return '처방전 사진 분석에 실패했습니다. Wi‑Fi·데이터 연결과 GEMINI 설정을 확인하거나 '
+    return '처방전 사진 분석에 실패했습니다. Wi‑Fi·데이터를 확인하거나 '
         '아래에서 약 이름을 직접 입력해 주세요.';
   }
 
+  static Future<String?> _sdkImageJson(Uint8List prepared, String modelId) async {
+    final model = GenerativeModel(
+      model: modelId,
+      apiKey: GeminiRuntimeConfig.apiKey,
+    );
+    final res = await model
+        .generateContent([
+          Content.multi([
+            TextPart(_imagePrompt),
+            DataPart('image/jpeg', prepared),
+          ]),
+        ])
+        .timeout(_budget);
+    return res.text?.trim();
+  }
+
   static Future<String?> _generateImageJson(Uint8List prepared) async {
-    final tried = <String>{};
     Object? lastError;
-    for (final modelId in _modelCandidates) {
-      if (!tried.add(modelId)) continue;
+    for (final modelId in GeminiRestGenerate.visionModelCandidates()) {
+      // 1) REST v1 — gemini-2.5-flash 등 최신 모델 (권장)
       try {
-        final model = GenerativeModel(
-          model: modelId,
-          apiKey: GeminiRuntimeConfig.apiKey,
+        final text = await GeminiRestGenerate.generateWithImage(
+          modelId: modelId,
+          prompt: _imagePrompt,
+          imageBytes: prepared,
         );
-        final res = await model
-            .generateContent([
-              Content.multi([
-                TextPart(_imagePrompt),
-                DataPart('image/jpeg', prepared),
-              ]),
-            ])
-            .timeout(_budget);
-        final text = res.text?.trim();
         if (text != null && text.isNotEmpty) {
           if (kDebugMode) {
-            debugPrint('PrescriptionRegister: OK model=$modelId');
+            debugPrint('PrescriptionRegister: REST OK model=$modelId');
           }
           return text;
         }
       } catch (e, st) {
         lastError = e;
         if (kDebugMode) {
-          debugPrint('PrescriptionRegister: model=$modelId failed: $e\n$st');
+          debugPrint('PrescriptionRegister: REST $modelId failed: $e\n$st');
+        }
+      }
+
+      // 2) 레거시 SDK (구 모델용)
+      try {
+        final text = await _sdkImageJson(prepared, modelId);
+        if (text != null && text.isNotEmpty) {
+          if (kDebugMode) {
+            debugPrint('PrescriptionRegister: SDK OK model=$modelId');
+          }
+          return text;
+        }
+      } catch (e, st) {
+        lastError = e;
+        if (kDebugMode) {
+          debugPrint('PrescriptionRegister: SDK $modelId failed: $e\n$st');
         }
       }
     }
 
-    // AI 채팅과 동일 파이프라인(멀티모달) 재시도
     try {
       final chat = AiChatService();
       final body = await chat
@@ -124,22 +134,12 @@ abstract final class PrescriptionRegisterService {
             imageMime: 'image/jpeg',
           )
           .timeout(_budget);
-      if (body.trim().isNotEmpty) {
-        if (kDebugMode) {
-          debugPrint('PrescriptionRegister: OK via AiChatService fallback');
-        }
-        return body;
-      }
-    } catch (e, st) {
+      if (body.trim().isNotEmpty) return body;
+    } catch (e) {
       lastError ??= e;
-      if (kDebugMode) {
-        debugPrint('PrescriptionRegister: AiChat fallback failed: $e\n$st');
-      }
     }
 
-    if (lastError != null) {
-      throw lastError;
-    }
+    if (lastError != null) throw lastError;
     return null;
   }
 
@@ -190,7 +190,16 @@ abstract final class PrescriptionRegisterService {
 
   static Future<String?> _generateTextJson(String prompt) async {
     Object? lastError;
-    for (final modelId in _modelCandidates) {
+    for (final modelId in GeminiRestGenerate.visionModelCandidates()) {
+      try {
+        final text = await GeminiRestGenerate.generateText(
+          modelId: modelId,
+          prompt: prompt,
+        );
+        if (text != null && text.isNotEmpty) return text;
+      } catch (e) {
+        lastError = e;
+      }
       try {
         final model = GenerativeModel(
           model: modelId,
@@ -199,7 +208,8 @@ abstract final class PrescriptionRegisterService {
         final res = await model
             .generateContent([Content.text(prompt)])
             .timeout(_budget);
-        return res.text?.trim();
+        final t = res.text?.trim();
+        if (t != null && t.isNotEmpty) return t;
       } catch (e) {
         lastError = e;
       }

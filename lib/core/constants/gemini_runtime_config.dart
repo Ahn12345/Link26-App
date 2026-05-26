@@ -38,6 +38,6 @@ abstract final class GeminiRuntimeConfig {
       final v = _stripQuotes(dotenv.env['GEMINI_MODEL_ID'] ?? '');
       if (v.isNotEmpty) return v;
     }
-    return 'gemini-2.0-flash';
+    return 'gemini-2.5-flash';
   }
 }
