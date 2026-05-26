@@ -9,6 +9,35 @@ void main() {
     expect(tilkoNhisLoginCheckSucceeded({'Result': 'false'}), isFalse);
   });
 
+  test('LoginCheck Message=성공 without tokens is not an error', () {
+    expect(
+      tilkoNhisLoginCheckIndicatesError({
+        'Result': false,
+        'Message': '성공',
+        'Status': 'OK',
+      }),
+      isFalse,
+    );
+    expect(
+      tilkoNhisLoginCheckHintKo({
+        'Result': false,
+        'Message': '성공',
+      }),
+      isNot(contains('틸코 LoginCheck: 성공')),
+    );
+  });
+
+  test('LoginCheck Result=true with Message=성공 is success not error', () {
+    expect(
+      tilkoNhisLoginCheckIndicatesError({
+        'Result': true,
+        'Message': '성공',
+        'Status': 'OK',
+      }),
+      isFalse,
+    );
+  });
+
   test('tilkoNhisLiftNestedSession merges ResultData tokens', () {
     final lifted = tilkoNhisLiftNestedSession({
       'ErrorCode': 0,

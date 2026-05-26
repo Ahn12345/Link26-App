@@ -1,6 +1,6 @@
 /// 기기에 설치된 APK가 이 소스 트리에서 나온 것인지 확인용입니다.
 /// `pubspec.yaml` 의 +빌드번호와 맞추세요.
-const int kAppBuildNumber = 20;
+const int kAppBuildNumber = 21;
 
 /// 사람이 읽는 짧은 태그(변경 요약). 필요 시만 수정.
-const String kAppBuildTag = 'hira-fallback';
+const String kAppBuildTag = 'logincheck-poll-fix';

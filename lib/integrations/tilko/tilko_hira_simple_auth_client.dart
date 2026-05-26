@@ -87,16 +87,52 @@ bool tilkoNhisAuthTokensComplete(dynamic root) {
   return true;
 }
 
-/// v2 LoginCheck 등 — `Status=Error`·비정상 Message 이면 폴링 중단(틸코 서버 오류).
+/// v2 LoginCheck — `simpleauth`와 달리 응답 본문에 토큰이 없습니다. 토큰 유무로 오류 판정하면 안 됩니다.
 bool tilkoNhisLoginCheckIndicatesError(Map<String, dynamic>? root) {
   if (root == null) return false;
-  return tilkoNhisSimpleAuthIndicatesError(root);
+  if (tilkoNhisLoginCheckSucceeded(root)) return false;
+
+  final code = (tilkoFindPlainString(root, 'ErrorCode') ?? '').trim();
+  if (code.isNotEmpty && code != '0') return true;
+
+  final status = (tilkoFindPlainString(root, 'Status') ?? '').trim().toUpperCase();
+  if (status == 'ERROR') return true;
+
+  final msg = (tilkoFindPlainString(root, 'Message') ?? '').trim();
+  if (msg.isEmpty) return false;
+  if (msg.contains('일시적인 장애') ||
+      msg.contains('찾을 수 없') ||
+      msg.contains('실패') ||
+      msg.contains('오류') ||
+      msg.contains('유효하지')) {
+    return true;
+  }
+  return false;
+}
+
+/// LoginCheck `Message`만 "성공"인데 `Result`는 아직 false인 경우가 많음 — 실패 문구로 쓰지 않음.
+bool tilkoNhisLoginCheckMessageLooksBenign(String msg) {
+  final m = msg.trim().toLowerCase();
+  if (m.isEmpty) return true;
+  const benign = <String>{
+    '성공',
+    'success',
+    'ok',
+    '완료',
+    '정상',
+    '대기',
+    '진행',
+  };
+  return benign.contains(m);
 }
 
 /// logincheck 실패 시 사용자·BFF hint용.
 String tilkoNhisLoginCheckHintKo(Map<String, dynamic>? root) {
   if (root == null) {
     return '간편인증 완료 확인(logincheck) 응답이 없습니다.';
+  }
+  if (tilkoNhisLoginCheckSucceeded(root)) {
+    return '간편인증은 확인됐지만 복약 조회 단계에서 문제가 있었습니다. BFF 로그를 확인하세요.';
   }
   final msg = (tilkoFindPlainString(root, 'Message') ?? '').trim();
   final status = (tilkoFindPlainString(root, 'Status') ?? '').trim();
@@ -106,10 +142,17 @@ String tilkoNhisLoginCheckHintKo(Map<String, dynamic>? root) {
         '잠시 후 다시 시도하거나 틸코에 ApiTxKey${apiTx.isEmpty ? '' : '($apiTx)'} 로 문의하세요. '
         'PASS 「나의 인증내역」이 「PASS인증서」로만 보이면 통신사 PASS(코드 4)와 다를 수 있습니다.';
   }
-  if (status.toUpperCase() == 'ERROR' || msg.isNotEmpty) {
+  if (tilkoNhisLoginCheckIndicatesError(root)) {
     return msg.isNotEmpty
         ? '틸코 LoginCheck: $msg'
         : '틸코 LoginCheck Status=$status — PASS 승인 후 다시 시도하세요.';
+  }
+  if (tilkoNhisLoginCheckMessageLooksBenign(msg)) {
+    return 'PASS 앱·문자에서 인증을 승인한 뒤, 요청 후 2분 안에 다시 시도하세요. '
+        '(LoginCheck는 아직 완료(Result=true)로 확인되지 않았습니다.)';
+  }
+  if (msg.isNotEmpty) {
+    return '틸코 LoginCheck: $msg — PASS 승인 후 다시 시도하세요.';
   }
   return 'PASS 앱·문자에서 인증을 승인한 뒤, 요청 후 2분 안에 다시 시도하세요.';
 }
@@ -1020,17 +1063,17 @@ class TilkoHiraSimpleAuthClient {
           '${tilkoNhisTokenPresenceSummary(session)}',
         );
       }
-      if (lcErr) {
-        lastPollError =
-            '틸코 LoginCheck 오류: ${tilkoFindPlainString(lcBody, 'Message') ?? tilkoFindPlainString(lcBody, 'Status') ?? ''}';
-        break;
-      }
       if (loginOk && tilkoNhisAuthTokensComplete(session)) {
         if (logPollProgress) {
           // ignore: avoid_print
           print('Tilko logincheck: 간편인증 완료 (#${i + 1})');
         }
         return session;
+      }
+      if (lcErr) {
+        lastPollError =
+            '틸코 LoginCheck 오류: ${tilkoFindPlainString(lcBody, 'Message') ?? tilkoFindPlainString(lcBody, 'Status') ?? ''}';
+        break;
       }
       await Future<void>.delayed(interval);
     }
