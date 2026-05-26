@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
+import 'package:link26_app/core/services/prescription_medicine_persistence.dart';
 import 'package:link26_app/core/services/medication_list_display_prefs.dart';
 import 'package:link26_app/core/services/medicine_list_loader.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
@@ -94,10 +95,7 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
       builder: (_) => const PrescriptionRegisterSheet(),
     );
     if (added == null || added.isEmpty) return;
-    for (final m in added) {
-      await LocalMedicineListStore.add(m.name);
-      await NhisMedicineCacheStore.upsert(m);
-    }
+    await PrescriptionMedicinePersistence.saveAll(added);
     widget.onMedicinesChanged?.call();
     await _reload();
   }
