@@ -237,6 +237,25 @@ abstract final class NhisMedicinesSync {
       );
     }
 
+    // Dart BFF GET /v1/medications 는 데모 스텁 — 전화번호·GET 없이 홈 부팅만 조용히 통과.
+    // 실복약은 POST /v1/flow/tilko-hira-medications(「심평원에서 불러오기」)만 사용.
+    final medsPath = NhisRuntimeConfig.medicinesPath;
+    if (medsPath == '/v1/medications' || medsPath.endsWith('/v1/medications')) {
+      final cached = await NhisMedicineCacheStore.loadMedicines();
+      if (kDebugMode) {
+        debugPrint(
+          'NHIS medications: GET $medsPath 스텁 생략 — 로컬 캐시 ${cached.length}건 '
+          '(실데이터는 틸코·심평원 플로우)',
+        );
+      }
+      return NhisMedicinesSyncOutcome(
+        result: NhisMedicinesSyncResult.success,
+        remoteItemCount: cached.length,
+        metaSource: 'local_cache',
+        suppressBootstrapBanner: true,
+      );
+    }
+
     var resolvedPhone = phoneDigits.replaceAll(RegExp(r'\D'), '');
     LocalUserRecord? user;
     if (resolvedPhone.length >= 10) {
@@ -251,25 +270,6 @@ abstract final class NhisMedicinesSync {
       }
       return const NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.skipped,
-        suppressBootstrapBanner: true,
-      );
-    }
-
-    // Dart BFF의 GET /v1/medications 는 데모 스텁뿐입니다. 실복약은
-    // POST /v1/flow/tilko-hira-medications(홈 「심평원에서 불러오기」)만 사용합니다.
-    final medsPath = NhisRuntimeConfig.medicinesPath;
-    if (medsPath == '/v1/medications' || medsPath.endsWith('/v1/medications')) {
-      final cached = await NhisMedicineCacheStore.loadMedicines();
-      if (kDebugMode) {
-        debugPrint(
-          'NHIS medications: GET $medsPath 스텁 생략 — 로컬 캐시 ${cached.length}건 '
-          '(실데이터는 틸코·심평원 플로우)',
-        );
-      }
-      return NhisMedicinesSyncOutcome(
-        result: NhisMedicinesSyncResult.success,
-        remoteItemCount: cached.length,
-        metaSource: 'local_cache',
         suppressBootstrapBanner: true,
       );
     }

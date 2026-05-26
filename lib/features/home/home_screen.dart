@@ -194,13 +194,13 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   /// 세션 사용자 기준 전화(숫자) — BFF·복약 동기화.
   Future<String> _phoneForNhisSync() async {
     if (!await AuthSession.isSignedIn()) return '';
-    final u = await UserLocalRepository.loadSignedInUserRecord();
-    if (u != null && u.phoneDigits.length >= 10) {
-      return u.phoneDigits.replaceAll(RegExp(r'\D'), '');
-    }
     final session = await AuthSession.activePhoneDigits();
-    if (session != null && session.isNotEmpty) {
-      return session.replaceAll(RegExp(r'\D'), '');
+    final sessionDigits = session?.replaceAll(RegExp(r'\D'), '') ?? '';
+    if (sessionDigits.length >= 10) return sessionDigits;
+    final u = await UserLocalRepository.loadSignedInUserRecord();
+    if (u != null) {
+      final fromUser = u.phoneDigits.replaceAll(RegExp(r'\D'), '');
+      if (fromUser.length >= 10) return fromUser;
     }
     return await UserLocalRepository.singleUserPhoneDigits() ?? '';
   }
