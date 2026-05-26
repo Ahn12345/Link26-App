@@ -125,13 +125,20 @@ abstract final class NhisTilkoHiraFlowSync {
       if (!ok) {
         final hint = res['hint_ko'];
         final detail = res['detail'];
-        final msg = Link26BffIntegrationsClient.polishFlowUserMessage(
-          (hint is String && hint.trim().isNotEmpty)
-              ? hint.trim()
-              : (detail is String && detail.trim().isNotEmpty)
-                  ? detail.trim()
-                  : 'BFF 틸코·건강보험공단(NHIS) 연동에 실패했습니다.',
-        );
+        var raw = (hint is String && hint.trim().isNotEmpty)
+            ? hint.trim()
+            : (detail is String && detail.trim().isNotEmpty)
+                ? detail.trim()
+                : 'BFF 틸코·건강보험공단(NHIS) 연동에 실패했습니다.';
+        // LoginCheck Message=성공은 인증 완료가 아니라 조회 단계 실패를 가리킴.
+        if (raw == '틸코 LoginCheck: 성공' ||
+            raw.startsWith('틸코 LoginCheck: 성공')) {
+          raw =
+              '간편인증 확인은 됐지만 심평원·건보 투약이력 조회에 실패했습니다. '
+              'PC BFF를 최신 코드로 재시작한 뒤 다시 시도해 주세요. '
+              '(BFF 로그에 「logincheck OK → 투약이력 조회」가 보여야 합니다.)';
+        }
+        final msg = Link26BffIntegrationsClient.polishFlowUserMessage(raw);
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail: msg,

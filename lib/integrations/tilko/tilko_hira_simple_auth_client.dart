@@ -185,7 +185,8 @@ bool tilkoNhisSimpleAuthReadyForTreatmentFetch(Map<String, dynamic> tilkoAuth) {
 
 /// NHIS `logincheck` — 휴대폰 간편인증 완료 여부(`Result` boolean). 토큰은 포함하지 않음.
 bool tilkoNhisLoginCheckSucceeded(Map<String, dynamic> root) {
-  final v = root['Result'] ?? root['result'];
+  final lifted = tilkoNhisLiftNestedSession(root);
+  final v = lifted['Result'] ?? lifted['result'];
   if (v is bool) return v;
   if (v is num) return v == 1;
   if (v is String) {

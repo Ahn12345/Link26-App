@@ -610,27 +610,18 @@ Future<void> _handle(HttpRequest request) async {
         final pollFailed = pollErr is String && pollErr.trim().isNotEmpty;
         final authReady = tilkoNhisSimpleAuthReadyForTreatmentFetch(tilkoAuth);
         if (!authReady) {
+          final lastLcBody = tilkoNhisLastLoginCheckBody(tilkoAuth);
+          final lcOk = lastLcBody != null &&
+              tilkoNhisLoginCheckSucceeded(lastLcBody);
           // ignore: avoid_print
           print(
             'BFF ② logincheck 실패 — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}'
-            '${pollFailed ? ' (PASS 승인 미완료·Result=대기)' : ''}',
+            '${pollFailed ? ' (PASS 승인 미완료·Result=대기)' : ''}'
+            '${lcOk ? ' (마지막 LoginCheck Result=true인데 세션 토큰 부족)' : ''}',
           );
           final errBit = pollErr is String && pollErr.trim().isNotEmpty
               ? ' ($pollErr)'
               : '';
-          final lastLc = tilkoAuth['_link26_last_logincheck'];
-          Map<String, dynamic>? lastLcBody;
-          if (lastLc is Map) {
-            lastLcBody = lastLc['body'] is Map
-                ? Map<String, dynamic>.from(
-                    (lastLc['body'] as Map).map(
-                      (k, v) => MapEntry('$k', v),
-                    ),
-                  )
-                : Map<String, dynamic>.from(
-                    lastLc.map((k, v) => MapEntry('$k', v)),
-                  );
-          }
           final pollHint = pollErr is String &&
                   pollErr.contains('일시적인 장애')
               ? tilkoNhisLoginCheckHintKo(lastLcBody)
@@ -656,7 +647,10 @@ Future<void> _handle(HttpRequest request) async {
         }
 
         // ignore: avoid_print
-        print('BFF ② logincheck OK — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}');
+        print(
+          'BFF ② logincheck OK — ${tilkoNhisTokenPresenceSummary(tilkoAuth)} '
+          '→ NHIS·심평원 투약이력 조회 시작',
+        );
         final end = DateTime.now();
         final start = DateTime(end.year - 3, end.month, end.day);
         Map<String, dynamic>? hiraRes;
