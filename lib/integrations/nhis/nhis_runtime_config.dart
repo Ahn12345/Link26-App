@@ -24,17 +24,21 @@ abstract final class NhisRuntimeConfig {
     return s == 'true' || s == '1' || s == 'yes';
   }
 
-  /// [refreshBffReachability] 이후: 도달 가능한 BFF만, 없으면 `''`(빠른 오프라인).
+  /// [refreshBffReachability] 이후: 도달 가능한 BFF 우선. 릴리스만 프로브 전부 실패 시 `''`.
   static String get baseUrl {
+    final candidates = baseUrlCandidates;
     if (Link26BffReachability.fastProbeEnabled) {
       final hit = Link26BffReachability.firstReachable(
         Link26BffReachability.lastOrderedBases,
       );
       if (hit != null && hit.isNotEmpty) return hit;
-      if (Link26BffReachability.recentlyAllUnreachable) return '';
+      if (Link26BffReachability.recentlyAllUnreachable) {
+        // 디버그: /health 오탐·BFF 늦게 켬에도 dotenv 후보로 시도.
+        if (!kReleaseMode && candidates.isNotEmpty) return candidates.first;
+        return '';
+      }
     }
-    final list = baseUrlCandidates;
-    if (list.isNotEmpty) return list.first;
+    if (candidates.isNotEmpty) return candidates.first;
     return '';
   }
 
