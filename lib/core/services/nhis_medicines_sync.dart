@@ -251,6 +251,7 @@ abstract final class NhisMedicinesSync {
       }
       return const NhisMedicinesSyncOutcome(
         result: NhisMedicinesSyncResult.skipped,
+        suppressBootstrapBanner: true,
       );
     }
 
