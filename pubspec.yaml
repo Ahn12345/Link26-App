@@ -5,7 +5,7 @@ name: link26_app
 description: Link26 mobile app (Android & iOS).
 publish_to: "none"
 
-version: 1.0.0+26
+version: 1.0.0+27
 
 environment:
   sdk: ^3.11.4

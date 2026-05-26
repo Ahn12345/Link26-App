@@ -6,6 +6,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
 import 'package:link26_app/core/services/prescription_image_prepare.dart';
 import 'package:link26_app/core/services/prescription_register_parser.dart';
+import 'package:link26_app/features/ai_chat/ai_chat_service.dart';
 
 enum PrescriptionExtractSource { image, pastedText }
 
@@ -40,6 +41,108 @@ abstract final class PrescriptionRegisterService {
 
 ''';
 
+  static List<String> get _modelCandidates {
+    final primary = GeminiRuntimeConfig.modelId.trim();
+    return [
+      if (primary.isNotEmpty) primary,
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-2.5-flash',
+    ];
+  }
+
+  static String _errorMessageKo(Object error, {String? modelId}) {
+    final s = error.toString();
+    if (s.contains('API_KEY_INVALID') ||
+        s.contains('API key not valid') ||
+        s.contains('PERMISSION_DENIED')) {
+      return 'GEMINI_API_KEY가 거부되었습니다. Google AI Studio 키를 확인한 뒤 '
+          'tool/sync_dotenv_asset.ps1 실행·앱 재설치를 해 주세요.';
+    }
+    if (s.contains('NOT_FOUND') ||
+        s.contains('not found') ||
+        s.contains('404')) {
+      return 'Gemini 모델(${modelId ?? GeminiRuntimeConfig.modelId})을 찾을 수 없습니다. '
+          '.env의 GEMINI_MODEL_ID를 gemini-2.0-flash 로 바꿔 보세요.';
+    }
+    if (s.contains('SocketException') ||
+        s.contains('Failed host lookup') ||
+        s.contains('Network is unreachable')) {
+      return '인터넷(Wi‑Fi·데이터) 연결을 확인한 뒤 다시 시도해 주세요.';
+    }
+    if (s.contains('RESOURCE_EXHAUSTED') || s.contains('429')) {
+      return 'Gemini 사용 한도에 걸렸습니다. 잠시 후 다시 시도하거나 직접 입력해 주세요.';
+    }
+    if (kDebugMode && s.length < 200) {
+      return '처방전 사진 분석 실패: $s';
+    }
+    return '처방전 사진 분석에 실패했습니다. Wi‑Fi·데이터 연결과 GEMINI 설정을 확인하거나 '
+        '아래에서 약 이름을 직접 입력해 주세요.';
+  }
+
+  static Future<String?> _generateImageJson(Uint8List prepared) async {
+    final tried = <String>{};
+    Object? lastError;
+    for (final modelId in _modelCandidates) {
+      if (!tried.add(modelId)) continue;
+      try {
+        final model = GenerativeModel(
+          model: modelId,
+          apiKey: GeminiRuntimeConfig.apiKey,
+        );
+        final res = await model
+            .generateContent([
+              Content.multi([
+                TextPart(_imagePrompt),
+                DataPart('image/jpeg', prepared),
+              ]),
+            ])
+            .timeout(_budget);
+        final text = res.text?.trim();
+        if (text != null && text.isNotEmpty) {
+          if (kDebugMode) {
+            debugPrint('PrescriptionRegister: OK model=$modelId');
+          }
+          return text;
+        }
+      } catch (e, st) {
+        lastError = e;
+        if (kDebugMode) {
+          debugPrint('PrescriptionRegister: model=$modelId failed: $e\n$st');
+        }
+      }
+    }
+
+    // AI 채팅과 동일 파이프라인(멀티모달) 재시도
+    try {
+      final chat = AiChatService();
+      final body = await chat
+          .respondChat(
+            '처방전 사진입니다. 복용 약 상품명만 JSON 배열로만 답하세요. '
+            '예: ["케피람정100mg"]. 설명·마크다운 없이 배열만.',
+            imageBytes: prepared,
+            imageMime: 'image/jpeg',
+          )
+          .timeout(_budget);
+      if (body.trim().isNotEmpty) {
+        if (kDebugMode) {
+          debugPrint('PrescriptionRegister: OK via AiChatService fallback');
+        }
+        return body;
+      }
+    } catch (e, st) {
+      lastError ??= e;
+      if (kDebugMode) {
+        debugPrint('PrescriptionRegister: AiChat fallback failed: $e\n$st');
+      }
+    }
+
+    if (lastError != null) {
+      throw lastError;
+    }
+    return null;
+  }
+
   static Future<PrescriptionExtractResult> extractFromImage({
     required Uint8List bytes,
     required String mimeType,
@@ -49,32 +152,20 @@ abstract final class PrescriptionRegisterService {
         names: [],
         errorMessageKo:
             '처방전 사진 인식에는 GEMINI_API_KEY가 필요합니다. '
-            '또는 처방 내용을 텍스트로 붙여넣어 주세요.',
+            '아래 「약 이름 직접 입력」을 이용해 주세요.',
       );
     }
     try {
       final prepared = PrescriptionImagePrepare.forVisionApi(bytes);
-      final model = GenerativeModel(
-        model: GeminiRuntimeConfig.modelId,
-        apiKey: GeminiRuntimeConfig.apiKey,
-      );
-      final res = await model
-          .generateContent([
-            Content.multi([
-              TextPart(_imagePrompt),
-              DataPart('image/jpeg', prepared),
-            ]),
-          ])
-          .timeout(_budget);
-      final text = res.text?.trim() ?? '';
-      final names = PrescriptionRegisterParser.parseFromModelText(text);
+      final text = await _generateImageJson(prepared);
+      final names = PrescriptionRegisterParser.parseFromModelText(text ?? '');
       if (names.isEmpty) {
         return PrescriptionExtractResult(
           names: names,
           source: PrescriptionExtractSource.image,
-          errorMessageKo: text.isEmpty
-              ? '사진에서 약 이름을 찾지 못했습니다. 더 밝게·약 이름이 보이게 다시 촬영하거나 텍스트로 붙여넣어 주세요.'
-              : '인식 결과를 해석하지 못했습니다. 텍스트 붙여넣기를 이용해 주세요.',
+          errorMessageKo: (text == null || text.isEmpty)
+              ? '사진에서 약 이름을 찾지 못했습니다. 더 밝게 촬영하거나 직접 입력해 주세요.'
+              : '인식 결과를 해석하지 못했습니다. 약 이름을 직접 입력해 주세요.',
         );
       }
       return PrescriptionExtractResult(
@@ -84,17 +175,37 @@ abstract final class PrescriptionRegisterService {
     } on TimeoutException {
       return const PrescriptionExtractResult(
         names: [],
-        errorMessageKo: '처방전 분석 시간이 초과되었습니다. 다시 시도하거나 텍스트로 붙여넣어 주세요.',
+        errorMessageKo: '처방전 분석 시간이 초과되었습니다. 직접 입력해 주세요.',
       );
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('PrescriptionRegisterService image: $e\n$st');
       }
-      return const PrescriptionExtractResult(
+      return PrescriptionExtractResult(
         names: [],
-        errorMessageKo: '처방전 사진 분석에 실패했습니다. 네트워크·API 키를 확인하거나 텍스트로 붙여넣어 주세요.',
+        errorMessageKo: _errorMessageKo(e),
       );
     }
+  }
+
+  static Future<String?> _generateTextJson(String prompt) async {
+    Object? lastError;
+    for (final modelId in _modelCandidates) {
+      try {
+        final model = GenerativeModel(
+          model: modelId,
+          apiKey: GeminiRuntimeConfig.apiKey,
+        );
+        final res = await model
+            .generateContent([Content.text(prompt)])
+            .timeout(_budget);
+        return res.text?.trim();
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    if (lastError != null) throw lastError;
+    return null;
   }
 
   static Future<PrescriptionExtractResult> extractFromPastedText(
@@ -122,18 +233,8 @@ abstract final class PrescriptionRegisterService {
     }
 
     try {
-      final model = GenerativeModel(
-        model: GeminiRuntimeConfig.modelId,
-        apiKey: GeminiRuntimeConfig.apiKey,
-      );
-      final res = await model
-          .generateContent([
-            Content.text('$_textPrompt$text'),
-          ])
-          .timeout(_budget);
-      final out = PrescriptionRegisterParser.parseFromModelText(
-        res.text?.trim() ?? '',
-      );
+      final raw = await _generateTextJson('$_textPrompt$text');
+      final out = PrescriptionRegisterParser.parseFromModelText(raw ?? '');
       if (out.isNotEmpty) {
         return PrescriptionExtractResult(
           names: out,
@@ -160,9 +261,9 @@ abstract final class PrescriptionRegisterService {
           source: PrescriptionExtractSource.pastedText,
         );
       }
-      return const PrescriptionExtractResult(
+      return PrescriptionExtractResult(
         names: [],
-        errorMessageKo: '텍스트 분석에 실패했습니다. 약품명을 한 줄에 하나씩 입력해 주세요.',
+        errorMessageKo: _errorMessageKo(e),
       );
     }
   }

@@ -263,6 +263,16 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Text(
+                'Gemini 키 로드됨 · 모델 ${GeminiRuntimeConfig.modelId}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Link26Surface.accent,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
             const SizedBox(height: 16),
             if (_busy) const LinearProgressIndicator(),
