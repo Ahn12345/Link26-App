@@ -25,6 +25,43 @@ import 'link26_bff_lan_beacon.dart';
 String _bffYmd(DateTime d) =>
     '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
 
+DateTime? _bffParseYmd(String? raw) {
+  final t = (raw ?? '').replaceAll(RegExp(r'\D'), '');
+  if (t.length != 8) return null;
+  final y = int.tryParse(t.substring(0, 4));
+  final m = int.tryParse(t.substring(4, 6));
+  final d = int.tryParse(t.substring(6, 8));
+  if (y == null || m == null || d == null) return null;
+  return DateTime(y, m, d);
+}
+
+/// 기본: **올해 1/1 ~ 오늘**. `TILKO_MEDICATION_QUERY_MODE=3y` 이면 최근 3년.
+/// 앱 `flow_extras.medication_query_start` / `_end` (YYYYMMDD) 로 덮어쓸 수 있습니다.
+({DateTime start, DateTime end, String mode}) _bffMedicationQueryRange(
+  Map<String, String> env,
+  Map<String, dynamic>? flowExtras,
+) {
+  final now = DateTime.now();
+  final startExtra = _bffParseYmd(
+    '${flowExtras?['medication_query_start'] ?? flowExtras?['startDateYyyymmdd'] ?? ''}',
+  );
+  final endExtra = _bffParseYmd(
+    '${flowExtras?['medication_query_end'] ?? flowExtras?['endDateYyyymmdd'] ?? ''}',
+  );
+  if (startExtra != null && endExtra != null && !endExtra.isBefore(startExtra)) {
+    return (start: startExtra, end: endExtra, mode: 'custom');
+  }
+  final mode = (env['TILKO_MEDICATION_QUERY_MODE'] ?? 'ytd').trim().toLowerCase();
+  if (mode == '3y' || mode == 'years3' || mode == '3years') {
+    return (
+      start: DateTime(now.year - 3, now.month, now.day),
+      end: now,
+      mode: '3y',
+    );
+  }
+  return (start: DateTime(now.year, 1, 1), end: now, mode: 'ytd');
+}
+
 Future<void> main() async {
   final server = await _bindServer();
   final port = server.port;
@@ -651,31 +688,47 @@ Future<void> _handle(HttpRequest request) async {
           'BFF ② logincheck OK — ${tilkoNhisTokenPresenceSummary(tilkoAuth)} '
           '→ NHIS·심평원 투약이력 조회 시작',
         );
-        final end = DateTime.now();
-        final start = DateTime(end.year - 3, end.month, end.day);
+        final flowExtrasRaw = map['flow_extras'];
+        final flowExtras = flowExtrasRaw is Map
+            ? Map<String, dynamic>.from(
+                flowExtrasRaw.map((k, v) => MapEntry('$k', v)),
+              )
+            : null;
+        final queryRange = _bffMedicationQueryRange(env, flowExtras);
+        final start = queryRange.start;
+        final end = queryRange.end;
+        final startYmd = _bffYmd(start);
+        final endYmd = _bffYmd(end);
+        // ignore: avoid_print
+        print(
+          'BFF ③ 투약이력 조회 기간 $startYmd~$endYmd (mode=${queryRange.mode}, '
+          '심평원 HIRA 우선)',
+        );
         Map<String, dynamic>? hiraRes;
         Map<String, dynamic>? nhisRes;
         var items = <Map<String, dynamic>>[];
         var metaSource = 'tilko_hira_my_medications';
 
-        if (authChannel == 'HIRA') {
-          try {
-            hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
-              tilkoRequestMap: tilkoMap,
-              tilkoAuthResponse: tilkoAuth,
-              startDateYyyymmdd: _bffYmd(start),
-              endDateYyyymmdd: _bffYmd(end),
-            );
-            if (hiraRes['http_status'] == null &&
-                !tilkoApiIndicatesFailure(hiraRes)) {
-              items = bffMapCodefRootToMedicationItems(hiraRes);
-            }
-          } catch (e) {
+        // 심평원(HIRA) — StartDate/EndDate 로 기간 지정 가능 → 올해 처방 우선.
+        try {
+          hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
+            tilkoRequestMap: tilkoMap,
+            tilkoAuthResponse: tilkoAuth,
+            startDateYyyymmdd: startYmd,
+            endDateYyyymmdd: endYmd,
+          );
+          if (hiraRes['http_status'] == null &&
+              !tilkoApiIndicatesFailure(hiraRes)) {
+            items = bffMapCodefRootToMedicationItems(hiraRes);
             // ignore: avoid_print
-            print('BFF flow HIRA 조회: $e');
+            print('BFF ③ HIRA(심평원) ${items.length}건 ($startYmd~$endYmd)');
           }
+        } catch (e) {
+          // ignore: avoid_print
+          print('BFF flow HIRA 조회: $e');
         }
 
+        // 건보(NHIS) — 기간 파라미터 없음·과거 이력이 섞일 수 있어 HIRA 0건일 때만 보조.
         if (items.isEmpty) {
           nhisRes =
               await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
@@ -713,15 +766,21 @@ Future<void> _handle(HttpRequest request) async {
 
           items = bffMapCodefRootToMedicationItems(nhisRes);
           metaSource = 'tilko_nhis_simpleauth_treatment_injection';
+          // ignore: avoid_print
+          print('BFF ③ NHIS(건보) ${items.length}건 (HIRA 0건 폴백)');
         }
 
-        if (items.isEmpty && hiraRes == null) {
+        if (items.isEmpty) {
+          final wideEnd = DateTime.now();
+          final wideStart = DateTime(wideEnd.year - 3, wideEnd.month, wideEnd.day);
+          final wideStartYmd = _bffYmd(wideStart);
+          final wideEndYmd = _bffYmd(wideEnd);
           try {
             hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
               tilkoRequestMap: tilkoMap,
               tilkoAuthResponse: tilkoAuth,
-              startDateYyyymmdd: _bffYmd(start),
-              endDateYyyymmdd: _bffYmd(end),
+              startDateYyyymmdd: wideStartYmd,
+              endDateYyyymmdd: wideEndYmd,
             );
             if (hiraRes['http_status'] == null &&
                 !tilkoApiIndicatesFailure(hiraRes)) {
@@ -731,7 +790,8 @@ Future<void> _handle(HttpRequest request) async {
                 metaSource = 'tilko_hira_my_medications';
                 // ignore: avoid_print
                 print(
-                  'BFF flow: NHIS 0건 → HIRA hiraa050300000100 ${items.length}건',
+                  'BFF flow: 올해 0건 → HIRA 최근 3년 $wideStartYmd~$wideEndYmd '
+                  '${items.length}건',
                 );
               }
             }
@@ -754,10 +814,16 @@ Future<void> _handle(HttpRequest request) async {
             'source': metaSource,
             'codefResultCode': st['code'],
             'codefResultMessage': st['message'],
+            'queryStartYmd': startYmd,
+            'queryEndYmd': endYmd,
+            'queryMode': queryRange.mode,
             if (emptyParsed)
               'note':
-                  'NHIS·심평원(HIRA) 응답은 수신했으나 앱이 인식한 복약 행이 0건입니다. '
-                  '조회 기간 내 처방이 없거나 JSON 필드명이 바뀐 경우일 수 있습니다.',
+                  '조회 기간($startYmd~$endYmd)에 심평원·건보 투약 이력이 없거나 '
+                  'JSON 필드명이 바뀌었을 수 있습니다.',
+            if (!emptyParsed && metaSource == 'tilko_hira_my_medications')
+              'notice':
+                  '심평원(HIRA) $startYmd~$endYmd 기간 투약 ${items.length}건을 반영했습니다.',
           },
         });
       } catch (e, st) {
