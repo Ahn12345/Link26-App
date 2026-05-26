@@ -608,7 +608,8 @@ Future<void> _handle(HttpRequest request) async {
         );
         final pollErr = tilkoAuth['_link26_poll_error'];
         final pollFailed = pollErr is String && pollErr.trim().isNotEmpty;
-        if (!tilkoNhisAuthTokensComplete(tilkoAuth) || pollFailed) {
+        final authReady = tilkoNhisSimpleAuthReadyForTreatmentFetch(tilkoAuth);
+        if (!authReady) {
           // ignore: avoid_print
           print(
             'BFF ② logincheck 실패 — ${tilkoNhisTokenPresenceSummary(tilkoAuth)}'

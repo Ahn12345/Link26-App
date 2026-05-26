@@ -38,6 +38,20 @@ void main() {
     );
   });
 
+  test('ready for treatment when tokens ok and last LoginCheck Result=true', () {
+    final auth = {
+      'CxId': 'c',
+      'ReqTxId': 'r',
+      'Token': 't',
+      'TxId': 'x',
+      '_link26_poll_error': '틸코 LoginCheck: 성공',
+      '_link26_last_logincheck': {
+        'body': {'Result': true, 'Message': '성공', 'Status': 'OK'},
+      },
+    };
+    expect(tilkoNhisSimpleAuthReadyForTreatmentFetch(auth), isTrue);
+  });
+
   test('tilkoNhisLiftNestedSession merges ResultData tokens', () {
     final lifted = tilkoNhisLiftNestedSession({
       'ErrorCode': 0,

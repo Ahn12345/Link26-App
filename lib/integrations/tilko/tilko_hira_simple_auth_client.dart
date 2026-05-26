@@ -157,6 +157,32 @@ String tilkoNhisLoginCheckHintKo(Map<String, dynamic>? root) {
   return 'PASS 앱·문자에서 인증을 승인한 뒤, 요청 후 2분 안에 다시 시도하세요.';
 }
 
+/// [waitForNhisAuthForTreatmentInjection] 반환값의 `_link26_last_logincheck` 본문.
+Map<String, dynamic>? tilkoNhisLastLoginCheckBody(Map<String, dynamic> tilkoAuth) {
+  final last = tilkoAuth['_link26_last_logincheck'];
+  if (last is! Map) return null;
+  if (last['body'] is Map<String, dynamic>) {
+    return last['body'] as Map<String, dynamic>;
+  }
+  if (last['body'] is Map) {
+    return Map<String, dynamic>.from(
+      (last['body'] as Map).map((k, v) => MapEntry('$k', v)),
+    );
+  }
+  return Map<String, dynamic>.from(
+    last.map((k, v) => MapEntry('$k', v)),
+  );
+}
+
+/// simpleauth 토큰 + (폴링 성공 또는 마지막 LoginCheck `Result=true`) — NHIS·HIRA 조회 가능.
+bool tilkoNhisSimpleAuthReadyForTreatmentFetch(Map<String, dynamic> tilkoAuth) {
+  if (!tilkoNhisAuthTokensComplete(tilkoAuth)) return false;
+  final pollErr = tilkoAuth['_link26_poll_error'];
+  if (pollErr is! String || pollErr.trim().isEmpty) return true;
+  final lc = tilkoNhisLastLoginCheckBody(tilkoAuth);
+  return lc != null && tilkoNhisLoginCheckSucceeded(lc);
+}
+
 /// NHIS `logincheck` — 휴대폰 간편인증 완료 여부(`Result` boolean). 토큰은 포함하지 않음.
 bool tilkoNhisLoginCheckSucceeded(Map<String, dynamic> root) {
   final v = root['Result'] ?? root['result'];
