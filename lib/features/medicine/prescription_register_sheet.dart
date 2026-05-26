@@ -194,12 +194,17 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   Future<void> _applyToMyList() async {
     await _mergeSelectedIntoConfirmed();
     if (_confirmed.isEmpty) {
-      _toast(
-        GeminiRuntimeConfig.isConfigured
-            ? '등록할 약이 없습니다. 사진·텍스트·직접 입력으로 약을 추가한 뒤 다시 시도하세요.'
-            : '사진 인식에는 GEMINI_API_KEY가 필요합니다. '
-                '아래에서 약 이름을 직접 입력한 뒤 「목록에 반영」을 눌러 주세요.',
-      );
+      if (_keyWarning != null) {
+        _toast(_keyWarning!);
+      } else {
+        _toast(
+          GeminiRuntimeConfig.isConfigured
+              ? '등록할 약이 없습니다. 「약 이름 직접 입력」→ 추가 → '
+                  '「목록에 반영」 순서로 진행해 주세요. (사진은 키 정상 후 가능)'
+              : '사진 인식에는 GEMINI_API_KEY가 필요합니다. '
+                  '아래에서 약 이름을 직접 입력한 뒤 「목록에 반영」을 눌러 주세요.',
+        );
+      }
       return;
     }
     await PrescriptionMedicinePersistence.saveAll(_confirmed);

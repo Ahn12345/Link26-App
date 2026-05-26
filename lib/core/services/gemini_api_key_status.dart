@@ -33,8 +33,14 @@ abstract final class GeminiApiKeyStatus {
     final lower = body.toLowerCase();
     if (lower.contains('leaked') || lower.contains('reported as leaked')) {
       return '이 GEMINI_API_KEY는 Google에서 유출 키로 차단했습니다. '
-          'AI Studio에서 새 키를 발급해 .env만 바꾼 뒤 sync_dotenv_asset.ps1 · 재설치하세요. '
-          '(모델 이름 문제가 아닙니다.)';
+          'AI Studio에서 새 키를 발급해 .env에 붙여넣은 뒤 '
+          'sync_dotenv_asset.ps1 → 앱 재빌드·재설치하세요. '
+          '(install만 하면 예전 키가 APK에 남습니다.)';
+    }
+    if (lower.contains('api_key_invalid') ||
+        lower.contains('api key not valid')) {
+      return 'GEMINI_API_KEY가 잘못되었습니다. AI Studio 「키 복사」로 '
+          '.env에 정확히 붙여넣은 뒤 sync_dotenv_asset.ps1 → 재빌드·재설치하세요.';
     }
     if (status == 403 || lower.contains('permission_denied')) {
       return 'GEMINI_API_KEY가 거부되었습니다(403). '
