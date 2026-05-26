@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -81,22 +80,6 @@ abstract final class PrescriptionRegisterService {
     }
     return '처방전 사진 분석에 실패했습니다. Wi‑Fi·데이터를 확인하거나 '
         '아래에서 약 이름을 직접 입력해 주세요.';
-  }
-
-  static Future<String?> _sdkImageJson(Uint8List prepared, String modelId) async {
-    final model = GenerativeModel(
-      model: modelId,
-      apiKey: GeminiRuntimeConfig.apiKey,
-    );
-    final res = await model
-        .generateContent([
-          Content.multi([
-            TextPart(_imagePrompt),
-            DataPart('image/jpeg', prepared),
-          ]),
-        ])
-        .timeout(_budget);
-    return res.text?.trim();
   }
 
   static Future<String?> _generateImageJson(Uint8List prepared) async {
