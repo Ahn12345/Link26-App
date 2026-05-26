@@ -164,7 +164,13 @@ abstract final class Link26BffIntegrationsClient {
     if (phase == 'continue' &&
         _lastSuccessfulFlowBase != null &&
         _lastSuccessfulFlowBase!.trim().isNotEmpty) {
-      return <String>[_lastSuccessfulFlowBase!.trim()];
+      final first = _lastSuccessfulFlowBase!.trim();
+      final rest = <String>[];
+      for (final b in _activeBases) {
+        if (b != first) rest.add(b);
+      }
+      // PASS 복귀 후 Wi‑Fi/USB가 바뀌면 start 때 쓴 주소만으로는 실패할 수 있음.
+      return <String>[first, ...rest];
     }
     return _activeBases;
   }

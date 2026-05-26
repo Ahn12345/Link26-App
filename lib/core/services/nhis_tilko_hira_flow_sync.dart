@@ -237,9 +237,14 @@ abstract final class NhisTilkoHiraFlowSync {
         final short = kReleaseMode
             ? '건강·복약 서버(BFF)에 연결하지 못했습니다. '
                 '인터넷과 운영 주소(NHIS_PRODUCTION_BASE_URL·원격 설정)를 확인해 주세요.'
-            : 'PC BFF에 연결하지 못했습니다. '
-                'BFF가 실행 중인지, 주소($bases)가 PC IP·포트 8787과 같은지 확인하세요. '
-                'USB 연결 시 `adb reverse tcp:8787 tcp:8787` 후 다시 시도하세요.';
+            : TilkoEnv.isPassAuth
+                ? 'PASS 승인 후 PC BFF에 연결하지 못했습니다. '
+                    'BFF 창을 켜 둔 채 Link26 앱을 포그라운드로 두고 '
+                    '「심평원에서 불러오기」를 다시 눌러 주세요. '
+                    '(USB: adb reverse tcp:8787 tcp:8787, 주소: $bases)'
+                : 'PC BFF에 연결하지 못했습니다. '
+                    'BFF가 실행 중인지, 주소($bases)가 PC IP·포트 8787과 같은지 확인하세요. '
+                    'USB 연결 시 `adb reverse tcp:8787 tcp:8787` 후 다시 시도하세요.';
         return NhisMedicinesSyncOutcome(
           result: NhisMedicinesSyncResult.failed,
           detail: short,
@@ -322,6 +327,10 @@ abstract final class NhisTilkoHiraFlowSync {
 
     final lifted = start['tilko_simple_auth'];
     if (lifted is! Map) return start;
+
+    // PASS 앱에 다녀오면 Android 가 네트워크를 끊는 경우가 있어 continue 전에 /health 재확인.
+    Link26BffReachability.clearProbeCache();
+    await NhisRuntimeConfig.refreshBffReachability();
 
     if (kDebugMode) {
       debugPrint('Tilko→HIRA: phase=continue 요청 시작 (PASS 승인 후 logincheck·복약 조회)');
