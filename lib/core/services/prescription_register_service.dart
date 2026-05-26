@@ -43,12 +43,12 @@ abstract final class PrescriptionRegisterService {
 
   static List<String> get _modelCandidates {
     final primary = GeminiRuntimeConfig.modelId.trim();
-    return [
-      if (primary.isNotEmpty) primary,
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-2.5-flash',
-    ];
+    const stable = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    final out = <String>[...stable];
+    if (primary.isNotEmpty && !out.contains(primary)) {
+      out.add(primary);
+    }
+    return out;
   }
 
   static String _errorMessageKo(Object error, {String? modelId}) {
