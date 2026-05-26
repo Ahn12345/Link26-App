@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/services/gemini_api_key_status.dart';
+import 'package:link26_app/core/services/gemini_http_exception.dart';
 import 'package:link26_app/core/services/gemini_rest_generate.dart';
 import 'package:link26_app/core/services/prescription_image_prepare.dart';
 import 'package:link26_app/core/services/prescription_register_parser.dart';
@@ -43,6 +45,12 @@ abstract final class PrescriptionRegisterService {
 ''';
 
   static String _errorMessageKo(Object error, {String? triedModel}) {
+    if (error is GeminiHttpException) {
+      return GeminiApiKeyStatus.messageFromHttp(
+        error.statusCode,
+        error.body,
+      );
+    }
     final s = error.toString();
     if (s.contains('leaked') ||
         s.contains('reported as leaked')) {
@@ -114,21 +122,6 @@ abstract final class PrescriptionRegisterService {
         }
       }
 
-      // 2) 레거시 SDK (구 모델용)
-      try {
-        final text = await _sdkImageJson(prepared, modelId);
-        if (text != null && text.isNotEmpty) {
-          if (kDebugMode) {
-            debugPrint('PrescriptionRegister: SDK OK model=$modelId');
-          }
-          return text;
-        }
-      } catch (e, st) {
-        lastError = e;
-        if (kDebugMode) {
-          debugPrint('PrescriptionRegister: SDK $modelId failed: $e\n$st');
-        }
-      }
     }
 
     try {
@@ -161,6 +154,10 @@ abstract final class PrescriptionRegisterService {
             '처방전 사진 인식에는 GEMINI_API_KEY가 필요합니다. '
             '아래 「약 이름 직접 입력」을 이용해 주세요.',
       );
+    }
+    final keyIssue = await GeminiApiKeyStatus.checkBlockingIssueKo();
+    if (keyIssue != null) {
+      return PrescriptionExtractResult(names: [], errorMessageKo: keyIssue);
     }
     try {
       final prepared = PrescriptionImagePrepare.forVisionApi(bytes);

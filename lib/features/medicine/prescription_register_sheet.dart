@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/services/gemini_api_key_status.dart';
 import 'package:link26_app/core/services/prescription_medicine_persistence.dart';
 import 'package:link26_app/core/services/prescription_register_service.dart';
 import 'package:link26_app/core/services/user_pinned_medicine_store.dart';
@@ -29,6 +30,7 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
 
   bool _busy = false;
   String? _status;
+  String? _keyWarning;
   final Map<String, String> _normToLabel = {};
   final Map<String, bool> _selected = {};
   final List<Medicine> _confirmed = [];
@@ -36,11 +38,17 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.openCameraOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final issue = await GeminiApiKeyStatus.checkBlockingIssueKo();
+      if (!mounted) return;
+      if (issue != null) {
+        setState(() => _keyWarning = issue);
+        _toast(issue);
+      }
+      if (widget.openCameraOnStart && issue == null) {
         if (mounted) unawaited(_pickImage(ImageSource.camera));
-      });
-    }
+      }
+    });
   }
 
   @override
@@ -251,6 +259,18 @@ class _PrescriptionRegisterSheetState extends State<PrescriptionRegisterSheet> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (_keyWarning != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _keyWarning!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Link26Surface.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  height: 1.35,
+                ),
+              ),
+            ],
             if (!GeminiRuntimeConfig.isConfigured) ...[
               const SizedBox(height: 8),
               Text(

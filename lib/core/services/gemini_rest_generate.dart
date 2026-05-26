@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:link26_app/core/constants/gemini_runtime_config.dart';
+import 'package:link26_app/core/services/gemini_http_exception.dart';
 
 /// [google_generative_ai] 0.4.x 가 최신 모델 ID를 못 찾을 때 REST(v1)로 호출합니다.
 abstract final class GeminiRestGenerate {
@@ -76,7 +77,10 @@ abstract final class GeminiRestGenerate {
             '${res.body.length > 200 ? res.body.substring(0, 200) : res.body}',
           );
         }
-        lastErr = StateError('${res.statusCode} $apiPrefix/$model ${res.body}');
+        if (res.statusCode == 403 || res.statusCode == 401) {
+          throw GeminiHttpException(res.statusCode, res.body);
+        }
+        lastErr = GeminiHttpException(res.statusCode, res.body);
       } catch (e) {
         lastErr = e;
       }
