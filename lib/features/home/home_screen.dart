@@ -404,8 +404,16 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     if (out.result == NhisMedicinesSyncResult.failed) {
       final msg = out.userMessageKo.trim();
       if (msg.isNotEmpty) {
+        final kept = medicines.length;
+        final text = kept > 0 &&
+                (msg.contains('투약이력 조회에 실패') ||
+                    msg.contains('LoginCheck'))
+            ? '방금 올해 처방 다시 받기는 실패했습니다. '
+                '기존 복약 $kept건은 그대로 두었습니다. '
+                'PC에서 BFF를 재시작한 뒤 「심평원에서 불러오기」를 다시 눌러 주세요.'
+            : msg;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), duration: const Duration(seconds: 10)),
+          SnackBar(content: Text(text), duration: const Duration(seconds: 10)),
         );
       }
       return;

@@ -72,6 +72,8 @@ Future<void> main() async {
   // ignore: avoid_print
   stdout.writeln('>>> link26-bff (Dart) 실제 포트: $port <<<');
   // ignore: avoid_print
+  stdout.writeln('    BFF build: logincheck-fix + hira-ytd');
+  // ignore: avoid_print
   stdout.writeln('    http://127.0.0.1:$port/health');
   // ignore: avoid_print
   stdout.writeln('    에뮬용 .env: NHIS_BASE_URL=http://10.0.2.2:$port');
@@ -645,9 +647,21 @@ Future<void> _handle(HttpRequest request) async {
         );
         final pollErr = tilkoAuth['_link26_poll_error'];
         final pollFailed = pollErr is String && pollErr.trim().isNotEmpty;
-        final authReady = tilkoNhisSimpleAuthReadyForTreatmentFetch(tilkoAuth);
+        var authReady = tilkoNhisSimpleAuthReadyForTreatmentFetch(tilkoAuth);
+        final lastLcBodyRecover = tilkoNhisLastLoginCheckBody(tilkoAuth);
+        if (!authReady &&
+            tilkoNhisAuthTokensComplete(tilkoAuth) &&
+            lastLcBodyRecover != null &&
+            tilkoNhisLoginCheckSucceeded(lastLcBodyRecover)) {
+          authReady = true;
+          // ignore: avoid_print
+          print(
+            'BFF ② logincheck OK (Result=true — poll_error 무시: '
+            '${pollErr is String ? pollErr.trim() : '-'})',
+          );
+        }
         if (!authReady) {
-          final lastLcBody = tilkoNhisLastLoginCheckBody(tilkoAuth);
+          final lastLcBody = lastLcBodyRecover;
           final lcOk = lastLcBody != null &&
               tilkoNhisLoginCheckSucceeded(lastLcBody);
           // ignore: avoid_print
