@@ -13,10 +13,13 @@ import 'package:link26_app/core/services/auth_session.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/hira_link_service.dart';
 import 'package:link26_app/core/services/link26_bff_reachability.dart';
+import 'package:link26_app/core/services/medication_list_display_prefs.dart';
+import 'package:link26_app/core/services/medicine_list_loader.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
+import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/features/medicine/prescription_only_add_sheet.dart';
 import 'package:link26_app/core/services/link26_bff_advice.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
-import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
 import 'package:link26_app/core/services/nhis_medicines_sync.dart';
 import 'package:link26_app/core/services/reminder_channel_prefs.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
@@ -41,6 +44,7 @@ class HomeDashboardContent extends StatefulWidget {
 class _HomeDashboardContentState extends State<HomeDashboardContent> {
   List<Medicine> medicines = [];
   List<AlarmItem> _doseAlarms = [];
+  bool _hideHospitalSupplies = false;
 
   /// 종 아이콘 배지: 미읽음 AI 알림 + 미완료 복용 건수.
   int _bellBadgeCount = 0;
@@ -129,6 +133,8 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
     AiChatHomeAlertNotifier.instance.addListener(_onBellDepsChanged);
     Link26RemoteBffBootstrap.revision.addListener(_onRemoteBffRevision);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _hideHospitalSupplies =
+          await MedicationListDisplayPrefs.hideHospitalSupplies();
       await _bootstrapMedicines();
       if (!mounted) return;
       unawaited(AiChatHomeAlertNotifier.instance.refreshBannerFromDb());
@@ -288,24 +294,9 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
   }
 
   Future<void> _reloadMedicinesFromStores() async {
-    final cached = await NhisMedicineCacheStore.loadMedicines();
-    final manualNames = await LocalMedicineListStore.load();
-    final byName = <String, Medicine>{};
-    for (final m in cached) {
-      final k = _normMedName(m.name);
-      if (k.isEmpty) continue;
-      byName[k] = m;
-    }
-    for (final n in manualNames) {
-      final k = _normMedName(n);
-      if (k.isEmpty) continue;
-      byName.putIfAbsent(
-        k,
-        () => Medicine(name: n.trim(), dose: '-', frequency: '-', time: '-'),
-      );
-    }
-    final merged = byName.values.toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final merged = await MedicineListLoader.loadMerged(
+      hideHospitalSupplies: _hideHospitalSupplies,
+    );
     final completed = await DoseReminderCompletionStore.completedNormsToday();
     if (!mounted) return;
     final composed = await _composeDoseAlarms(merged, completed);
@@ -433,6 +424,11 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
           content: Text(
             '${l10n.homeHiraMedicationsLoadSuccess} (${out.remoteItemCount}건)',
           ),
+          action: SnackBarAction(
+            label: '처방 약 추가',
+            onPressed: () => unawaited(_offerPrescriptionOnlyAdd()),
+          ),
+          duration: const Duration(seconds: 12),
         ),
       );
     } else if (out.result == NhisMedicinesSyncResult.success) {
@@ -453,6 +449,36 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
         );
       }
     }
+  }
+
+  Future<void> _offerPrescriptionOnlyAdd() async {
+    if (!mounted) return;
+    final added = await showModalBottomSheet<List<Medicine>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const PrescriptionOnlyAddSheet(),
+    );
+    if (added == null || added.isEmpty) return;
+    for (final m in added) {
+      await LocalMedicineListStore.add(m.name);
+      await NhisMedicineCacheStore.upsert(m);
+    }
+    if (!mounted) return;
+    await _reloadMedicinesFromStores();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('처방 약 ${added.length}건을 목록에 추가했습니다.'),
+      ),
+    );
+  }
+
+  Future<void> _toggleHideHospitalSupplies(bool value) async {
+    await MedicationListDisplayPrefs.setHideHospitalSupplies(value);
+    if (!mounted) return;
+    setState(() => _hideHospitalSupplies = value);
+    await _reloadMedicinesFromStores();
   }
 
   String _shortTime(DateTime? t) {
@@ -681,6 +707,17 @@ class _HomeDashboardContentState extends State<HomeDashboardContent> {
                     ),
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapSm(w)),
+                  if (medicines.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: Link26ResponsiveUi.gapSm(w),
+                      ),
+                      child: FilterChip(
+                        label: const Text('복용 약만 보기'),
+                        selected: _hideHospitalSupplies,
+                        onSelected: (v) => unawaited(_toggleHideHospitalSupplies(v)),
+                      ),
+                    ),
                   if (medicines.isEmpty)
                     Padding(
                       padding: EdgeInsets.only(

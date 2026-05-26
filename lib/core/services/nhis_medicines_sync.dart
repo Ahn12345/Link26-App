@@ -8,6 +8,7 @@ import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/link26_remote_bff_bootstrap.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/core/services/user_pinned_medicine_store.dart';
 import 'package:link26_app/integrations/bff/link26_bff_integrations_client.dart';
 import 'package:link26_app/integrations/nhis/nhis_http_message.dart';
 import 'package:link26_app/integrations/nhis/nhis_medications_client.dart';
@@ -50,7 +51,9 @@ class NhisMedicinesSyncOutcome {
 
   bool get isTilkoCodefNhis => metaSource == 'tilko_codef_nhis';
 
-  bool get isTilkoHiraMyMedications => metaSource == 'tilko_hira_my_medications';
+  bool get isTilkoHiraMyMedications =>
+      metaSource == 'tilko_hira_my_medications' ||
+      metaSource == 'tilko_hira_nhis_merged';
 
   bool get isTilkoNhisTreatmentSimpleAuth =>
       metaSource == 'tilko_nhis_simpleauth_treatment_injection';
@@ -193,6 +196,7 @@ abstract final class NhisMedicinesSync {
         s == 'codef_error' ||
         s == 'tilko_codef_nhis' ||
         s == 'tilko_hira_my_medications' ||
+        s == 'tilko_hira_nhis_merged' ||
         s == 'tilko_nhis_simpleauth_treatment_injection';
   }
 
@@ -369,6 +373,7 @@ abstract final class NhisMedicinesSync {
     return s == 'codef' ||
         s == 'tilko_codef_nhis' ||
         s == 'tilko_hira_my_medications' ||
+        s == 'tilko_hira_nhis_merged' ||
         s == 'tilko_nhis_simpleauth_treatment_injection';
   }
 
@@ -405,8 +410,48 @@ abstract final class NhisMedicinesSync {
   }
 
   static Future<void> _replaceLocalWithRemote(List<Medicine> fromApi) async {
-    await NhisMedicineCacheStore.saveMedicines(fromApi);
-    final names = fromApi
+    final remoteNorms = <String>{
+      for (final m in fromApi)
+        if (_norm(m.name).isNotEmpty) _norm(m.name),
+    };
+
+    // 업데이트 전 수동 목록 중 API에 없는 항목은 고정(핀)으로 승격합니다.
+    final oldManual = await LocalMedicineListStore.load();
+    for (final n in oldManual) {
+      final k = _norm(n);
+      if (k.isNotEmpty && !remoteNorms.contains(k)) {
+        await UserPinnedMedicineStore.pin(n);
+      }
+    }
+
+    final pinned = await UserPinnedMedicineStore.loadNorms();
+    final oldCached = await NhisMedicineCacheStore.loadMedicines();
+    final byName = <String, Medicine>{};
+    for (final m in fromApi) {
+      final k = _norm(m.name);
+      if (k.isEmpty) continue;
+      byName[k] = m;
+    }
+    for (final m in oldCached) {
+      final k = _norm(m.name);
+      if (k.isEmpty || !pinned.contains(k) || byName.containsKey(k)) continue;
+      byName[k] = m;
+    }
+    for (final n in oldManual) {
+      final k = _norm(n);
+      if (k.isEmpty || !pinned.contains(k) || byName.containsKey(k)) continue;
+      byName[k] = Medicine(
+        name: n.trim(),
+        dose: '-',
+        frequency: '-',
+        time: '-',
+      );
+    }
+
+    final merged = byName.values.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    await NhisMedicineCacheStore.saveMedicines(merged);
+    final names = merged
         .map((m) => m.name.trim())
         .where((n) => n.isNotEmpty)
         .toList();

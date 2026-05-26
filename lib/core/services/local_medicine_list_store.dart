@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/storage_keys.dart';
+import 'user_pinned_medicine_store.dart';
 
 abstract final class LocalMedicineListStore {
   static Future<List<String>> load() async {
@@ -25,6 +26,7 @@ abstract final class LocalMedicineListStore {
   static Future<void> add(String name) async {
     final n = name.trim();
     if (n.isEmpty) return;
+    await UserPinnedMedicineStore.pin(n);
     final cur = await load();
     if (cur.contains(n)) return;
     cur.add(n);

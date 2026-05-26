@@ -11,6 +11,13 @@ abstract final class StorageKeys {
   static const hiraMonthlyAuthMonth = 'hira_monthly_auth_month_v1';
   static const localMyMedicinesJson = 'local_my_medicines_json_v1';
 
+  /// 직접 추가·처방전 약 — 심평원 전체 동기화 후에도 유지할 정규화 이름 목록 JSON.
+  static const userPinnedMedicineNormsJson = 'user_pinned_medicine_norms_v1';
+
+  /// true면 홈·내 약 목록에서 수액·주사 등 병원 투여 항목을 숨깁니다.
+  static const medicationHideHospitalSupplies =
+      'medication_hide_hospital_supplies_v1';
+
   /// 날짜(yyyy-MM-dd) → 해당 일에 복용 완료 처리한 약 이름 정규화 목록 JSON.
   static const doseReminderCompletedByDayV1 = 'dose_reminder_completed_by_day_v1';
 

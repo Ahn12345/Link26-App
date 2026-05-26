@@ -69,6 +69,24 @@ DateTime? _bffParseYmd(String? raw) {
   );
 }
 
+List<Map<String, dynamic>> _bffMergeMedicationItems(
+  List<Map<String, dynamic>> a,
+  List<Map<String, dynamic>> b,
+) {
+  final seen = <String>{};
+  final out = <Map<String, dynamic>>[];
+  for (final list in [a, b]) {
+    for (final row in list) {
+      final name = '${row['name'] ?? ''}'.trim().toLowerCase();
+      if (name.isEmpty) continue;
+      final key =
+          '$name|${row['dose'] ?? ''}|${row['frequency'] ?? ''}|${row['time'] ?? ''}';
+      if (seen.add(key)) out.add(row);
+    }
+  }
+  return out;
+}
+
 Future<void> main() async {
   final server = await _bindServer();
   final port = server.port;
@@ -79,7 +97,7 @@ Future<void> main() async {
   // ignore: avoid_print
   stdout.writeln('>>> link26-bff (Dart) 실제 포트: $port <<<');
   // ignore: avoid_print
-  stdout.writeln('    BFF build: logincheck-fix + hira-1y');
+  stdout.writeln('    BFF build: logincheck-fix + hira-nhis-merge-1y');
   // ignore: avoid_print
   stdout.writeln('    http://127.0.0.1:$port/health');
   // ignore: avoid_print
@@ -727,10 +745,11 @@ Future<void> _handle(HttpRequest request) async {
         );
         Map<String, dynamic>? hiraRes;
         Map<String, dynamic>? nhisRes;
-        var items = <Map<String, dynamic>>[];
+        var hiraItems = <Map<String, dynamic>>[];
+        var nhisItems = <Map<String, dynamic>>[];
         var metaSource = 'tilko_hira_my_medications';
 
-        // 심평원(HIRA) — StartDate/EndDate 로 기간 지정 가능 → 올해 처방 우선.
+        // 심평원(HIRA) — StartDate/EndDate (최근 1년).
         try {
           hiraRes = await tilkoClient.requestHiraMyMedicationsSimpleAuth(
             tilkoRequestMap: tilkoMap,
@@ -740,56 +759,54 @@ Future<void> _handle(HttpRequest request) async {
           );
           if (hiraRes['http_status'] == null &&
               !tilkoApiIndicatesFailure(hiraRes)) {
-            items = bffMapCodefRootToMedicationItems(hiraRes);
+            hiraItems = bffMapCodefRootToMedicationItems(hiraRes);
             // ignore: avoid_print
-            print('BFF ③ HIRA(심평원) ${items.length}건 ($startYmd~$endYmd)');
+            print('BFF ③ HIRA(심평원) ${hiraItems.length}건 ($startYmd~$endYmd)');
           }
         } catch (e) {
           // ignore: avoid_print
           print('BFF flow HIRA 조회: $e');
         }
 
-        // 건보(NHIS) — 기간 파라미터 없음·과거 이력이 섞일 수 있어 HIRA 0건일 때만 보조.
-        if (items.isEmpty) {
+        // 건보(NHIS) — HIRA에만 없는 병원·조제 이력 보완(항상 호출·병합).
+        try {
           nhisRes =
               await tilkoClient.requestNhisRetrieveTreatmentInjectionInformationPerson(
             tilkoRequestMap: tilkoMap,
             tilkoAuthResponse: tilkoAuth,
           );
-          if (nhisRes['http_status'] != null) {
-            final inner = nhisRes['body'];
-            await _json(request, 200, {
-              'ok': false,
-              'detail': '틸코 NHIS 진료·투약 정보(간편인증) HTTP 오류',
-              'hint_ko':
-                  '공단 간편인증이 완료된 뒤 호출했는지, '
-                  '문서(https://apidemo.tilko.net … NhisSimpleAuth-RetrieveTreatmentInjectionInformationPerson)와 대조하세요.',
-              'tilko': tilkoAuth,
-              'nhis_treatment_injection':
-                  inner is Map<String, dynamic> ? inner : nhisRes,
-            });
-            return;
-          }
-
-          if (tilkoApiIndicatesFailure(nhisRes)) {
+          if (nhisRes['http_status'] == null &&
+              !tilkoApiIndicatesFailure(nhisRes)) {
+            nhisItems = bffMapCodefRootToMedicationItems(nhisRes);
+            // ignore: avoid_print
+            print('BFF ③ NHIS(건보) ${nhisItems.length}건');
+          } else if (nhisRes['http_status'] != null) {
+            // ignore: avoid_print
+            print('BFF ③ NHIS HTTP ${nhisRes['http_status']} (HIRA ${hiraItems.length}건 유지)');
+          } else {
             final st = tilkoApiStatusFields(nhisRes);
-            await _json(request, 200, {
-              'ok': false,
-              'detail':
-                  'NHIS 진료·투약 조회 실패: ${st['code'] ?? ''} ${st['message'] ?? ''}'.trim(),
-              'hint_ko':
-                  '틸코 응답 Status를 확인하세요. 간편인증이 완료되지 않았거나 조회 기간에 이력이 없을 수 있습니다.',
-              'tilko': tilkoAuth,
-              'nhis_treatment_injection': nhisRes,
-            });
-            return;
+            // ignore: avoid_print
+            print(
+              'BFF ③ NHIS Status=${st['code']} ${st['message']} (HIRA ${hiraItems.length}건 유지)',
+            );
           }
-
-          items = bffMapCodefRootToMedicationItems(nhisRes);
-          metaSource = 'tilko_nhis_simpleauth_treatment_injection';
+        } catch (e) {
           // ignore: avoid_print
-          print('BFF ③ NHIS(건보) ${items.length}건 (HIRA 0건 폴백)');
+          print('BFF flow NHIS 조회: $e');
         }
+
+        final beforeMerge = hiraItems.length;
+        var items = _bffMergeMedicationItems(hiraItems, nhisItems);
+        final nhisAdded = items.length - beforeMerge;
+        if (nhisItems.isNotEmpty && hiraItems.isNotEmpty) {
+          metaSource = 'tilko_hira_nhis_merged';
+        } else if (nhisItems.isNotEmpty && hiraItems.isEmpty) {
+          metaSource = 'tilko_nhis_simpleauth_treatment_injection';
+        }
+        // ignore: avoid_print
+        print(
+          'BFF ③ 병합: HIRA $beforeMerge + NHIS 신규 $nhisAdded = 총 ${items.length}건',
+        );
 
         if (items.isEmpty) {
           final wideEnd = DateTime.now();
@@ -842,9 +859,13 @@ Future<void> _handle(HttpRequest request) async {
               'note':
                   '조회 기간($startYmd~$endYmd)에 심평원·건보 투약 이력이 없거나 '
                   'JSON 필드명이 바뀌었을 수 있습니다.',
-            if (!emptyParsed && metaSource == 'tilko_hira_my_medications')
+            if (!emptyParsed &&
+                (metaSource == 'tilko_hira_my_medications' ||
+                    metaSource == 'tilko_hira_nhis_merged'))
               'notice':
-                  '심평원(HIRA) 최근 1년($startYmd~$endYmd) 투약 ${items.length}건을 반영했습니다.',
+                  '심평원·건보 조제 이력 ${items.length}건($startYmd~$endYmd). '
+                  '종이 처방만 있고 약국·병원 조제가 없으면 나오지 않습니다. '
+                  '앱에서 「+ 약 추가」로 넣어 주세요.',
           },
         });
       } catch (e, st) {

@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:link26_app/core/layout/link26_responsive_ui_tokens.g.dart';
 import 'package:link26_app/core/services/dose_reminder_completion_store.dart';
 import 'package:link26_app/core/services/local_medicine_list_store.dart';
+import 'package:link26_app/core/services/medication_list_display_prefs.dart';
+import 'package:link26_app/core/services/medicine_list_loader.dart';
 import 'package:link26_app/core/services/nhis_medicine_cache_store.dart';
+import 'package:link26_app/features/medicine/prescription_only_add_sheet.dart';
 import 'package:link26_app/core/theme/link26_surface_style.dart';
 import 'package:link26_app/core/theme/link26_unified_page.dart';
 import 'package:link26_app/core/widgets/link26_dashboard_widgets.dart';
@@ -40,6 +43,7 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
   List<Medicine> _medicines = [];
   Map<String, int> _completionByNorm = {};
   bool _loading = true;
+  bool _hideHospitalSupplies = false;
 
   String _normMedName(String name) =>
       name.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
@@ -55,29 +59,20 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
   @override
   void initState() {
     super.initState();
-    _reload();
+    unawaited(_loadPrefsAndReload());
+  }
+
+  Future<void> _loadPrefsAndReload() async {
+    _hideHospitalSupplies =
+        await MedicationListDisplayPrefs.hideHospitalSupplies();
+    await _reload();
   }
 
   Future<void> _reload() async {
     setState(() => _loading = true);
-    final cached = await NhisMedicineCacheStore.loadMedicines();
-    final manualNames = await LocalMedicineListStore.load();
-    final byName = <String, Medicine>{};
-    for (final m in cached) {
-      final k = _normMedName(m.name);
-      if (k.isEmpty) continue;
-      byName[k] = m;
-    }
-    for (final n in manualNames) {
-      final k = _normMedName(n);
-      if (k.isEmpty) continue;
-      byName.putIfAbsent(
-        k,
-        () => Medicine(name: n.trim(), dose: '-', frequency: '-', time: '-'),
-      );
-    }
-    final merged = byName.values.toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final merged = await MedicineListLoader.loadMerged(
+      hideHospitalSupplies: _hideHospitalSupplies,
+    );
     final range = _rangeForSpan();
     final completions = await DoseReminderCompletionStore.completionCountsByNormInRange(
       fromInclusive: range.$1,
@@ -89,6 +84,29 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
       _completionByNorm = completions;
       _loading = false;
     });
+  }
+
+  Future<void> _openPrescriptionOnlyAdd() async {
+    final added = await showModalBottomSheet<List<Medicine>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const PrescriptionOnlyAddSheet(),
+    );
+    if (added == null || added.isEmpty) return;
+    for (final m in added) {
+      await LocalMedicineListStore.add(m.name);
+      await NhisMedicineCacheStore.upsert(m);
+    }
+    widget.onMedicinesChanged?.call();
+    await _reload();
+  }
+
+  Future<void> _toggleHideHospitalSupplies(bool value) async {
+    await MedicationListDisplayPrefs.setHideHospitalSupplies(value);
+    if (!mounted) return;
+    setState(() => _hideHospitalSupplies = value);
+    await _reload();
   }
 
   Future<void> _openAddMedicine() async {
@@ -179,6 +197,24 @@ class _MyMedicinesPeriodScreenState extends State<MyMedicinesPeriodScreen> {
                         },
                       );
                     }).toList(),
+                  ),
+                  SizedBox(height: Link26ResponsiveUi.gapMd(w)),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilterChip(
+                        label: const Text('복용 약만 보기'),
+                        selected: _hideHospitalSupplies,
+                        onSelected: (v) =>
+                            unawaited(_toggleHideHospitalSupplies(v)),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.medication_outlined, size: 18),
+                        label: const Text('처방전 약 추가'),
+                        onPressed: () => unawaited(_openPrescriptionOnlyAdd()),
+                      ),
+                    ],
                   ),
                   SizedBox(height: Link26ResponsiveUi.gapLg(w)),
                   Text(

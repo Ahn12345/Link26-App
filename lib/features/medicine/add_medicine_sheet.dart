@@ -112,15 +112,18 @@ class _AddMedicineSheetState extends State<AddMedicineSheet> {
             contentPadding: EdgeInsets.zero,
             title: const Text('직접 입력', style: TextStyle(fontWeight: FontWeight.w900)),
             trailing: const Icon(Icons.arrow_forward, size: 32),
-            onTap: () => Navigator.pop(
-              context,
-              const Medicine(
-                name: '직접 입력 약',
-                dose: '용량 미정',
-                frequency: '복용법 미정',
-                time: '08:00',
-              ),
-            ),
+            onTap: () {
+              final name = searchController.text.trim();
+              Navigator.pop(
+                context,
+                Medicine(
+                  name: name.isNotEmpty ? name : '약 이름 미입력',
+                  dose: '용량 미정',
+                  frequency: '복용법 미정',
+                  time: '08:00',
+                ),
+              );
+            },
           ),
           SizedBox(
             width: double.infinity,
