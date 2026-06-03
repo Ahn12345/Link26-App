@@ -189,27 +189,33 @@ class AiChatService {
     }
 
     final primaryIntro = '''
-[1차 분석 — 출력은 JSON 한 덩어리만, 코드펜스·마크다운 금지]
-역할: 약국 보조 AI. 의학적 진단·처방 금지.
-사용자_텍스트: ${userText.isEmpty ? "(없음, 이미지만 가능)" : userText}
+[역할] 약국 보조 AI. 의학적 진단·처방 금지. 한국어로 답변.
+[사용자 질문] ${userText.isEmpty ? "(없음, 이미지만 가능)" : userText}
 
-[CONTEXT: DUR CSV 일부 — 병용금기·노인주의]
+[DUR 병용금기·노인주의 참고]
 $durCtx
 
-[CONTEXT: 국민건강보험 복약 API·캐시 스냅샷 JSON 또는 메시지]
+[건강보험 복약 스냅샷]
 $nhisA
 
-[CONTEXT: 로컬에 저장된 복약 이름 요약]
+[로컬 복약 이름]
 $cacheNames
 
-[CONTEXT: 식약처 e약은요(공공데이터) — 약 검색·효능·용법 참고. 이미지만 있을 때는 추정 약명을 names_guessed에 넣으세요]
+[식약처 e약은요 참고]
 $easyDrugA
 
-JSON 형식만 출력:
-{"draft_signal":"green|yellow|red","draft_reason":"한글 2문장 이내","dur_note":"한글","nhis_note":"한글","names_guessed":["추정한_약_이름"]}
+[출력 형식 엄수] 첫 줄은 반드시 아래 중 하나로 시작:
+🟢 먹어도 괜찮아 —
+🟡 권고 —
+🔴 절대 먹으면 안 돼 —
 
-의미: green=현재 자료 기준 특별한 병용·금기 징후가 약함, yellow=주의·확인·전문가 상담 필요, red=병용금기·중대 위험 가능성이 높음.
-names_guessed: 사용자 문장·이미지에서 추정한 의약품 이름(한글 상품명 위주, 없으면 []).
+같은 줄에 한 문장 이어 쓰고, 다음 줄부터 한글 3~5문장 추가:
+1. 처방전이나 이미지에서 확인된 약 이름과 효능을 간략히 설명
+2. 주의사항이나 상호작용 안내
+3. 반드시 의사·약사 상담 권고
+
+불확실하면 🟡, 위험 징후가 있으면 🔴 선택.
+이미지가 있으면 이미지에서 약 이름을 직접 읽어서 분석하세요.
 ''';
 
     final List<Content> primaryCall;
@@ -229,53 +235,16 @@ names_guessed: 사용자 문장·이미지에서 추정한 의약품 이름(한�
       primaryCall = [Content.text(primaryIntro)];
     }
 
-    var primaryRaw = await _geminiFromContents(primaryCall);
-    debugPrint('Gemini: 1차 결과 = ${primaryRaw == null ? "null" : "${primaryRaw.length}자"}');
-    primaryRaw ??= await _geminiText(primaryIntro);
-    if (primaryRaw == null || primaryRaw.trim().isEmpty) {
-      return '🟡 권고 —\n1차 분석을 생성하지 못했습니다. 네트워크·API 키·모델명을 확인해 주세요.';
+    var result = await _geminiFromContents(primaryCall);
+    debugPrint('Gemini: 결과 = ${result == null ? "null" : "${result.length}자"}');
+    result ??= await _geminiText(primaryIntro);
+    if (result == null || result.trim().isEmpty) {
+      return '🟡 권고 —\n분석을 생성하지 못했습니다. 네트워크·API 키·모델명을 확인해 주세요.';
     }
-
-    final nhisB = await NhisChatContext.fetchMedicationsSnapshot(
-      timeLimit: _nhisSnapshotBudget,
-    );
-
-    final guessedNames =
-        EasyDrugChatContext.parseNamesGuessedFromPrimaryJson(primaryRaw);
-    final easyDrugB =
-        await EasyDrugChatContext.buildSnippetForNames(guessedNames);
-
-    final secondPrompt = '''
-[2차 최종 검토 — 출력 형식 엄수]
-첫 줄은 반드시 아래 중 하나로 **시작** (공백·이모지 동일):
-🟢 먹어도 괜찮아 —
-🟡 권고 —
-🔴 절대 먹으면 안 돼 —
-
-같은 줄에 한 문장을 이어 쓰고, 다음 줄부터 한글 2~4문장만 추가하세요.
-의학적 진단·처방·특정 용량 지시 금지. 반드시 의사·약사 상담을 안내하세요.
-
-[1차 결과]
-$primaryRaw
-
-[DUR 발췌 재참조]
-$durCtx
-
-[NHIS 복약 API 1차 스냅샷]
-$nhisA
-
-[NHIS 복약 API 2차 재조회 스냅샷 — 1차와 다르면 더 최신·보수적으로 판단]
-$nhisB
-
-${easyDrugB.isEmpty ? '' : '[e약은요·1차 추정 약명 기준 보강]\n$easyDrugB\n'}
-
-불확실하면 🟡, 위험 징후가 있으면 🔴를 선택하세요.
-''';
-
-    var finalText = await _geminiText(secondPrompt);
-    debugPrint('Gemini: 2차 결과 = ${finalText == null ? "null" : "${finalText.length}자"}');
-    finalText = _ensureTrafficLightFormat(finalText, primaryRaw);
-    return finalText;
+    if (result.startsWith('🟢') || result.startsWith('🟡') || result.startsWith('🔴')) {
+      return result;
+    }
+    return _ensureTrafficLightFormat(result, result);
   }
 
   String _ensureTrafficLightFormat(String? second, String primaryFallback) {
@@ -289,8 +258,19 @@ ${easyDrugB.isEmpty ? '' : '[e약은요·1차 추정 약명 기준 보강]\n$eas
       SafetySignal.yellow => '🟡 권고 —',
       SafetySignal.red => '🔴 절대 먹으면 안 돼 —',
     };
-    if (t.isEmpty) t = '(2차 검토 문구 생성 실패. 1차 요약을 참고하세요.)';
-    return '$prefix\n$t\n\n[1차 요약]\n$primaryFallback';
+    if (t.isEmpty) {
+      try {
+        final reasonMatch = RegExp(r'"draft_reason"\s*:\s*"([^"]+)"').firstMatch(primaryFallback);
+        final durMatch = RegExp(r'"dur_note"\s*:\s*"([^"]+)"').firstMatch(primaryFallback);
+        final reason = reasonMatch?.group(1) ?? '';
+        final dur = durMatch?.group(1) ?? '';
+        t = reason.isNotEmpty ? reason : '분석이 완료됐습니다.';
+        if (dur.isNotEmpty && dur != '정보 없음') t += '\n$dur';
+      } catch (_) {
+        t = '분석이 완료됐습니다. 의사 또는 약사와 상담하세요.';
+      }
+    }
+    return '$prefix\n$t\n\n의사 또는 약사와 상담하여 정확한 복약 지도를 받으세요.';
   }
 
   SafetySignal _signalFromDraftJson(String raw) {
