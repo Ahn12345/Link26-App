@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:link26_app/l10n/app_localizations.dart';
-
 import 'package:link26_app/core/constants/app_build_fingerprint.dart';
 import 'package:link26_app/core/database/user_local_repository.dart';
 import 'package:link26_app/core/layout/link26_responsive_layout.dart';
@@ -15,12 +14,9 @@ import 'package:link26_app/core/widgets/link26_standard_frame.dart';
 import 'package:link26_app/features/auth/login/login_page.dart';
 import 'package:link26_app/features/auth/signup/signup_page.dart';
 
-/// 스플래시 이후 — 브랜드 + 로그인 / 회원가입.
 class AuthWelcomeScreen extends StatefulWidget {
   const AuthWelcomeScreen({super.key});
-
   static const routeName = '/auth/welcome';
-
   @override
   State<AuthWelcomeScreen> createState() => _AuthWelcomeScreenState();
 }
@@ -37,7 +33,6 @@ class _AuthWelcomeScreenState extends State<AuthWelcomeScreen> {
         borderRadius: BorderRadius.circular(Link26Surface.radiusButton),
       ),
     );
-
     return Scaffold(
       backgroundColor: Link26UnifiedPage.background,
       body: Link26BrandBackdrop(
@@ -150,45 +145,6 @@ class _AuthWelcomeScreenState extends State<AuthWelcomeScreen> {
                                     Navigator.of(context).pushNamed(SignupPage.routeName),
                                 style: outlineBtn,
                                 child: Text(l10n.signup, style: const TextStyle(fontWeight: FontWeight.w800)),
-                              ),
-                              SizedBox(height: Link26ResponsiveUi.gapMd(w)),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.authSocialLoginComingSoon),
-                                          ),
-                                        );
-                                      },
-                                      style: outlineBtn.copyWith(minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48),),backgroundColor: const WidgetStatePropertyAll(Colors.white),),child: Text(l10n.authKakaoLogin,style: TextStyle(fontWeight: FontWeight.w800,color: Link26UnifiedPage.ctaBlue,),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: Link26ResponsiveUi.gapSm(w)),
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.authSocialLoginComingSoon),
-                                          ),
-                                        );
-                                      },
-                                      style: outlineBtn.copyWith(
-                                        minimumSize: const WidgetStatePropertyAll(
-                                          Size.fromHeight(48),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        l10n.authGoogleLogin,
-                                        style: const TextStyle(fontWeight: FontWeight.w800),
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ],
                           ),

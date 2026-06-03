@@ -21,7 +21,7 @@ class AiChatService {
   static String get _modelId => GeminiRuntimeConfig.modelId;
 
   /// NHIS 스냅샷이 느리면 AI 채팅 전체가 멈춘 것처럼 보이므로 상한을 둡니다.
-  static const Duration _nhisSnapshotBudget = Duration(seconds: 14);
+  static const Duration _nhisSnapshotBudget = Duration(seconds: 3);
 
   /// 멀티모달·긴 프롬프트 대비.
   static const Duration _geminiBudget = Duration(seconds: 120);
@@ -49,14 +49,18 @@ class AiChatService {
     final key = GeminiRuntimeConfig.apiKey;
     if (key.isEmpty) return null;
     try {
+      debugPrint('Gemini: 텍스트 요청 시작 (길이=${prompt.length})');
       final res = await _geminiModel()
           .generateContent([Content.text(prompt)])
           .timeout(_geminiBudget);
+      debugPrint('Gemini: 텍스트 응답 성공');
       return res.text?.trim();
     } on TimeoutException {
+      debugPrint('Gemini: 텍스트 타임아웃');
       if (kDebugMode) debugPrint('Gemini generateContent timeout');
       return null;
     } catch (e, st) {
+      debugPrint('Gemini: 텍스트 실패 $e');
       if (kDebugMode) {
         debugPrint('Gemini generateContent failed: $e\n$st');
       }
@@ -65,15 +69,22 @@ class AiChatService {
   }
 
   Future<String?> _geminiFromContents(List<Content> contents) async {
-    if (GeminiRuntimeConfig.apiKey.isEmpty) return null;
+    if (GeminiRuntimeConfig.apiKey.isEmpty) {
+      debugPrint('Gemini: API 키 없음 — 멀티모달 스킵');
+      return null;
+    }
     try {
+      debugPrint('Gemini: 멀티모달 요청 시작 — contents=${contents.length}');
       final res =
           await _geminiModel().generateContent(contents).timeout(_geminiBudget);
+      debugPrint('Gemini: 멀티모달 응답 성공 — text=${res.text?.length ?? 0}자');
       return res.text?.trim();
     } on TimeoutException {
+      debugPrint('Gemini: 멀티모달 타임아웃');
       if (kDebugMode) debugPrint('Gemini multimodal timeout');
       return null;
     } catch (e, st) {
+      debugPrint('Gemini: 멀티모달 실패 $e');
       if (kDebugMode) {
         debugPrint('Gemini multimodal failed: $e\n$st');
       }
@@ -95,7 +106,6 @@ class AiChatService {
     for (final h in hints) {
       if (t.contains(h) || low.contains(h.toLowerCase())) return true;
     }
-    // 일상 영어 인사 등은 약 파이프라인 제외 (단, 긴 영문은 성분명 가능성)
     if (RegExp(r'^(hi|hello|hey|thanks|thank you|ok|bye|good morning)\b',
             caseSensitive: false)
         .hasMatch(low)) {
@@ -114,9 +124,12 @@ class AiChatService {
   }) async {
     final text = userText.trim();
     final hasImg = imageBytes != null && imageBytes.isNotEmpty;
+    debugPrint('Gemini: respondChat 호출 — text="${text.isEmpty ? "(없음)" : text}" hasImg=$hasImg imageBytes=${imageBytes?.length ?? 0}');
     if (!shouldRunMedicinePipeline(text, hasImage: hasImg)) {
+      debugPrint('Gemini: 일상 대화 파이프라인 선택');
       return _respondCasual(text.isEmpty ? '…' : text);
     }
+    debugPrint('Gemini: 약 2단계 파이프라인 선택');
     return _respondMedicineTwoPass(text, imageBytes, imageMime);
   }
 
@@ -139,18 +152,32 @@ class AiChatService {
   ) async {
     final key = GeminiRuntimeConfig.apiKey;
     final durQuery = userText.isEmpty ? '의약품' : userText;
-    final ctx = await Future.wait<Object>([
-      DurAssetContext.buildSnippetForQuery(durQuery),
-      NhisChatContext.fetchMedicationsSnapshot(
-        timeLimit: _nhisSnapshotBudget,
-      ),
-      NhisChatContext.cachedMedicineNamesSummary(),
-      EasyDrugChatContext.buildSnippetForUserText(userText),
-    ]);
-    final durCtx = ctx[0] as String;
-    final nhisA = ctx[1] as String;
-    final cacheNames = ctx[2] as String;
-    final easyDrugA = ctx[3] as String;
+    debugPrint('Gemini: 2단계 시작 — key길이=${key.length} imageBytes=${imageBytes?.length ?? 0} mime=$imageMime');
+
+    String durCtx = '(DUR 스킵)';
+    String nhisA = '(NHIS 스킵)';
+    String cacheNames = '(캐시 스킵)';
+    String easyDrugA = '(e약은요 스킵)';
+    try {
+      debugPrint('Gemini: 컨텍스트 수집 시작');
+      final results = await Future.wait<String>([
+        DurAssetContext.buildSnippetForQuery(durQuery)
+            .timeout(const Duration(seconds: 5), onTimeout: () => '(DUR 로딩 타임아웃)'),
+        NhisChatContext.fetchMedicationsSnapshot(timeLimit: _nhisSnapshotBudget),
+        NhisChatContext.cachedMedicineNamesSummary()
+            .timeout(const Duration(seconds: 3), onTimeout: () => '(캐시 타임아웃)'),
+        EasyDrugChatContext.buildSnippetForUserText(userText)
+            .timeout(const Duration(seconds: 5), onTimeout: () => '(e약은요 타임아웃)'),
+      ]);
+      durCtx = results[0];
+      nhisA = results[1];
+      cacheNames = results[2];
+      easyDrugA = results[3];
+      debugPrint('Gemini: 컨텍스트 수집 완료');
+    } catch (e, st) {
+      debugPrint('Gemini: 컨텍스트 수집 오류 $e');
+      debugPrint('$st');
+    }
 
     if (key.isEmpty) {
       return '🟡 권고 —\n'
@@ -190,6 +217,7 @@ names_guessed: 사용자 문장·이미지에서 추정한 의약품 이름(한�
         imageMime != null &&
         imageMime.isNotEmpty &&
         imageBytes.isNotEmpty) {
+      debugPrint('Gemini: 이미지 포함 멀티모달 호출 준비 — mime=$imageMime bytes=${imageBytes.length}');
       primaryCall = [
         Content.multi([
           TextPart(primaryIntro),
@@ -197,10 +225,12 @@ names_guessed: 사용자 문장·이미지에서 추정한 의약품 이름(한�
         ]),
       ];
     } else {
+      debugPrint('Gemini: 텍스트 전용 호출 준비');
       primaryCall = [Content.text(primaryIntro)];
     }
 
     var primaryRaw = await _geminiFromContents(primaryCall);
+    debugPrint('Gemini: 1차 결과 = ${primaryRaw == null ? "null" : "${primaryRaw.length}자"}');
     primaryRaw ??= await _geminiText(primaryIntro);
     if (primaryRaw == null || primaryRaw.trim().isEmpty) {
       return '🟡 권고 —\n1차 분석을 생성하지 못했습니다. 네트워크·API 키·모델명을 확인해 주세요.';
@@ -243,6 +273,7 @@ ${easyDrugB.isEmpty ? '' : '[e약은요·1차 추정 약명 기준 보강]\n$eas
 ''';
 
     var finalText = await _geminiText(secondPrompt);
+    debugPrint('Gemini: 2차 결과 = ${finalText == null ? "null" : "${finalText.length}자"}');
     finalText = _ensureTrafficLightFormat(finalText, primaryRaw);
     return finalText;
   }
